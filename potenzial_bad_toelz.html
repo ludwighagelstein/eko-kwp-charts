@@ -31,12 +31,12 @@ const ambitioniert = 124.3;
 
 const istWirt = ist.map((v, i) => v + wirt[i]);
 
-const traceIst = { x: labels, y: ist, type: 'bar', name: 'Ist 2023', width: 0.5,
-  marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2023: %{y:.1f} GWh/a<extra></extra>' };
-const traceWirt = { x: labels, y: wirt, base: ist, type: 'bar', name: 'wirtschaftliches Potenzial', width: 0.5,
-  marker: { color: '#92D050' }, hovertemplate: '%{x}<br>wirtschaftliches Potenzial: %{y:.1f} GWh/a<extra></extra>' };
-const traceTech = { x: labels, y: techx, base: istWirt, type: 'bar', name: 'technisches Potenzial', width: 0.5,
-  marker: { color: '#D7E4BD' }, hovertemplate: '%{x}<br>technisches Potenzial: %{y:.1f} GWh/a<extra></extra>' };
+const traceIst = { x: labels, y: ist, customdata: ist, type: 'bar', name: 'Ist 2023', width: 0.5,
+  marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2023: %{customdata:.1f} GWh/a<extra></extra>' };
+const traceWirt = { x: labels, y: wirt, base: ist, customdata: wirt, type: 'bar', name: 'wirtschaftliches Potenzial', width: 0.5,
+  marker: { color: '#92D050' }, hovertemplate: '%{x}<br>wirtschaftliches Potenzial: %{customdata:.1f} GWh/a<extra></extra>' };
+const traceTech = { x: labels, y: techx, base: istWirt, customdata: techx, type: 'bar', name: 'technisches Potenzial', width: 0.5,
+  marker: { color: '#D7E4BD' }, hovertemplate: '%{x}<br>technisches Potenzial: %{customdata:.1f} GWh/a<extra></extra>' };
 
 const lineShapes = [
   { type: 'line', x0: -0.5, x1: labels.length - 0.5, y0: gesamtbedarf, y1: gesamtbedarf, line: { color: '#C00000', width: 2 } },
