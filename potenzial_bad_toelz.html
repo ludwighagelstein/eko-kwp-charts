@@ -16,7 +16,7 @@
 <body>
 <div class="header">
   <h1>Bad Toelz: Potenzialanalyse</h1>
-  <p>Nutzenergie [MWh/a] – Ist-Stand, wirtschaftliches und technisches Potenzial je Energieträger</p>
+  <p>Nutzenergie [GWh/a] – Ist-Stand, wirtschaftliches und technisches Potenzial je Energieträger</p>
 </div>
 <div id="chart"></div>
 <div class="footer">Quelle: Kommunale Wärmeplanung Bad Toelz, EWO-Kompetenzzentrum Energie EKO e.V.</div>
@@ -25,18 +25,18 @@ const labels = ["Solarthermie", "Energieholz", "Oberfl. Geothermie (EWS & GWWP)"
 const ist = [2.9, 21.8, 1.0, 5.3, 0.0, 19.6, 0.0, 0.0, 50.6];
 const wirt = [4.4, 19.5, 18.0, 19.5, 1.2, 0.0, 0.0, 3.2, 65.9];
 const techx = [0.0, 0.0, 7.7, 73.9, 0.0, 44.4, 1.4, 0.0, 127.5];
-const gesamtbedarf = 0.0;
-const konservativ = 0.0;
-const ambitioniert = 0.0;
+const gesamtbedarf = 176.4;
+const konservativ = 143.2;
+const ambitioniert = 124.3;
 
 const istWirt = ist.map((v, i) => v + wirt[i]);
 
 const traceIst = { x: labels, y: ist, type: 'bar', name: 'Ist 2023', width: 0.5,
-  marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2023: %{y:.1f} MWh/a<extra></extra>' };
+  marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2023: %{y:.1f} GWh/a<extra></extra>' };
 const traceWirt = { x: labels, y: wirt, base: ist, type: 'bar', name: 'wirtschaftliches Potenzial', width: 0.5,
-  marker: { color: '#92D050' }, hovertemplate: '%{x}<br>wirtschaftliches Potenzial (zusätzlich): %{y:.1f} MWh/a<extra></extra>' };
+  marker: { color: '#92D050' }, hovertemplate: '%{x}<br>wirtschaftliches Potenzial: %{y:.1f} GWh/a<extra></extra>' };
 const traceTech = { x: labels, y: techx, base: istWirt, type: 'bar', name: 'technisches Potenzial', width: 0.5,
-  marker: { color: '#D7E4BD' }, hovertemplate: '%{x}<br>technisches Potenzial (zusätzlich): %{y:.1f} MWh/a<extra></extra>' };
+  marker: { color: '#D7E4BD' }, hovertemplate: '%{x}<br>technisches Potenzial: %{y:.1f} GWh/a<extra></extra>' };
 
 const lineShapes = [
   { type: 'line', x0: -0.5, x1: labels.length - 0.5, y0: gesamtbedarf, y1: gesamtbedarf, line: { color: '#C00000', width: 2 } },
@@ -54,7 +54,7 @@ const layout = {
   font: { family: 'Segoe UI, Arial, sans-serif', size: 13, color: '#333' },
   margin: { t: 10, l: 60, r: 20, b: 130 },
   xaxis: { tickangle: -30, automargin: true },
-  yaxis: { title: 'Nutzenergie [MWh/a]', gridcolor: '#eee', zeroline: false },
+  yaxis: { title: 'Nutzenergie [GWh/a]', gridcolor: '#eee', zeroline: false },
   legend: { orientation: 'h', y: 1.18, x: 0 },
   shapes: lineShapes,
   plot_bgcolor: '#fff', paper_bgcolor: '#fff'
