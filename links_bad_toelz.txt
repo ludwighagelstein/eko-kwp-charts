@@ -1,4 +1,1 @@
-https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html
-https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_bad_toelz.html
-https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_bad_toelz.html
-https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html
+https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html
