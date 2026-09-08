@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Entwicklung Wärmemix Endenergie Bad Tölz</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 800px; background: #fff; color: #222; }
+  .header { padding: 20px 30px 4px 30px; }
+  .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
+  .header p { font-size: 13px; margin: 0; color: #555; }
+  #chart { width: 100%; height: 600px; }
+  .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; }
+  .toggle { padding: 0 30px 8px 30px; }
+  .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
+    border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
+  .toggle button.active { background: #1D4B8F; color: #fff; }
+</style>
+</head>
+<body>
+<div class="header"><h1>Entwicklung Wärmemix Endenergie Bad Tölz</h1><p>Endenergieverbrauch nach Energieträgern 2023–2045 (GWh/a)</p></div>
+<div class="toggle">
+  <button id="btn-fs" class="active" onclick="showScenario('Fortschreibung')">Szenario Fortschreibung</button>
+  <button id="btn-o45" onclick="showScenario('O45')">Szenario O45</button>
+</div>
+<div id="chart"></div>
+<div class="footer">Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</div>
+<script>
+const dataFS = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "color": "#4A4A4A", "y": [48.88, 44.86, 40.64, 36.43, 32.35, 28.16, 24.26, 20.65, 17.42, 14.46, 11.76, 9.33, 7.11, 5.06, 3.31, 1.85, 0.77, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "color": "#7C350B", "y": [0.62, 0.18, 0.05, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "color": "#999999", "y": [108.24, 108.34, 107.4, 105.77, 103.64, 100.09, 96.25, 92.18, 88.36, 84.32, 80.07, 75.63, 70.63, 64.09, 56.96, 48.83, 41.14, 33.45, 24.66, 16.14, 9.35, 4.06, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 1.3, 2.46, 3.49, 3.84, 4.12, 4.33, 4.47, 4.96, 6.84, 9.01, 11.89, 13.97, 15.74, 17.86, 19.72, 19.86, 18.51, 15.94]}, {"name": "Fl\u00fcssiggas", "color": "#887894", "y": [1.47, 0.96, 0.62, 0.41, 0.26, 0.17, 0.11, 0.07, 0.05, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "color": "#B22222", "y": [5.12, 3.15, 1.94, 1.19, 0.73, 0.45, 0.28, 0.17, 0.11, 0.06, 0.04, 0.02, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Fernw\u00e4rme", "color": "#F39C12", "y": [19.59, 21.79, 23.89, 25.89, 27.79, 29.6, 31.31, 32.92, 34.44, 35.86, 37.18, 38.4, 39.53, 40.56, 41.49, 42.33, 43.07, 43.71, 44.25, 44.7, 45.05, 45.3, 45.46]}, {"name": "Heizstrom", "color": "#1225A0", "y": [0.22, 0.16, 0.11, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Energieholz", "color": "#6FAC46", "y": [16.58, 16.56, 16.54, 16.53, 16.51, 16.5, 16.48, 16.46, 16.45, 16.43, 16.42, 16.4, 16.39, 16.37, 16.35, 16.34, 16.32, 16.31, 16.29, 16.27, 16.26, 16.24, 16.23]}, {"name": "Solarthermie", "color": "#FFCF00", "y": [2.91, 3.0, 3.09, 3.18, 3.27, 3.36, 3.46, 3.56, 3.67, 3.78, 3.89, 4.0, 4.12, 4.24, 4.36, 4.49, 4.62, 4.75, 4.89, 5.04, 5.18, 5.34, 5.49]}, {"name": "Oberfl\u00e4chennahe Geothermie", "color": "#83ACFC", "y": [0.26, 0.46, 0.66, 0.86, 1.07, 1.27, 1.47, 1.67, 1.88, 2.08, 2.28, 2.48, 2.69, 2.89, 3.09, 3.29, 3.5, 3.7, 3.9, 4.1, 4.31, 4.51, 4.71]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "color": "#326F90", "y": [1.76, 2.21, 2.66, 3.11, 3.56, 4.01, 4.46, 4.91, 5.36, 5.81, 6.26, 6.71, 7.16, 7.61, 8.06, 8.51, 8.96, 9.41, 9.86, 10.31, 10.76, 11.21, 11.66]}], "total": [205.66, 201.67, 197.61, 193.47, 189.25, 184.95, 180.57, 176.11, 171.57, 166.95, 162.25, 157.47, 152.61, 147.67, 142.64, 137.53, 132.35, 127.07, 121.72, 116.29, 110.77, 105.17, 99.49], "fossil": [171.38, 165.02, 158.61, 152.13, 145.59, 137.69, 129.84, 122.06, 114.9, 107.73, 100.57, 93.4, 85.81, 76.77, 67.37, 57.18, 47.73, 38.51, 28.87, 19.42, 11.62, 5.24, 0.0], "renew": [34.29, 36.65, 39.0, 41.33, 43.66, 47.27, 50.73, 54.05, 56.68, 59.22, 61.69, 64.07, 66.8, 70.89, 75.27, 80.35, 84.62, 88.57, 92.85, 96.87, 99.16, 99.93, 99.49], "fossil_pct": [83.3, 81.8, 80.3, 78.6, 76.9, 74.4, 71.9, 69.3, 67.0, 64.5, 62.0, 59.3, 56.2, 52.0, 47.2, 41.6, 36.1, 30.3, 23.7, 16.7, 10.5, 5.0, 0.0], "renew_pct": [16.7, 18.2, 19.7, 21.4, 23.1, 25.6, 28.1, 30.7, 33.0, 35.5, 38.0, 40.7, 43.8, 48.0, 52.8, 58.4, 63.9, 69.7, 76.3, 83.3, 89.5, 95.0, 100.0]};
+const dataO45 = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "color": "#4A4A4A", "y": [48.88, 44.61, 40.19, 35.82, 31.6, 27.32, 23.36, 19.72, 16.47, 13.52, 10.86, 8.48, 6.36, 4.44, 2.83, 1.54, 0.61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "color": "#7C350B", "y": [0.62, 0.18, 0.05, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "color": "#999999", "y": [108.24, 107.76, 106.22, 103.99, 101.24, 97.1, 92.69, 88.04, 83.54, 78.81, 73.89, 68.78, 63.15, 56.18, 48.76, 40.6, 32.97, 25.55, 17.64, 10.47, 5.17, 1.64, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 1.26, 2.37, 3.33, 3.63, 3.85, 3.99, 4.07, 4.44, 5.99, 7.71, 9.88, 11.2, 12.02, 12.77, 12.8, 11.0, 7.46, 2.06]}, {"name": "Fl\u00fcssiggas", "color": "#887894", "y": [1.47, 0.96, 0.62, 0.41, 0.26, 0.17, 0.11, 0.07, 0.05, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "color": "#B22222", "y": [5.12, 3.15, 1.94, 1.19, 0.73, 0.45, 0.28, 0.17, 0.11, 0.06, 0.04, 0.02, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Fernw\u00e4rme", "color": "#F39C12", "y": [19.59, 20.84, 22.04, 23.17, 24.24, 25.25, 26.19, 27.08, 27.9, 28.66, 29.37, 30.01, 30.58, 31.1, 31.56, 31.95, 32.28, 32.55, 32.76, 32.91, 33.0, 33.02, 32.99]}, {"name": "Heizstrom", "color": "#1225A0", "y": [0.22, 0.16, 0.11, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Energieholz", "color": "#6FAC46", "y": [16.58, 16.72, 16.86, 17.01, 17.15, 17.3, 17.45, 17.6, 17.75, 17.91, 18.06, 18.22, 18.37, 18.53, 18.69, 18.85, 19.01, 19.18, 19.34, 19.51, 19.68, 19.85, 20.02]}, {"name": "Solarthermie", "color": "#FFCF00", "y": [2.91, 3.0, 3.09, 3.18, 3.27, 3.36, 3.46, 3.56, 3.67, 3.78, 3.89, 4.0, 4.12, 4.24, 4.36, 4.49, 4.62, 4.75, 4.89, 5.04, 5.18, 5.34, 5.49]}, {"name": "Oberfl\u00e4chennahe Geothermie", "color": "#83ACFC", "y": [0.26, 0.49, 0.73, 0.97, 1.2, 1.44, 1.67, 1.91, 2.15, 2.38, 2.62, 2.86, 3.09, 3.33, 3.56, 3.8, 4.04, 4.27, 4.51, 4.75, 4.98, 5.22, 5.45]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "color": "#326F90", "y": [1.76, 2.26, 2.75, 3.25, 3.74, 4.24, 4.73, 5.23, 5.72, 6.22, 6.71, 7.21, 7.7, 8.2, 8.69, 9.19, 9.68, 10.18, 10.67, 11.17, 11.66, 12.16, 12.65]}], "total": [205.66, 200.13, 194.6, 189.06, 183.51, 177.94, 172.35, 166.74, 160.99, 155.23, 149.45, 143.66, 137.85, 132.02, 126.17, 120.31, 114.42, 108.52, 102.59, 96.65, 90.68, 84.69, 78.67], "fossil": [171.38, 163.87, 156.37, 148.87, 141.35, 132.57, 123.92, 115.41, 107.43, 99.51, 91.66, 83.87, 75.77, 66.46, 56.99, 47.05, 37.95, 29.32, 20.75, 12.89, 6.84, 2.5, 0.0], "renew": [34.29, 36.26, 38.23, 40.2, 42.15, 45.36, 48.42, 51.33, 53.57, 55.72, 57.79, 59.79, 62.08, 65.55, 69.18, 73.26, 76.47, 79.2, 81.84, 83.76, 83.84, 82.19, 78.67], "fossil_pct": [83.3, 81.9, 80.4, 78.7, 77.0, 74.5, 71.9, 69.2, 66.7, 64.1, 61.3, 58.4, 55.0, 50.3, 45.2, 39.1, 33.2, 27.0, 20.2, 13.3, 7.5, 2.9, 0.0], "renew_pct": [16.7, 18.1, 19.6, 21.3, 23.0, 25.5, 28.1, 30.8, 33.3, 35.9, 38.7, 41.6, 45.0, 49.7, 54.8, 60.9, 66.8, 73.0, 79.8, 86.7, 92.5, 97.1, 100.0]};
+function buildTraces(dd) {
+  const areaTraces = dd.traces.map(t => ({
+    x: dd.years, y: t.y, name: t.name, type: 'scatter', mode: 'none',
+    stackgroup: 'one', fillcolor: t.color, line: { width: 0 },
+    hoverinfo: 'skip' }));
+  const lineTraces = [
+    { x: dd.years, y: dd.total, name: 'Gesamt', type: 'scatter', mode: 'lines',
+       line: { color: '#FF6602', width: 2.5 }, hoverinfo: 'skip' },
+    { x: dd.years, y: dd.fossil, customdata: dd.fossil_pct, name: 'fossiler Anteil', type: 'scatter', mode: 'lines',
+       line: { color: '#333333', width: 2 }, hovertemplate: 'fossil: %{customdata:.0f}%<extra></extra>' },
+    { x: dd.years, y: dd.renew, customdata: dd.renew_pct, name: 'erneuerbarer Anteil', type: 'scatter', mode: 'lines',
+       line: { color: '#00A24D', width: 2 }, hovertemplate: 'erneuerbar: %{customdata:.0f}%<extra></extra>' },
+  ];
+  return areaTraces.concat(lineTraces);
+}
+const layout = {
+  font: { family: 'Segoe UI, Arial, sans-serif', size: 13, color: '#333' },
+  margin: { t: 20, l: 60, r: 20, b: 40 },
+  xaxis: { dtick: 5, gridcolor: '#eee' },
+  yaxis: { title: 'GWh/a', gridcolor: '#eee', zeroline: false },
+  legend: { orientation: 'h', y: -0.18 },
+  plot_bgcolor: '#fff', paper_bgcolor: '#fff', hovermode: 'x unified'
+};
+Plotly.newPlot('chart', buildTraces(dataFS), layout, {responsive: true, displayModeBar: false});
+function showScenario(sz) {
+  document.getElementById('btn-fs').classList.toggle('active', sz === 'Fortschreibung');
+  document.getElementById('btn-o45').classList.toggle('active', sz === 'O45');
+  Plotly.react('chart', buildTraces(sz === 'Fortschreibung' ? dataFS : dataO45), layout, {responsive: true, displayModeBar: false});
+}
+</script>
+</body>
+</html>
