@@ -62,16 +62,19 @@ const traceWirt = { x: labels, y: wirt, customdata: wirt, type: 'bar', name: 'wi
 const traceTech = { x: labels, y: techx, customdata: techx, type: 'bar', name: 'technisches Potenzial', width: 0.5,
   marker: { color: '#D7E4BD' }, hovertemplate: '%{x}<br>technisches Potenzial: %{customdata:.1f} GWh/a<extra></extra>' };
 
-const lineShapes = [
-  { type: 'line', x0: -0.5, x1: labels.length - 0.5, y0: gesamtbedarf, y1: gesamtbedarf, line: { color: '#C00000', width: 2 } },
-  { type: 'line', x0: -0.5, x1: labels.length - 0.5, y0: konservativ, y1: konservativ, line: { color: '#984807', width: 2, dash: 'dash' } },
-  { type: 'line', x0: -0.5, x1: labels.length - 0.5, y0: ambitioniert, y1: ambitioniert, line: { color: '#F79646', width: 2, dash: 'dash' } },
-];
-const legendLines = [
-  { x: [null], y: [null], mode: 'lines', name: 'Gesamtbedarf Nutzwärme 2023', line: { color: '#C00000', width: 2 } },
-  { x: [null], y: [null], mode: 'lines', name: 'konservatives Sanierungsszenario (2045)', line: { color: '#984807', width: 2, dash: 'dash' } },
-  { x: [null], y: [null], mode: 'lines', name: 'ambitioniertes Sanierungsszenario (2045)', line: { color: '#F79646', width: 2, dash: 'dash' } },
-];
+// Referenzlinien als echte Datenspuren, nicht als layout.shapes: eine Shape
+// haengt an keiner Spur, deshalb blieb sie beim Klick in der Legende stehen --
+// abgeschaltet wurde nur eine leere Platzhalter-Spur. Als Spur verschwindet die
+// Linie wirklich und zaehlt ausserdem bei der Achsenskalierung mit.
+const traceLinien = [
+  { wert: gesamtbedarf, farbe: '#C00000', strich: 'solid', name: 'Gesamtbedarf Nutzwärme 2023' },
+  { wert: konservativ, farbe: '#984807', strich: 'dash', name: 'konservatives Sanierungsszenario (2045)' },
+  { wert: ambitioniert, farbe: '#F79646', strich: 'dash', name: 'ambitioniertes Sanierungsszenario (2045)' },
+].map(l => ({
+  x: labels, y: labels.map(() => l.wert), type: 'scatter', mode: 'lines', name: l.name,
+  line: { color: l.farbe, width: 2, dash: l.strich },
+  hovertemplate: l.name + ': %{y:.1f} GWh/a<extra></extra>'
+}));
 
 const layout = {
   barmode: 'stack',
@@ -90,7 +93,6 @@ const layout = {
   // 'Ist 2023' stellt.
   legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top',
              font: { size: 11 }, traceorder: 'normal' },
-  shapes: lineShapes,
   plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };
 
@@ -145,7 +147,7 @@ function onResize(redraw) {
 }
 
 function draw() {
-  const traces = [traceIst, traceWirt, traceTech, ...legendLines];
+  const traces = [traceIst, traceWirt, traceTech, ...traceLinien];
   Plotly.react('chart', traces, responsive(layout, traces.length),
                {responsive: true, displayModeBar: false});
 }
