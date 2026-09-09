@@ -1,5 +1,13 @@
+# Zum Einfügen in den Embed-Block der StoryMap.
+# Am besten den iFrame-Code nehmen — bei der nackten URL
+# erzwingt StoryMaps eine eigene, flache Blockhöhe.
 https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
 https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
 https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
 https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
 https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>

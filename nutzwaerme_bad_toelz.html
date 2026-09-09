@@ -15,22 +15,24 @@
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
   .header p { font-size: 13px; margin: 0; color: #555; }
-  #chart { width: 100%; flex: 1 1 auto; min-height: 300px; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 400px; }
   .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
   .toggle { padding: 0 30px 8px 30px; flex: none; }
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
     border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
   .toggle button.active { background: #1D4B8F; color: #fff; }
 
-  /* Schmale Bloecke (StoryMaps auf dem Handy): der Embed-Block ist dort nur
-     rund 310x190 px. Titel und Quellenzeile entfallen, weil StoryMaps die
-     Bildunterschrift ohnehin direkt unter den Block setzt und die Quelle in
-     der Story steht -- sonst bliebe fuer das Diagramm selbst kaum Platz. */
+  /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
+     Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
+     die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
+     embed_snippet(). */
   @media (max-width: 620px) {
-    .header, .footer { display: none; }
-    .toggle { padding: 4px 8px 4px 8px; }
-    .toggle button { font-size: 10px; padding: 3px 8px; margin-right: 4px; }
-    #chart { min-height: 150px; }
+    .header { padding: 10px 12px 2px 12px; }
+    .header h1 { font-size: 15px; }
+    .header p { font-size: 11px; }
+    .toggle { padding: 0 12px 6px 12px; }
+    .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
+    .footer { padding: 2px 12px 8px 12px; font-size: 9px; }
   }
 </style>
 </head>
@@ -76,7 +78,6 @@ const NARROW_PX = 620;
 function responsive(base) {
   if (window.innerWidth >= NARROW_PX) return base;
   const l = JSON.parse(JSON.stringify(base));
-  l.showlegend = false;
   l.legend = { orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top',
                font: { size: 9 }, tracegroupgap: 2 };
   l.margin = { t: 8, l: 40, r: 8, b: 8 };
