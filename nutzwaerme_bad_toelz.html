@@ -75,15 +75,24 @@ const layout = {
 
 const NARROW_PX = 620;
 
-function responsive(base) {
+function responsive(base, legendeEintraege) {
   if (window.innerWidth >= NARROW_PX) return base;
   const l = JSON.parse(JSON.stringify(base));
-  // entrywidth 0.5 als Bruchteil der Legendenbreite = zwei Spalten. Einspaltig
-  // wird die Legende bei 14 Eintraegen so hoch, dass Plotly ihr einen eigenen
-  // Scrollbalken verpasst und die letzten Eintraege abschneidet.
-  l.legend = { orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top',
+  const gedrehteTicks = !!(l.xaxis && l.xaxis.tickangle);
+  l.legend = { orientation: 'h', x: 0, xanchor: 'left', yanchor: 'top',
                font: { size: 9 }, tracegroupgap: 2,
-               entrywidthmode: 'fraction', entrywidth: 0.5 };
+               // Gedrehte Achsenbeschriftungen brauchen unter dem Diagramm
+               // Platz; eine Legende direkt darunter landet sonst mitten drin.
+               y: gedrehteTicks ? -0.5 : -0.12 };
+  // Zwei Spalten (entrywidth als Bruchteil der Legendenbreite) nur bei vielen
+  // Eintraegen: einspaltig wird die Legende dann so hoch, dass Plotly sie
+  // scrollbar macht und abschneidet. Bei wenigen Eintraegen waere es schaedlich,
+  // weil lange Namen wie "konservatives Sanierungsszenario (2045)" nicht in eine
+  // halbe Spalte passen und in die Nachbarspalte laufen.
+  if (legendeEintraege > 8) {
+    l.legend.entrywidthmode = 'fraction';
+    l.legend.entrywidth = 0.5;
+  }
   l.margin = { t: 8, l: 40, r: 8, b: 8 };
   if (l.yaxis) { l.yaxis.title = ''; l.yaxis.tickfont = { size: 9 }; }
   if (l.xaxis) { l.xaxis.tickfont = { size: 9 }; }
@@ -107,8 +116,9 @@ function onResize(redraw) {
 
 let aktuellesSzenario = 'Fortschreibung';
 function draw() {
-  Plotly.react('chart', buildTraces(aktuellesSzenario === 'Fortschreibung' ? dataFS : dataO45),
-               responsive(layout), {responsive: true, displayModeBar: false});
+  const traces = buildTraces(aktuellesSzenario === 'Fortschreibung' ? dataFS : dataO45);
+  Plotly.react('chart', traces, responsive(layout, traces.length),
+               {responsive: true, displayModeBar: false});
 }
 function showScenario(sz) {
   aktuellesSzenario = sz;
