@@ -68,7 +68,9 @@ function layoutFuer(gruppe) {
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showline: true, linecolor: '#595959', linewidth: 1, zeroline: false },
     yaxis: { showgrid: false, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
-              showline: true, linecolor: '#595959', linewidth: 1 },
+              showline: true, linecolor: '#595959', linewidth: 1,
+              tickmode: 'array', tickvals: [gruppe.achse],
+              ticktext: ['<b>' + gruppe.achse + '</b>'] },
     legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom',
                font: { size: 10 }, traceorder: 'normal' },
     plot_bgcolor: '#fff', paper_bgcolor: '#fff'
