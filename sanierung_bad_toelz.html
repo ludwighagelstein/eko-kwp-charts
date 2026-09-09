@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8">
 <title>Sanierungsszenario Bad Tölz</title>
-<link rel="alternate" type="application/json+oembed" href="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.oembed.json">
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
   html, body { height: 100%; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 800px;
+  body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 1000px;
     background: #fff; color: #222; display: flex; flex-direction: column; }
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
@@ -40,14 +39,20 @@ const traceO45 = { x: years, y: o45, type: 'bar', name: 'Sanierungsszenario O45'
 const layout = {
   barmode: 'group',
   font: { family: 'Segoe UI, Arial, sans-serif', size: 13, color: '#333' },
-  margin: { t: 140, l: 70, r: 20, b: 60 },
+  // Legende und Reduktionstext rechts neben die Saeulen statt darueber: der
+  // frueher noetige obere Rand von 140 px liess im flachen StoryMaps-Block nur
+  // ~95 px fuer die Saeulen uebrig.
+  // Fester rechter Rand: die Legende wuerde sich per automargin selbst Platz
+  // verschaffen, die Annotation darunter nicht -- ohne den Rand wird ihr Text
+  // am Blockrand abgeschnitten.
+  margin: { t: 10, l: 70, r: 250, b: 10 },
   xaxis: { type: 'linear', tickmode: 'array', tickvals: years, ticktext: years.map(String),
-            tickangle: -30, automargin: true },
+            tickangle: 0, automargin: true },
   yaxis: { title: 'Nutzenergie [MWh]', gridcolor: '#eee', zeroline: false, tickformat: ',.0f' },
-  legend: { orientation: 'h', y: 1.04, x: 0 },
+  legend: { orientation: 'v', x: 1, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 11 } },
   annotations: [
-    { xref: 'paper', yref: 'paper', x: 1, y: 1.16, xanchor: 'right', yanchor: 'bottom', showarrow: false,
-       align: 'right', font: { size: 12, color: '#333' },
+    { xref: 'paper', yref: 'paper', x: 1.005, y: 0.55, xanchor: 'left', yanchor: 'top', showarrow: false,
+       align: 'left', font: { size: 11, color: '#333' },
        text: ["Fortschreibung 2023\u21922045: -33,109 MWh (-19 %)", "O45 2023\u21922045: -52,082 MWh (-30 %)"].join('<br>') }
   ],
   plot_bgcolor: '#fff', paper_bgcolor: '#fff'
