@@ -82,11 +82,14 @@ function responsive(base, legendeEintraege) {
   if (window.innerWidth >= NARROW_PX) return base;
   const l = JSON.parse(JSON.stringify(base));
   const gedrehteTicks = !!(l.xaxis && l.xaxis.tickangle);
+  const traceorder = base.legend && base.legend.traceorder;
   l.legend = { orientation: 'h', x: 0, xanchor: 'left', yanchor: 'top',
                font: { size: 9 }, tracegroupgap: 2,
                // Gedrehte Achsenbeschriftungen brauchen unter dem Diagramm
                // Platz; eine Legende direkt darunter landet sonst mitten drin.
                y: gedrehteTicks ? -0.5 : -0.12 };
+  // l.legend wird komplett ersetzt -- eine gesetzte Reihenfolge mitnehmen.
+  if (traceorder) l.legend.traceorder = traceorder;
   // Zwei Spalten (entrywidth als Bruchteil der Legendenbreite) nur bei vielen
   // Eintraegen: einspaltig wird die Legende dann so hoch, dass Plotly sie
   // scrollbar macht und abschneidet. Bei wenigen Eintraegen waere es schaedlich,

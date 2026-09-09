@@ -52,13 +52,14 @@ const gesamtbedarf = 176.4;
 const konservativ = 143.2;
 const ambitioniert = 124.3;
 
-const istWirt = ist.map((v, i) => v + wirt[i]);
-
+// Die y-Werte sind bereits Zuwaechse, das Stapeln uebernimmt barmode 'stack'.
+// Nicht ueber feste base-Werte stapeln: beim Ausblenden einer Reihe ueber die
+// Legende behielten die darueberliegenden ihren Sockel und es blieb ein Loch.
 const traceIst = { x: labels, y: ist, customdata: ist, type: 'bar', name: 'Ist 2023', width: 0.5,
   marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2023: %{customdata:.1f} GWh/a<extra></extra>' };
-const traceWirt = { x: labels, y: wirt, base: ist, customdata: wirt, type: 'bar', name: 'wirtschaftliches Potenzial', width: 0.5,
+const traceWirt = { x: labels, y: wirt, customdata: wirt, type: 'bar', name: 'wirtschaftliches Potenzial', width: 0.5,
   marker: { color: '#92D050' }, hovertemplate: '%{x}<br>wirtschaftliches Potenzial: %{customdata:.1f} GWh/a<extra></extra>' };
-const traceTech = { x: labels, y: techx, base: istWirt, customdata: techx, type: 'bar', name: 'technisches Potenzial', width: 0.5,
+const traceTech = { x: labels, y: techx, customdata: techx, type: 'bar', name: 'technisches Potenzial', width: 0.5,
   marker: { color: '#D7E4BD' }, hovertemplate: '%{x}<br>technisches Potenzial: %{customdata:.1f} GWh/a<extra></extra>' };
 
 const lineShapes = [
@@ -73,7 +74,7 @@ const legendLines = [
 ];
 
 const layout = {
-  barmode: 'overlay',
+  barmode: 'stack',
   font: { family: 'Segoe UI, Arial, sans-serif', size: 13, color: '#333' },
   margin: { t: 10, l: 60, r: 10, b: 10 },
   // 45 Grad gedreht: waagrecht ueberlappen die langen Energietraeger-Namen bei
@@ -82,7 +83,10 @@ const layout = {
             tickfont: { size: 10 } },
   yaxis: { title: 'Nutzenergie [GWh/a]', gridcolor: '#eee', zeroline: false,
             rangemode: 'nonnegative', showline: true, linecolor: '#595959', linewidth: 1 },
-  legend: { orientation: 'v', x: 1, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 11 } },
+  // barmode 'stack' dreht die Legendenreihenfolge sonst um, dann stehen die
+  // Referenzlinien vor 'Ist 2023'.
+  legend: { orientation: 'v', x: 1, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 11 },
+             traceorder: 'normal' },
   shapes: lineShapes,
   plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };
@@ -94,11 +98,14 @@ function responsive(base, legendeEintraege) {
   if (window.innerWidth >= NARROW_PX) return base;
   const l = JSON.parse(JSON.stringify(base));
   const gedrehteTicks = !!(l.xaxis && l.xaxis.tickangle);
+  const traceorder = base.legend && base.legend.traceorder;
   l.legend = { orientation: 'h', x: 0, xanchor: 'left', yanchor: 'top',
                font: { size: 9 }, tracegroupgap: 2,
                // Gedrehte Achsenbeschriftungen brauchen unter dem Diagramm
                // Platz; eine Legende direkt darunter landet sonst mitten drin.
                y: gedrehteTicks ? -0.5 : -0.12 };
+  // l.legend wird komplett ersetzt -- eine gesetzte Reihenfolge mitnehmen.
+  if (traceorder) l.legend.traceorder = traceorder;
   // Zwei Spalten (entrywidth als Bruchteil der Legendenbreite) nur bei vielen
   // Eintraegen: einspaltig wird die Legende dann so hoch, dass Plotly sie
   // scrollbar macht und abschneidet. Bei wenigen Eintraegen waere es schaedlich,
