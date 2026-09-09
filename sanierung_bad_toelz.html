@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Sanierungsszenario Bad Tölz</title>
+<link rel="alternate" type="application/json+oembed" href="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.oembed.json">
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
   html, body { height: 100%; }
@@ -11,7 +12,7 @@
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
   .header p { font-size: 13px; margin: 0; color: #555; }
-  #chart { width: 100%; flex: 1 1 auto; min-height: 730px; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 720px; }
   .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
   .toggle { padding: 0 30px 8px 30px; flex: none; }
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
@@ -53,19 +54,6 @@ const layout = {
 };
 
 Plotly.newPlot('chart', [traceFort, traceO45], layout, {responsive: true, displayModeBar: false});
-</script>
-<script>
-(function () {
-  if (window.parent === window) return;
-  function report() {
-    window.parent.postMessage(
-      { sentinel: 'amp', type: 'embed-size', height: Math.ceil(document.documentElement.scrollHeight) },
-      '*');
-  }
-  window.addEventListener('load', report);
-  window.addEventListener('resize', report);
-  report();
-})();
 </script>
 </body>
 </html>

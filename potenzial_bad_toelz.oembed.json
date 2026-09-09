@@ -1,0 +1,8 @@
+{
+  "type": "rich",
+  "version": "1.0",
+  "provider_name": "EWO-Kompetenzzentrum Energie EKO e.V.",
+  "width": 800,
+  "height": 920,
+  "html": "<iframe src=\"https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html\" width=\"800\" height=\"920\" style=\"border:0\" loading=\"lazy\"></iframe>"
+}
