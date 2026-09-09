@@ -17,6 +17,19 @@
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
     border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
   .toggle button.active { background: #1D4B8F; color: #fff; }
+
+  /* Schmale Bloecke (StoryMaps auf dem Handy): dort ist der Block nur rund
+     330 px breit und entsprechend flach. Kopf und Raender schrumpfen, damit
+     vom knappen Platz moeglichst viel beim Diagramm ankommt. */
+  @media (max-width: 620px) {
+    .header { padding: 10px 12px 2px 12px; }
+    .header h1 { font-size: 15px; }
+    .header p { font-size: 11px; }
+    .toggle { padding: 0 12px 6px 12px; }
+    .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
+    .footer { padding: 2px 12px 8px 12px; font-size: 9px; }
+    #chart { min-height: 200px; }
+  }
 </style>
 </head>
 <body>
@@ -58,7 +71,41 @@ const layout = {
   plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };
 
-Plotly.newPlot('chart', [traceFort, traceO45], layout, {responsive: true, displayModeBar: false});
+
+const NARROW_PX = 620;
+
+function responsive(base) {
+  if (window.innerWidth >= NARROW_PX) return base;
+  const l = JSON.parse(JSON.stringify(base));
+  l.legend = { orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top',
+               font: { size: 9 }, tracegroupgap: 2 };
+  l.margin = { t: 8, l: 40, r: 8, b: 8 };
+  if (l.yaxis) { l.yaxis.title = ''; l.yaxis.tickfont = { size: 9 }; }
+  if (l.xaxis) { l.xaxis.tickfont = { size: 9 }; }
+  // Annotationen sitzen breit rechts im Rand; schmal gibt es den nicht mehr,
+  // also unter die Legende. Ohne das wuerden sie am Blockrand abgeschnitten.
+  if (l.annotations) l.annotations.forEach(a => {
+    a.font = { size: 9 };
+    a.x = 0; a.xanchor = 'left'; a.y = -0.34; a.yanchor = 'top'; a.align = 'left';
+  });
+  return l;
+}
+
+// Beim Drehen des Geraets bzw. Groessenwechsel neu aufbauen.
+function onResize(redraw) {
+  let last = window.innerWidth >= NARROW_PX;
+  window.addEventListener('resize', () => {
+    const now = window.innerWidth >= NARROW_PX;
+    if (now !== last) { last = now; redraw(); }
+  });
+}
+
+function draw() {
+  Plotly.react('chart', [traceFort, traceO45], responsive(layout),
+               {responsive: true, displayModeBar: false});
+}
+draw();
+onResize(draw);
 </script>
 </body>
 </html>
