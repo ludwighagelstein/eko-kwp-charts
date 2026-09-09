@@ -81,8 +81,12 @@ const NARROW_PX = 620;
 function responsive(base) {
   if (window.innerWidth >= NARROW_PX) return base;
   const l = JSON.parse(JSON.stringify(base));
+  // entrywidth 0.5 als Bruchteil der Legendenbreite = zwei Spalten. Einspaltig
+  // wird die Legende bei 14 Eintraegen so hoch, dass Plotly ihr einen eigenen
+  // Scrollbalken verpasst und die letzten Eintraege abschneidet.
   l.legend = { orientation: 'h', x: 0, xanchor: 'left', y: -0.12, yanchor: 'top',
-               font: { size: 9 }, tracegroupgap: 2 };
+               font: { size: 9 }, tracegroupgap: 2,
+               entrywidthmode: 'fraction', entrywidth: 0.5 };
   l.margin = { t: 8, l: 40, r: 8, b: 8 };
   if (l.yaxis) { l.yaxis.title = ''; l.yaxis.tickfont = { size: 9 }; }
   if (l.xaxis) { l.xaxis.tickfont = { size: 9 }; }
