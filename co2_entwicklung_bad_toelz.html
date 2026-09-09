@@ -11,7 +11,7 @@
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
   .header p { font-size: 13px; margin: 0; color: #555; }
-  #chart { width: 100%; flex: 1 1 auto; min-height: 420px; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 525px; }
   .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
   .toggle { padding: 0 30px 8px 30px; flex: none; }
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
@@ -59,6 +59,19 @@ function showScenario(sz) {
   document.getElementById('btn-o45').classList.toggle('active', sz === 'O45');
   Plotly.react('chart', buildTraces(sz === 'Fortschreibung' ? dataFS : dataO45), layout, {responsive: true, displayModeBar: false});
 }
+</script>
+<script>
+(function () {
+  if (window.parent === window) return;
+  function report() {
+    window.parent.postMessage(
+      { sentinel: 'amp', type: 'embed-size', height: Math.ceil(document.documentElement.scrollHeight) },
+      '*');
+  }
+  window.addEventListener('load', report);
+  window.addEventListener('resize', report);
+  report();
+})();
 </script>
 </body>
 </html>
