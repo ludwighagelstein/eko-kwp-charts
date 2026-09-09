@@ -16,3 +16,6 @@ https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html
 
 https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
+
+https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.html" width="100%" height="750" style="border:0" loading="lazy"></iframe>
