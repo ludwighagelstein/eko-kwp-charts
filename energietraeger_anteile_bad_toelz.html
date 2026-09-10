@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<!-- Ohne diese Zeile nehmen mobile Browser 980 px Layoutbreite an und skalieren
+     die fertige Seite herunter: das Desktop-Layout erscheint winzig, und weder
+     die Media-Query noch der Schmal-Zweig greifen, weil innerWidth 980 bleibt. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Anteile der Energieträger Bad Tölz</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  body { font-family: 'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 1000px;
+    background: #fff; color: #222; display: flex; flex-direction: column; }
+  .header { padding: 20px 30px 4px 30px; flex: none; }
+  .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
+  .header p { font-size: 13px; margin: 0; color: #555; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 400px; }
+  .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
+  .toggle { padding: 0 30px 8px 30px; flex: none; }
+  .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
+    border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
+  .toggle button.active { background: #1D4B8F; color: #fff; }
+
+  /* Nur fuer Screenreader: unsichtbar, aber im Zugaenglichkeitsbaum. */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Tastaturfokus auf den Legendeneintraegen. Plotly zeichnet dort reines SVG
+     ohne Rahmen; der Fokus waere sonst unsichtbar (WCAG 2.4.7). Der Rahmen
+     kommt auf das unsichtbare Klickfeld, das Plotly ueber jeden Eintrag legt. */
+  g.traces:focus { outline: none; }
+  g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
+
+  /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
+     nicht hoeher wird als vor der Datentabelle. Bewusst als Textfluss und
+     nicht als Flexbox mit space-between: die schiebt den Schalter an den
+     rechten Rand und braucht dadurch die volle Breite beider Teile. Zwischen
+     etwa 620 und 760 px Blockbreite reicht die nicht, die Zeile brach um und
+     die Fusszeile wurde 17 px hoeher. Im Textfluss haengt der Schalter direkt
+     hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
+     wirklich kein Platz mehr ist. */
+  .footer-zeile { display: block; }
+  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
+    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
+  .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
+  .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
+    white-space: nowrap; }
+  .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
+  .tabelle th[scope="row"] { text-align: left; }
+  .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
+  /* Mittlere Breiten (schmaler Einbettungsblock, Tablet): nur die Seitenraender
+     schrumpfen, Schriftgroessen bleiben. Grund ist die Fusszeile -- bei 30 px
+     Rand reicht die Breite fuer Quellenangabe und Tabellenschalter knapp nicht
+     mehr, die Zeile bricht um und kostet 15 px Diagrammhoehe. Im
+     Kuchendiagramm, das die Hoehe am knappsten braucht, entstand daraus in
+     StoryMaps ein Scrollbalken. Muss VOR dem 620-px-Block stehen: der setzt
+     dieselben Eigenschaften und soll darunter gewinnen. */
+  @media (max-width: 760px) {
+    .header { padding-left: 12px; padding-right: 12px; }
+    .toggle { padding-left: 12px; padding-right: 12px; }
+    .footer { padding-left: 12px; padding-right: 12px; }
+  }
+
+  /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
+     Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
+     die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
+     embed_snippet(). */
+  @media (max-width: 620px) {
+    .header { padding: 10px 12px 2px 12px; }
+    .header h1 { font-size: 15px; }
+    .header p { font-size: 11px; }
+    .toggle { padding: 0 12px 6px 12px; }
+    .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
+    .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
+    .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1 id="titel">Bad Tölz: Anteile der Energieträger 2023</h1>
+  <p>Verteilung des Wärmeverbrauchs auf die Energieträger [GWh/a]</p>
+</div>
+<div class="toggle" role="group" aria-label="Bezugsgröße wählen">
+  <button id="btn-endenergie" class="active" aria-pressed="true" onclick="zeigeVariante(&#39;endenergie&#39;)">Endenergieverbrauch</button>
+  <button id="btn-nutzenergie" aria-pressed="false" onclick="zeigeVariante(&#39;nutzenergie&#39;)">Nutzwärmeverbrauch</button>
+</div>
+<p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
+<div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
+<div class="footer">
+  <div class="footer-zeile">
+    <span>Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
+            onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
+  </div>
+  <div id="datentabelle" class="tabelle" hidden><div id="tab-endenergie"><table><caption>Endenergieverbrauch 2023 nach Energieträger – in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>16,58</td><td>8,1</td></tr><tr><th scope="row">Solarthermie</th><td>2,91</td><td>1,4</td></tr><tr><th scope="row">Fernwärme EE</th><td>12,78</td><td>6,2</td></tr><tr><th scope="row">Fernwärme fossil</th><td>6,81</td><td>3,3</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,76</td><td>0,9</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>0,26</td><td>0,1</td></tr><tr><th scope="row">Heizstrom</th><td>0,22</td><td>0,1</td></tr><tr><th scope="row">BHKW-Wärme</th><td>5,12</td><td>2,5</td></tr><tr><th scope="row">Flüssiggas</th><td>1,47</td><td>0,7</td></tr><tr><th scope="row">Erdgas</th><td>108,24</td><td>52,6</td></tr><tr><th scope="row">Kohle</th><td>0,62</td><td>0,3</td></tr><tr><th scope="row">Heizöl</th><td>48,88</td><td>23,8</td></tr><tr><th scope="row">Summe</th><td>205,66</td><td>100,0</td></tr></tbody></table></div><div id="tab-nutzenergie" hidden><table><caption>Nutzwärmeverbrauch 2023 nach Energieträger – in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>0,00</td><td>5,1</td></tr><tr><th scope="row">Solarthermie</th><td>0,00</td><td>6,8</td></tr><tr><th scope="row">Biogas-Wärme</th><td>0,00</td><td>5,7</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>0,00</td><td>20,3</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>0,00</td><td>27,0</td></tr><tr><th scope="row">Heizstrom</th><td>0,00</td><td>6,8</td></tr><tr><th scope="row">BHKW-Wärme</th><td>0,00</td><td>5,7</td></tr><tr><th scope="row">Flüssiggas</th><td>0,00</td><td>5,7</td></tr><tr><th scope="row">Erdgas</th><td>0,00</td><td>5,7</td></tr><tr><th scope="row">Kohle</th><td>0,00</td><td>5,4</td></tr><tr><th scope="row">Heizöl</th><td>0,00</td><td>5,7</td></tr><tr><th scope="row">Summe</th><td>0,01</td><td>100,0</td></tr></tbody></table></div></div>
+</div>
+<script>
+const varianten = [{"key": "endenergie", "titel": "Endenergieverbrauch", "labels": ["Energieholz", "Solarthermie", "Fernw\u00e4rme EE", "Fernw\u00e4rme fossil", "Luft-Wasser-WP", "Oberfl. Geothermie", "Heizstrom", "BHKW-W\u00e4rme", "Fl\u00fcssiggas", "Erdgas", "Kohle", "Heiz\u00f6l"], "werte": [16.58, 2.91, 12.78, 6.81, 1.76, 0.26, 0.22, 5.12, 1.47, 108.24, 0.62, 48.88], "farben": ["#6FAC46", "#FFCF00", "#F39C12", "#BB5C07", "#326F90", "#83ACFC", "#1225A0", "#B22222", "#887894", "#999999", "#7C350B", "#4A4A4A"]}, {"key": "nutzenergie", "titel": "Nutzw\u00e4rmeverbrauch", "labels": ["Energieholz", "Solarthermie", "Biogas-W\u00e4rme", "Luft-Wasser-WP", "Oberfl. Geothermie", "Heizstrom", "BHKW-W\u00e4rme", "Fl\u00fcssiggas", "Erdgas", "Kohle", "Heiz\u00f6l"], "werte": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], "farben": ["#6FAC46", "#FFCF00", "#00A24D", "#326F90", "#83ACFC", "#1225A0", "#B22222", "#887894", "#999999", "#7C350B", "#4A4A4A"]}];
+let aktuelleVariante = varianten[0].key;
+
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
+
+// Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
+// passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
+// missverstaendlich (gedrueckt = sichtbar oder ausgeblendet?).
+function legendeEigenschaftenSetzen(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    eintrag.setAttribute('tabindex', '0');
+    eintrag.setAttribute('role', 'switch');
+    const text = eintrag.querySelector('text.legendtext');
+    if (text) eintrag.setAttribute('aria-label',
+      text.getAttribute('data-unformatted') || text.textContent);
+  });
+}
+
+// Zustand aus der Darstellung ablesen statt aus den Daten: Plotly setzt einen
+// abgeschalteten Legendeneintrag auf Deckkraft 0.5. Ueber die Datenspuren ginge
+// es nicht verlaesslich, weil die Reihenfolge der Legende nicht der Reihenfolge
+// in gd.data entspricht -- gestapelte Diagramme drehen sie um.
+function legendeZustandNachfuehren(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const sichtbar = parseFloat(eintrag.style.opacity || '1') > 0.9;
+    eintrag.setAttribute('aria-checked', sichtbar ? 'true' : 'false');
+  });
+}
+
+// Die Grafik selbst ist fuer Screenreader stumm: Plotly zeichnet reines SVG
+// ohne Rollen. Die Achsen-, Titel- und Datenbeschriftungen darin wuerden als
+// zusammenhanglose Wortfolge vorgelesen ('2023 2030 ... 10.000 20.000 ...').
+// Deshalb alles ausblenden, was rein grafisch ist; die Werte stehen in der
+// Datentabelle, die Beschriftungen als echter Text im Seitenkopf.
+//
+// aria-hidden muss dabei auf die Geschwister der Legende gesetzt werden, nicht
+// auf ihre Vorfahren: ein 'aria-hidden=false' im Inneren hebt ein
+// 'aria-hidden=true' weiter oben nicht wieder auf.
+function grafikAusZugaenglichkeitsbaum(gd) {
+  const legende = gd.querySelector('g.legend');
+  const legendenEbene = legende && legende.closest('svg.main-svg');
+  gd.querySelectorAll('svg.main-svg').forEach(svg => {
+    if (svg !== legendenEbene) { svg.setAttribute('aria-hidden', 'true'); return; }
+    [...svg.children].forEach(kind => {
+      if (kind !== legende.parentElement) { kind.setAttribute('aria-hidden', 'true'); return; }
+      // In dieser Ebene (infolayer) sitzen neben der Legende die Achsen- und
+      // Diagrammtitel sowie die Annotationen.
+      [...kind.children].forEach(enkel => {
+        if (enkel !== legende) enkel.setAttribute('aria-hidden', 'true');
+      });
+    });
+  });
+}
+
+function a11yAnwenden(gd) {
+  legendeEigenschaftenSetzen(gd);
+  legendeZustandNachfuehren(gd);
+  grafikAusZugaenglichkeitsbaum(gd);
+}
+
+function zugaenglichMachen(gd) {
+  a11yAnwenden(gd);
+  if (gd._a11yVerdrahtet) return;
+  gd._a11yVerdrahtet = true;
+
+  gd.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const eintrag = ev.target.closest && ev.target.closest('g.traces');
+    if (!eintrag) return;
+    ev.preventDefault();      // die Leertaste wuerde sonst die Seite scrollen
+    const ziel = eintrag.querySelector('rect.legendtoggle') || eintrag;
+    ['mousedown', 'mouseup', 'click'].forEach(art => ziel.dispatchEvent(
+      new MouseEvent(art, { bubbles: true, cancelable: true, view: window })));
+  });
+
+  // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
+  // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
+  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
+  // Animation.
+  gd.on('plotly_afterplot', () => a11yAnwenden(gd));
+}
+
+
+function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  ziel.hidden = !auf;
+}
+
+
+// Plotly zeichnet fuer Kuchenstuecke ein Quadrat als Legendensymbol und kennt
+// keine Option fuer die Form. Beim Balkendiagramm ging das nur ueber leere
+// Punkt-Spuren; hier genuegt es, den gezeichneten Pfad nachtraeglich durch
+// einen Kreis zu ersetzen -- Position, Farbe und Klickverhalten bleiben
+// Plotlys. Muss nach jedem Neuzeichnen wieder laufen, weil Plotly die Legende
+// dabei neu aufbaut.
+function legendenSymboleRund(gd) {
+  const r = 5.5;
+  const kreis = `M0,-${r}A${r},${r} 0 1,1 0,${r}A${r},${r} 0 1,1 0,-${r}Z`;
+  gd.querySelectorAll('path.legendpie').forEach(pfad => {
+    pfad.setAttribute('d', kreis);
+    // Der weisse Trennstrich zwischen den Stuecken gehoert nicht ans Symbol.
+    pfad.style.strokeWidth = '0';
+  });
+}
+
+// Weiches Aus-/Einblenden. Plotly wuerde das Stueck sofort entfernen und alle
+// Prozentwerte neu berechnen -- ein sichtbarer Sprung. Stattdessen laeuft der
+// Wert des Stuecks auf Null, die uebrigen Anteile wachsen dabei von selbst
+// mit. Erst am Ende wird Plotlys eigener Zustand (hiddenlabels) gesetzt: nur
+// dann graut der Legendeneintrag aus und das Stueck ist wirklich weg.
+function kuchenLegendeVerdrahten(gd) {
+  if (gd._kuchenVerdrahtet) return;
+  gd._kuchenVerdrahtet = true;
+
+  gd.on('plotly_legendclick', ev => {
+    const labels = gd.data[0].labels;
+    const i = labels.indexOf(ev.label);
+    if (i < 0) return;
+
+    const verborgen = gd._verborgen || (gd._verborgen = {});
+    const ausblenden = !verborgen[ev.label];
+    verborgen[ev.label] = ausblenden;
+    const versteckteListe = () => labels.filter(l => verborgen[l]);
+
+    const marken = gd._marken || (gd._marken = {});
+    marken[i] = (marken[i] || 0) + 1;
+    const meine = marken[i];
+
+    const voll = gd._urwerte[i];
+    const lauf = () => {
+      const von = ausblenden ? Number(gd.data[0].values[i]) : 0;
+      const start = performance.now();
+      function schritt() {
+        if (marken[i] !== meine) return;   // neuerer Klick hat uebernommen
+        const t = Math.min(1, (performance.now() - start) / ANIM_DAUER);
+        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const werte = gd.data[0].values.slice();
+        werte[i] = von + ((ausblenden ? 0 : voll) - von) * e;
+        Plotly.restyle(gd, { values: [werte] }, [0]);
+        if (t < 1) { setTimeout(schritt, 16); return; }
+        Plotly.relayout(gd, { hiddenlabels: versteckteListe() });
+      }
+      schritt();
+    };
+
+    if (ausblenden) {
+      lauf();
+    } else {
+      // Einblenden: erst aus hiddenlabels nehmen und auf Null setzen, sonst
+      // gaebe es nichts zu animieren -- und das Stueck blitzte in voller
+      // Groesse auf, bevor die Animation greift.
+      const werte = gd.data[0].values.slice();
+      werte[i] = 0;
+      Plotly.relayout(gd, { hiddenlabels: versteckteListe() })
+        .then(() => Plotly.restyle(gd, { values: [werte] }, [0]))
+        .then(lauf);
+    }
+    return false;
+  });
+}
+
+
+function layoutFuer(schmal) {
+  return {
+    font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
+    // automargin holt sich den Platz fuer die aussen stehenden Prozentwerte
+    // selbst; ein fester Rand wuerde den Kuchen unnoetig klein halten.
+    margin: schmal ? { t: 6, l: 6, r: 6, b: 6 } : { t: 10, l: 10, r: 10, b: 10 },
+    // Legende rechts neben dem Kuchen, schmal darunter -- wie in den uebrigen
+    // interaktiven Diagrammen. Unten ist sie hier klar schlechter: Plotly
+    // begrenzt die Breite einer waagrechten Legende auf die Zeichenflaeche
+    // (gemessen 543 px bei 880 px Block), dreizehn Energietraeger brauchen
+    // dort fuenf Zeilen und der Kuchen schrumpft auf 348 px. Rechts als eine
+    // Spalte bleiben 470 px -- ein Drittel mehr Durchmesser. Die Bildfassung
+    // (fig_energietraeger_kuchen) setzt sie dagegen darunter, weil sie mehr
+    // Hoehe als Breite hat.
+    legend: schmal
+      ? { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.02, yanchor: 'top',
+           font: { size: 9 }, tracegroupgap: 2 }
+      : { orientation: 'v', x: 1.02, xanchor: 'left', y: 0.5, yanchor: 'middle',
+           font: { size: 13 } },
+    separators: ',.', paper_bgcolor: '#fff', plot_bgcolor: '#fff'
+  };
+}
+
+function spurFuer(v, schmal) {
+  return {
+    type: 'pie', labels: v.labels, values: v.werte,
+    marker: { colors: v.farben, line: { color: '#fff', width: 1 } },
+    // sort: false haelt die Reihenfolge der Excel-Spalten (erneuerbar zuerst),
+    // direction/rotation lassen den Kuchen wie in Infogram oben beginnen.
+    sort: false, direction: 'clockwise', rotation: 0,
+    // texttemplate statt textinfo 'percent': Plotly schreibt sonst drei
+    // signifikante Stellen ('0,101%' statt '0,1%').
+    // Schmal ist fuer aussen stehende Werte kein Platz - dort tragen Legende,
+    // Tippen (Hover) und die Datentabelle die Zahlen.
+    textinfo: schmal ? 'none' : 'percent',
+    texttemplate: schmal ? undefined : '%{percent:.1%}',
+    textposition: 'outside', automargin: true,
+    hovertemplate: '%{label}: %{value:.2f} GWh/a (%{percent:.1%})<extra></extra>'
+  };
+}
+
+function draw() {
+  const schmal = window.innerWidth < 620;
+  const v = varianten.find(x => x.key === aktuelleVariante);
+  const gd = document.getElementById('chart');
+  // Beim Wechsel der Bezugsgroesse mit frischem Zustand anfangen: die
+  // ausgeblendeten Stuecke der anderen Fassung sollen nicht mitwandern.
+  gd._verborgen = {};
+  gd._urwerte = v.werte.slice();
+  const l = layoutFuer(schmal);
+  l.hiddenlabels = [];
+  return Plotly.react('chart', [spurFuer(v, schmal)], l,
+                      {responsive: true, displayModeBar: false})
+    .then(() => {
+      kuchenLegendeVerdrahten(gd);
+      legendenSymboleRund(gd);
+      zugaenglichMachen(gd);
+      if (!gd._symbolNachgefuehrt) {
+        gd._symbolNachgefuehrt = true;
+        // Plotly baut die Legende bei jedem Neuzeichnen neu auf - die runden
+        // Symbole waeren sonst nach dem ersten Klick wieder Quadrate.
+        gd.on('plotly_afterplot', () => legendenSymboleRund(gd));
+      }
+    });
+}
+
+function zeigeVariante(key) {
+  aktuelleVariante = key;
+  varianten.forEach(v => {
+    const knopf = document.getElementById('btn-' + v.key);
+    const aktiv = v.key === key;
+    knopf.classList.toggle('active', aktiv);
+    // aria-pressed zusaetzlich zur Klasse: die Farbumkehr allein sagt einem
+    // Screenreader nicht, welche Bezugsgroesse gerade aktiv ist.
+    knopf.setAttribute('aria-pressed', aktiv ? 'true' : 'false');
+    document.getElementById('tab-' + v.key).hidden = !aktiv;
+  });
+  draw();
+}
+
+draw();
+let warSchmal = window.innerWidth < 620;
+window.addEventListener('resize', () => {
+  const jetzt = window.innerWidth < 620;
+  if (jetzt !== warSchmal) { warSchmal = jetzt; draw(); }
+});
+</script>
+</body>
+</html>

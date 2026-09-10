@@ -34,10 +34,16 @@
   g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
 
   /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
-     nicht hoeher wird als vor der Datentabelle. */
-  .footer-zeile { display: flex; flex-wrap: wrap; gap: 2px 16px; justify-content: space-between; }
+     nicht hoeher wird als vor der Datentabelle. Bewusst als Textfluss und
+     nicht als Flexbox mit space-between: die schiebt den Schalter an den
+     rechten Rand und braucht dadurch die volle Breite beider Teile. Zwischen
+     etwa 620 und 760 px Blockbreite reicht die nicht, die Zeile brach um und
+     die Fusszeile wurde 17 px hoeher. Im Textfluss haengt der Schalter direkt
+     hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
+     wirklich kein Platz mehr ist. */
+  .footer-zeile { display: block; }
   .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
-    border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
   .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
   .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
   .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
@@ -46,6 +52,19 @@
   .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
   .tabelle th[scope="row"] { text-align: left; }
   .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
+  /* Mittlere Breiten (schmaler Einbettungsblock, Tablet): nur die Seitenraender
+     schrumpfen, Schriftgroessen bleiben. Grund ist die Fusszeile -- bei 30 px
+     Rand reicht die Breite fuer Quellenangabe und Tabellenschalter knapp nicht
+     mehr, die Zeile bricht um und kostet 15 px Diagrammhoehe. Im
+     Kuchendiagramm, das die Hoehe am knappsten braucht, entstand daraus in
+     StoryMaps ein Scrollbalken. Muss VOR dem 620-px-Block stehen: der setzt
+     dieselben Eigenschaften und soll darunter gewinnen. */
+  @media (max-width: 760px) {
+    .header { padding-left: 12px; padding-right: 12px; }
+    .toggle { padding-left: 12px; padding-right: 12px; }
+    .footer { padding-left: 12px; padding-right: 12px; }
+  }
 
   /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
      Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
@@ -59,11 +78,6 @@
     .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
     .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
     .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
-    /* Schmal reicht die Breite nicht fuer Quelle und Schalter nebeneinander;
-       als Textfluss haengt der Schalter hinter der Quellenangabe und kostet
-       nur dann eine Zeile, wenn dort wirklich kein Platz mehr ist. */
-    .footer-zeile { display: block; }
-    .tabelle-schalter { margin-left: 6px; }
   }
 </style>
 <style>
@@ -90,10 +104,10 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Endenergieverbrauch 2023 nach Energieträger – in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>16,6</td><td>8,1</td></tr><tr><th scope="row">Solarthermie</th><td>2,9</td><td>1,4</td></tr><tr><th scope="row">Fernwärme EE</th><td>12,8</td><td>6,2</td></tr><tr><th scope="row">Fernwärme fossil</th><td>6,8</td><td>3,3</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,8</td><td>0,9</td></tr><tr><th scope="row">Oberfl. GT</th><td>0,3</td><td>0,1</td></tr><tr><th scope="row">Heizstrom</th><td>0,2</td><td>0,1</td></tr><tr><th scope="row">BHKW-Wärme</th><td>5,1</td><td>2,5</td></tr><tr><th scope="row">Flüssiggas</th><td>1,5</td><td>0,7</td></tr><tr><th scope="row">Erdgas</th><td>108,2</td><td>52,6</td></tr><tr><th scope="row">Kohle</th><td>0,6</td><td>0,3</td></tr><tr><th scope="row">Heizöl</th><td>48,9</td><td>23,8</td></tr><tr><th scope="row">Summe</th><td>205,7</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2023 nach Sektor – in GWh/a</caption><thead><tr><th scope="col">Sektor</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Kommunal</th><td>2,1</td><td>1,0</td></tr><tr><th scope="row">GHD</th><td>87,3</td><td>42,5</td></tr><tr><th scope="row">private Haushalte</th><td>116,2</td><td>56,5</td></tr><tr><th scope="row">Summe</th><td>205,7</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2023 nach Gebäudetyp – in GWh/a</caption><thead><tr><th scope="col">Gebäudetyp</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Nichtwohngebäude</th><td>89,5</td><td>43,5</td></tr><tr><th scope="row">Wohnen MFH</th><td>63,3</td><td>30,8</td></tr><tr><th scope="row">Wohnen EFH/DHH/RH</th><td>52,9</td><td>25,7</td></tr><tr><th scope="row">Summe</th><td>205,7</td><td>100,0</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Endenergieverbrauch 2023 nach Energieträger – in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>16,6</td><td>8,1</td></tr><tr><th scope="row">Solarthermie</th><td>2,9</td><td>1,4</td></tr><tr><th scope="row">Fernwärme EE</th><td>12,8</td><td>6,2</td></tr><tr><th scope="row">Fernwärme fossil</th><td>6,8</td><td>3,3</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,8</td><td>0,9</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>0,3</td><td>0,1</td></tr><tr><th scope="row">Heizstrom</th><td>0,2</td><td>0,1</td></tr><tr><th scope="row">BHKW-Wärme</th><td>5,1</td><td>2,5</td></tr><tr><th scope="row">Flüssiggas</th><td>1,5</td><td>0,7</td></tr><tr><th scope="row">Erdgas</th><td>108,2</td><td>52,6</td></tr><tr><th scope="row">Kohle</th><td>0,6</td><td>0,3</td></tr><tr><th scope="row">Heizöl</th><td>48,9</td><td>23,8</td></tr><tr><th scope="row">Summe</th><td>205,7</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2023 nach Sektor – in GWh/a</caption><thead><tr><th scope="col">Sektor</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Kommunal</th><td>2,1</td><td>1,0</td></tr><tr><th scope="row">GHD</th><td>87,3</td><td>42,5</td></tr><tr><th scope="row">private Haushalte</th><td>116,2</td><td>56,5</td></tr><tr><th scope="row">Summe</th><td>205,7</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2023 nach Gebäudetyp – in GWh/a</caption><thead><tr><th scope="col">Gebäudetyp</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Nichtwohngebäude</th><td>89,5</td><td>43,5</td></tr><tr><th scope="row">Wohnen MFH</th><td>63,3</td><td>30,8</td></tr><tr><th scope="row">Wohnen EFH/DHH/RH</th><td>52,9</td><td>25,7</td></tr><tr><th scope="row">Summe</th><td>205,7</td><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
-const gruppen = [{"achse": "Energietr\u00e4ger", "eintraege": [{"label": "Energieholz", "wert": 16.58, "farbe": "#6FAC46"}, {"label": "Solarthermie", "wert": 2.91, "farbe": "#FFCF00"}, {"label": "Fernw\u00e4rme EE", "wert": 12.78, "farbe": "#F39C12"}, {"label": "Fernw\u00e4rme fossil", "wert": 6.81, "farbe": "#BB5C07"}, {"label": "Luft-Wasser-WP", "wert": 1.76, "farbe": "#326F90"}, {"label": "Oberfl. GT", "wert": 0.26, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 0.22, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 5.12, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 1.47, "farbe": "#887894"}, {"label": "Erdgas", "wert": 108.24, "farbe": "#999999"}, {"label": "Kohle", "wert": 0.62, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 48.88, "farbe": "#4A4A4A"}]}, {"achse": "Sektor", "eintraege": [{"label": "Kommunal", "wert": 2.12, "farbe": "#00A24D"}, {"label": "GHD", "wert": 87.33, "farbe": "#F39C12"}, {"label": "private Haushalte", "wert": 116.22, "farbe": "#326F90"}]}, {"achse": "Geb\u00e4udetyp", "eintraege": [{"label": "Nichtwohngeb\u00e4ude", "wert": 89.46, "farbe": "#1D4B8F"}, {"label": "Wohnen MFH", "wert": 63.34, "farbe": "#6FAC46"}, {"label": "Wohnen EFH/DHH/RH", "wert": 52.86, "farbe": "#E8C547"}]}];
+const gruppen = [{"achse": "Energietr\u00e4ger", "eintraege": [{"label": "Energieholz", "wert": 16.58, "farbe": "#6FAC46"}, {"label": "Solarthermie", "wert": 2.91, "farbe": "#FFCF00"}, {"label": "Fernw\u00e4rme EE", "wert": 12.78, "farbe": "#F39C12"}, {"label": "Fernw\u00e4rme fossil", "wert": 6.81, "farbe": "#BB5C07"}, {"label": "Luft-Wasser-WP", "wert": 1.76, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 0.26, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 0.22, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 5.12, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 1.47, "farbe": "#887894"}, {"label": "Erdgas", "wert": 108.24, "farbe": "#999999"}, {"label": "Kohle", "wert": 0.62, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 48.88, "farbe": "#4A4A4A"}]}, {"achse": "Sektor", "eintraege": [{"label": "Kommunal", "wert": 2.12, "farbe": "#00A24D"}, {"label": "GHD", "wert": 87.33, "farbe": "#F39C12"}, {"label": "private Haushalte", "wert": 116.22, "farbe": "#326F90"}]}, {"achse": "Geb\u00e4udetyp", "eintraege": [{"label": "Nichtwohngeb\u00e4ude", "wert": 89.46, "farbe": "#1D4B8F"}, {"label": "Wohnen MFH", "wert": 63.34, "farbe": "#6FAC46"}, {"label": "Wohnen EFH/DHH/RH", "wert": 52.86, "farbe": "#E8C547"}]}];
 const OBERGRENZE = 220;
 
 function layoutFuer(gruppe) {

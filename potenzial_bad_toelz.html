@@ -34,10 +34,16 @@
   g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
 
   /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
-     nicht hoeher wird als vor der Datentabelle. */
-  .footer-zeile { display: flex; flex-wrap: wrap; gap: 2px 16px; justify-content: space-between; }
+     nicht hoeher wird als vor der Datentabelle. Bewusst als Textfluss und
+     nicht als Flexbox mit space-between: die schiebt den Schalter an den
+     rechten Rand und braucht dadurch die volle Breite beider Teile. Zwischen
+     etwa 620 und 760 px Blockbreite reicht die nicht, die Zeile brach um und
+     die Fusszeile wurde 17 px hoeher. Im Textfluss haengt der Schalter direkt
+     hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
+     wirklich kein Platz mehr ist. */
+  .footer-zeile { display: block; }
   .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
-    border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
   .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
   .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
   .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
@@ -46,6 +52,19 @@
   .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
   .tabelle th[scope="row"] { text-align: left; }
   .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
+  /* Mittlere Breiten (schmaler Einbettungsblock, Tablet): nur die Seitenraender
+     schrumpfen, Schriftgroessen bleiben. Grund ist die Fusszeile -- bei 30 px
+     Rand reicht die Breite fuer Quellenangabe und Tabellenschalter knapp nicht
+     mehr, die Zeile bricht um und kostet 15 px Diagrammhoehe. Im
+     Kuchendiagramm, das die Hoehe am knappsten braucht, entstand daraus in
+     StoryMaps ein Scrollbalken. Muss VOR dem 620-px-Block stehen: der setzt
+     dieselben Eigenschaften und soll darunter gewinnen. */
+  @media (max-width: 760px) {
+    .header { padding-left: 12px; padding-right: 12px; }
+    .toggle { padding-left: 12px; padding-right: 12px; }
+    .footer { padding-left: 12px; padding-right: 12px; }
+  }
 
   /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
      Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
@@ -59,11 +78,6 @@
     .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
     .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
     .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
-    /* Schmal reicht die Breite nicht fuer Quelle und Schalter nebeneinander;
-       als Textfluss haengt der Schalter hinter der Quellenangabe und kostet
-       nur dann eine Zeile, wenn dort wirklich kein Platz mehr ist. */
-    .footer-zeile { display: block; }
-    .tabelle-schalter { margin-left: 6px; }
   }
 </style>
 </head>
