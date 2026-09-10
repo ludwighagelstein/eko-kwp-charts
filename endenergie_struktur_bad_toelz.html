@@ -78,14 +78,24 @@ function layoutFuer(gruppe) {
   };
 }
 
-function draw() {
+async function draw() {
   const schmal = window.innerWidth < 620;
-  gruppen.forEach((g, i) => {
-    const traces = g.eintraege.map(e => ({
+  await Promise.all(gruppen.map((g, i) => {
+    const balken = g.eintraege.map(e => ({
       x: [e.wert], y: [g.achse], type: 'bar', orientation: 'h', name: e.label,
-      marker: { color: e.farbe }, width: 0.5,
+      marker: { color: e.farbe }, width: 0.5, showlegend: false,
       hovertemplate: e.label + ': %{x:.1f} GWh/a<extra></extra>'
     }));
+    // Runde Legendensymbole: fuer Balken zeichnet Plotly ein Rechteck und kennt
+    // keine Option fuer die Form. Deshalb je Reihe eine leere Punkt-Spur, die
+    // ausschliesslich den Legendeneintrag liefert. Der Klick darauf wird in
+    // legendeVerdrahten() auf die zugehoerige Balken-Spur uebertragen.
+    const legendenPunkte = g.eintraege.map(e => ({
+      x: [null], y: [null], type: 'scatter', mode: 'markers', name: e.label,
+      marker: { symbol: 'circle', size: schmal ? 8 : 11, color: e.farbe },
+      hoverinfo: 'skip', showlegend: true
+    }));
+    const traces = balken.concat(legendenPunkte);
     const l = layoutFuer(g);
     if (schmal) {
       // Schmal ist links kein Platz fuer die Kategorienamen; die stehen dann
@@ -103,9 +113,24 @@ function draw() {
                           font: { size: 10, color: '#1D4B8F' } }];
       l.legend.y = 1.16;
     }
-    Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false});
+    return Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false})
+      .then(() => legendeVerdrahten(document.getElementById('teil' + i), g.eintraege.length));
+  }));
+  await zeichenflaechenAusgleichen();
+}
+
+// Der Legendenklick trifft die Punkt-Spur; ohne diese Verdrahtung bliebe der
+// zugehoerige Balken stehen. Nur einmal je Panel anhaengen, sonst wuerde der
+// Handler bei jedem Neuzeichnen doppelt reagieren.
+function legendeVerdrahten(gd, anzahl) {
+  if (gd._legendeVerdrahtet) return;
+  gd._legendeVerdrahtet = true;
+  gd.on('plotly_legendclick', ev => {
+    const balken = ev.curveNumber - anzahl;
+    if (balken < 0 || balken >= anzahl) return;
+    const sichtbar = gd.data[balken].visible;
+    Plotly.restyle(gd, { visible: sichtbar === false ? true : false }, [balken]);
   });
-  zeichenflaechenAusgleichen();
 }
 
 // Die Legende der Energietraeger braucht mehr Zeilen als die der anderen
