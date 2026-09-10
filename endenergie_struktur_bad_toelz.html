@@ -127,6 +127,13 @@ function layoutFuer(gruppe) {
               ticktext: ['<b>' + gruppe.achse + '</b>'] },
     legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom',
                font: { size: 14 }, traceorder: 'normal' },
+    // Der Strich der letzten Zahl faellt genau auf den rechten Rand der
+    // Zeichenflaeche; dort zeichnet Plotly keine Gitterlinie mehr. Deshalb als
+    // Linie in Gitterfarbe nachziehen -- verhaelt sich wie eine echte
+    // Gitterlinie (gleiches Vorgehen wie beim Jahr 2045 in den Zeitreihen).
+    shapes: [{ type: 'line', xref: 'x', yref: 'paper', layer: 'below',
+                x0: OBERGRENZE, x1: OBERGRENZE, y0: 0, y1: 1,
+                line: { color: '#eee', width: 1 } }],
     separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
   };
 }
