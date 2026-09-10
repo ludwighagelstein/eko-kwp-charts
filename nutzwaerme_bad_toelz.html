@@ -23,6 +23,30 @@
     border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
   .toggle button.active { background: #1D4B8F; color: #fff; }
 
+  /* Nur fuer Screenreader: unsichtbar, aber im Zugaenglichkeitsbaum. */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Tastaturfokus auf den Legendeneintraegen. Plotly zeichnet dort reines SVG
+     ohne Rahmen; der Fokus waere sonst unsichtbar (WCAG 2.4.7). Der Rahmen
+     kommt auf das unsichtbare Klickfeld, das Plotly ueber jeden Eintrag legt. */
+  g.traces:focus { outline: none; }
+  g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
+
+  /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
+     nicht hoeher wird als vor der Datentabelle. */
+  .footer-zeile { display: flex; flex-wrap: wrap; gap: 2px 16px; justify-content: space-between; }
+  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
+    border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
+  .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
+  .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
+    white-space: nowrap; }
+  .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
+  .tabelle th[scope="row"] { text-align: left; }
+  .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
   /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
      Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
      die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
@@ -34,17 +58,31 @@
     .toggle { padding: 0 12px 6px 12px; }
     .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
     .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
+    .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
+    /* Schmal reicht die Breite nicht fuer Quelle und Schalter nebeneinander;
+       als Textfluss haengt der Schalter hinter der Quellenangabe und kostet
+       nur dann eine Zeile, wenn dort wirklich kein Platz mehr ist. */
+    .footer-zeile { display: block; }
+    .tabelle-schalter { margin-left: 6px; }
   }
 </style>
 </head>
 <body>
-<div class="header"><h1>Entwicklung Wärmemix Nutzenergie Bad Tölz</h1><p>Nutzwärmeverbrauch nach Energieträgern 2023–2045 (GWh/a)</p></div>
-<div class="toggle">
-  <button id="btn-fs" class="active" onclick="showScenario('Fortschreibung')">Szenario Fortschreibung</button>
-  <button id="btn-o45" onclick="showScenario('O45')">Szenario O45</button>
+<div class="header"><h1 id="titel">Entwicklung Wärmemix Nutzenergie Bad Tölz</h1><p>Nutzwärmeverbrauch nach Energieträgern 2023–2045 (GWh/a)</p></div>
+<div class="toggle" role="group" aria-label="Szenario wählen">
+  <button id="btn-fs" class="active" aria-pressed="true" onclick="showScenario('Fortschreibung')">Szenario Fortschreibung</button>
+  <button id="btn-o45" aria-pressed="false" onclick="showScenario('O45')">Szenario O45</button>
 </div>
-<div id="chart"></div>
-<div class="footer">Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</div>
+<p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
+<div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
+<div class="footer">
+  <div class="footer-zeile">
+    <span>Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
+            onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
+  </div>
+  <div id="datentabelle" class="tabelle" hidden><div id="tab-fs"><table><caption>Entwicklung Wärmemix Nutzenergie Bad Tölz, Szenario Fortschreibung – in GWh/a</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Heizöl</th><th scope="col">Kohle</th><th scope="col">Erdgas</th><th scope="col">Erfüllung Biotreppe</th><th scope="col">Flüssiggas</th><th scope="col">BHKW-Wärme</th><th scope="col">Fernwärme</th><th scope="col">Heizstrom</th><th scope="col">Energieholz</th><th scope="col">Solarthermie</th><th scope="col">Oberflächennahe Geothermie</th><th scope="col">Luft-Wasser-Wärmepumpe</th><th scope="col">Gesamt</th><th scope="col">fossil</th><th scope="col">erneuerbar</th></tr></thead><tbody><tr><th scope="row">2023</th><td>41,55</td><td>0,50</td><td>92,01</td><td>0,00</td><td>1,25</td><td>4,35</td><td>14,81</td><td>0,22</td><td>12,43</td><td>2,91</td><td>1,03</td><td>5,29</td><td>176,35</td><td>145,33</td><td>31,02</td></tr><tr><th scope="row">2024</th><td>38,13</td><td>0,15</td><td>92,09</td><td>0,00</td><td>0,81</td><td>2,68</td><td>16,78</td><td>0,16</td><td>12,42</td><td>3,00</td><td>1,84</td><td>6,64</td><td>174,69</td><td>139,91</td><td>34,78</td></tr><tr><th scope="row">2025</th><td>34,54</td><td>0,04</td><td>91,29</td><td>0,00</td><td>0,53</td><td>1,65</td><td>18,75</td><td>0,11</td><td>12,41</td><td>3,09</td><td>2,65</td><td>7,99</td><td>173,05</td><td>134,43</td><td>38,61</td></tr><tr><th scope="row">2026</th><td>30,97</td><td>0,01</td><td>89,91</td><td>0,00</td><td>0,35</td><td>1,01</td><td>20,72</td><td>0,08</td><td>12,40</td><td>3,18</td><td>3,46</td><td>9,34</td><td>171,42</td><td>128,91</td><td>42,51</td></tr><tr><th scope="row">2027</th><td>27,50</td><td>0,00</td><td>88,09</td><td>0,00</td><td>0,22</td><td>0,62</td><td>22,70</td><td>0,06</td><td>12,38</td><td>3,27</td><td>4,27</td><td>10,69</td><td>169,80</td><td>123,33</td><td>46,48</td></tr><tr><th scope="row">2028</th><td>23,94</td><td>0,00</td><td>85,07</td><td>1,10</td><td>0,15</td><td>0,38</td><td>24,67</td><td>0,04</td><td>12,37</td><td>3,36</td><td>5,08</td><td>12,04</td><td>168,21</td><td>116,59</td><td>51,61</td></tr><tr><th scope="row">2029</th><td>20,62</td><td>0,00</td><td>81,81</td><td>2,09</td><td>0,10</td><td>0,24</td><td>26,64</td><td>0,03</td><td>12,36</td><td>3,46</td><td>5,89</td><td>13,39</td><td>166,62</td><td>109,92</td><td>56,71</td></tr><tr><th scope="row">2030</th><td>17,55</td><td>0,00</td><td>78,35</td><td>2,97</td><td>0,06</td><td>0,15</td><td>28,61</td><td>0,02</td><td>12,35</td><td>3,56</td><td>6,70</td><td>14,74</td><td>165,05</td><td>103,30</td><td>61,75</td></tr><tr><th scope="row">2031</th><td>14,81</td><td>0,00</td><td>75,10</td><td>3,26</td><td>0,04</td><td>0,09</td><td>30,59</td><td>0,01</td><td>12,34</td><td>3,67</td><td>7,51</td><td>16,09</td><td>163,50</td><td>97,21</td><td>66,29</td></tr><tr><th scope="row">2032</th><td>12,29</td><td>0,00</td><td>71,67</td><td>3,50</td><td>0,03</td><td>0,06</td><td>32,56</td><td>0,01</td><td>12,32</td><td>3,78</td><td>8,32</td><td>17,44</td><td>161,96</td><td>91,12</td><td>70,84</td></tr><tr><th scope="row">2033</th><td>10,00</td><td>0,00</td><td>68,06</td><td>3,68</td><td>0,02</td><td>0,03</td><td>34,53</td><td>0,01</td><td>12,31</td><td>3,89</td><td>9,13</td><td>18,79</td><td>160,44</td><td>85,04</td><td>75,40</td></tr><tr><th scope="row">2034</th><td>7,93</td><td>0,00</td><td>64,29</td><td>3,80</td><td>0,01</td><td>0,02</td><td>36,50</td><td>0,00</td><td>12,30</td><td>4,00</td><td>9,94</td><td>20,14</td><td>158,93</td><td>78,96</td><td>79,97</td></tr><tr><th scope="row">2035</th><td>6,05</td><td>0,00</td><td>60,03</td><td>4,22</td><td>0,01</td><td>0,01</td><td>38,47</td><td>0,00</td><td>12,29</td><td>4,12</td><td>10,75</td><td>21,49</td><td>157,43</td><td>72,53</td><td>84,90</td></tr><tr><th scope="row">2036</th><td>4,30</td><td>0,00</td><td>54,47</td><td>5,81</td><td>0,00</td><td>0,01</td><td>40,45</td><td>0,00</td><td>12,28</td><td>4,24</td><td>11,56</td><td>22,84</td><td>155,95</td><td>64,87</td><td>91,08</td></tr><tr><th scope="row">2037</th><td>2,81</td><td>0,00</td><td>48,41</td><td>7,65</td><td>0,00</td><td>0,00</td><td>42,42</td><td>0,00</td><td>12,27</td><td>4,36</td><td>12,37</td><td>24,19</td><td>154,49</td><td>56,90</td><td>97,58</td></tr><tr><th scope="row">2038</th><td>1,58</td><td>0,00</td><td>41,50</td><td>10,10</td><td>0,00</td><td>0,00</td><td>44,39</td><td>0,00</td><td>12,25</td><td>4,49</td><td>13,18</td><td>25,54</td><td>153,03</td><td>48,27</td><td>104,76</td></tr><tr><th scope="row">2039</th><td>0,65</td><td>0,00</td><td>34,97</td><td>11,87</td><td>0,00</td><td>0,00</td><td>46,36</td><td>0,00</td><td>12,24</td><td>4,62</td><td>13,99</td><td>26,89</td><td>151,59</td><td>40,27</td><td>111,32</td></tr><tr><th scope="row">2040</th><td>0,00</td><td>0,00</td><td>28,43</td><td>13,38</td><td>0,00</td><td>0,00</td><td>48,33</td><td>0,00</td><td>12,23</td><td>4,75</td><td>14,80</td><td>28,24</td><td>150,17</td><td>32,47</td><td>117,70</td></tr><tr><th scope="row">2041</th><td>0,00</td><td>0,00</td><td>20,96</td><td>15,18</td><td>0,00</td><td>0,00</td><td>50,31</td><td>0,00</td><td>12,22</td><td>4,89</td><td>15,61</td><td>29,59</td><td>148,76</td><td>24,33</td><td>124,43</td></tr><tr><th scope="row">2042</th><td>0,00</td><td>0,00</td><td>13,72</td><td>16,76</td><td>0,00</td><td>0,00</td><td>52,28</td><td>0,00</td><td>12,21</td><td>5,04</td><td>16,42</td><td>30,94</td><td>147,36</td><td>16,34</td><td>131,02</td></tr><tr><th scope="row">2043</th><td>0,00</td><td>0,00</td><td>7,95</td><td>16,88</td><td>0,00</td><td>0,00</td><td>54,25</td><td>0,00</td><td>12,19</td><td>5,18</td><td>17,23</td><td>32,29</td><td>145,97</td><td>9,76</td><td>136,21</td></tr><tr><th scope="row">2044</th><td>0,00</td><td>0,00</td><td>3,45</td><td>15,73</td><td>0,00</td><td>0,00</td><td>56,22</td><td>0,00</td><td>12,18</td><td>5,34</td><td>18,04</td><td>33,64</td><td>144,60</td><td>4,39</td><td>140,21</td></tr><tr><th scope="row">2045</th><td>0,00</td><td>0,00</td><td>0,00</td><td>13,55</td><td>0,00</td><td>0,00</td><td>58,20</td><td>0,00</td><td>12,17</td><td>5,49</td><td>18,85</td><td>34,99</td><td>143,24</td><td>0,00</td><td>143,24</td></tr></tbody></table></div><div id="tab-o45" hidden><table><caption>Entwicklung Wärmemix Nutzenergie Bad Tölz, Szenario O45 – in GWh/a</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Heizöl</th><th scope="col">Kohle</th><th scope="col">Erdgas</th><th scope="col">Erfüllung Biotreppe</th><th scope="col">Flüssiggas</th><th scope="col">BHKW-Wärme</th><th scope="col">Fernwärme</th><th scope="col">Heizstrom</th><th scope="col">Energieholz</th><th scope="col">Solarthermie</th><th scope="col">Oberflächennahe Geothermie</th><th scope="col">Luft-Wasser-Wärmepumpe</th><th scope="col">Gesamt</th><th scope="col">fossil</th><th scope="col">erneuerbar</th></tr></thead><tbody><tr><th scope="row">2023</th><td>41,55</td><td>0,50</td><td>92,01</td><td>0,00</td><td>1,25</td><td>4,35</td><td>14,81</td><td>0,22</td><td>12,43</td><td>2,91</td><td>1,03</td><td>5,29</td><td>176,35</td><td>145,33</td><td>31,02</td></tr><tr><th scope="row">2024</th><td>37,92</td><td>0,15</td><td>91,59</td><td>0,00</td><td>0,81</td><td>2,68</td><td>16,05</td><td>0,16</td><td>12,54</td><td>3,00</td><td>1,97</td><td>6,77</td><td>173,65</td><td>138,95</td><td>34,70</td></tr><tr><th scope="row">2025</th><td>34,16</td><td>0,04</td><td>90,29</td><td>0,00</td><td>0,53</td><td>1,65</td><td>17,30</td><td>0,11</td><td>12,65</td><td>3,09</td><td>2,92</td><td>8,26</td><td>170,99</td><td>132,56</td><td>38,43</td></tr><tr><th scope="row">2026</th><td>30,45</td><td>0,01</td><td>88,39</td><td>0,00</td><td>0,35</td><td>1,01</td><td>18,55</td><td>0,08</td><td>12,76</td><td>3,18</td><td>3,86</td><td>9,74</td><td>168,37</td><td>126,17</td><td>42,20</td></tr><tr><th scope="row">2027</th><td>26,86</td><td>0,00</td><td>86,05</td><td>0,00</td><td>0,22</td><td>0,62</td><td>19,79</td><td>0,06</td><td>12,87</td><td>3,27</td><td>4,81</td><td>11,23</td><td>165,79</td><td>119,78</td><td>46,01</td></tr><tr><th scope="row">2028</th><td>23,23</td><td>0,00</td><td>82,54</td><td>1,07</td><td>0,15</td><td>0,38</td><td>21,04</td><td>0,04</td><td>12,98</td><td>3,36</td><td>5,75</td><td>12,71</td><td>163,25</td><td>112,31</td><td>50,94</td></tr><tr><th scope="row">2029</th><td>19,86</td><td>0,00</td><td>78,78</td><td>2,01</td><td>0,10</td><td>0,24</td><td>22,29</td><td>0,03</td><td>13,09</td><td>3,46</td><td>6,70</td><td>14,20</td><td>160,75</td><td>104,96</td><td>55,79</td></tr><tr><th scope="row">2030</th><td>16,76</td><td>0,00</td><td>74,84</td><td>2,83</td><td>0,06</td><td>0,15</td><td>23,53</td><td>0,02</td><td>13,20</td><td>3,56</td><td>7,64</td><td>15,68</td><td>158,28</td><td>97,73</td><td>60,56</td></tr><tr><th scope="row">2031</th><td>14,00</td><td>0,00</td><td>71,01</td><td>3,08</td><td>0,04</td><td>0,09</td><td>24,78</td><td>0,01</td><td>13,31</td><td>3,67</td><td>8,59</td><td>17,17</td><td>155,75</td><td>90,95</td><td>64,80</td></tr><tr><th scope="row">2032</th><td>11,49</td><td>0,00</td><td>66,99</td><td>3,27</td><td>0,03</td><td>0,06</td><td>26,03</td><td>0,01</td><td>13,43</td><td>3,78</td><td>9,53</td><td>18,65</td><td>153,26</td><td>84,23</td><td>69,03</td></tr><tr><th scope="row">2033</th><td>9,23</td><td>0,00</td><td>62,81</td><td>3,39</td><td>0,02</td><td>0,03</td><td>27,27</td><td>0,01</td><td>13,55</td><td>3,89</td><td>10,48</td><td>20,14</td><td>150,81</td><td>77,56</td><td>73,25</td></tr><tr><th scope="row">2034</th><td>7,21</td><td>0,00</td><td>58,46</td><td>3,46</td><td>0,01</td><td>0,02</td><td>28,52</td><td>0,00</td><td>13,66</td><td>4,00</td><td>11,42</td><td>21,62</td><td>148,39</td><td>70,95</td><td>77,44</td></tr><tr><th scope="row">2035</th><td>5,41</td><td>0,00</td><td>53,68</td><td>3,77</td><td>0,01</td><td>0,01</td><td>29,77</td><td>0,00</td><td>13,78</td><td>4,12</td><td>12,37</td><td>23,11</td><td>146,02</td><td>64,08</td><td>81,94</td></tr><tr><th scope="row">2036</th><td>3,77</td><td>0,00</td><td>47,75</td><td>5,10</td><td>0,00</td><td>0,01</td><td>31,01</td><td>0,00</td><td>13,90</td><td>4,24</td><td>13,31</td><td>24,59</td><td>143,68</td><td>56,20</td><td>87,49</td></tr><tr><th scope="row">2037</th><td>2,41</td><td>0,00</td><td>41,44</td><td>6,55</td><td>0,00</td><td>0,00</td><td>32,26</td><td>0,00</td><td>14,02</td><td>4,36</td><td>14,26</td><td>26,08</td><td>141,38</td><td>48,17</td><td>93,21</td></tr><tr><th scope="row">2038</th><td>1,31</td><td>0,00</td><td>34,51</td><td>8,40</td><td>0,00</td><td>0,00</td><td>33,51</td><td>0,00</td><td>14,14</td><td>4,49</td><td>15,20</td><td>27,56</td><td>139,12</td><td>39,74</td><td>99,38</td></tr><tr><th scope="row">2039</th><td>0,52</td><td>0,00</td><td>28,03</td><td>9,52</td><td>0,00</td><td>0,00</td><td>34,75</td><td>0,00</td><td>14,26</td><td>4,62</td><td>16,15</td><td>29,05</td><td>136,90</td><td>32,04</td><td>104,86</td></tr><tr><th scope="row">2040</th><td>0,00</td><td>0,00</td><td>21,72</td><td>10,22</td><td>0,00</td><td>0,00</td><td>36,00</td><td>0,00</td><td>14,38</td><td>4,75</td><td>17,09</td><td>30,53</td><td>134,71</td><td>24,73</td><td>109,98</td></tr><tr><th scope="row">2041</th><td>0,00</td><td>0,00</td><td>14,99</td><td>10,86</td><td>0,00</td><td>0,00</td><td>37,25</td><td>0,00</td><td>14,51</td><td>4,89</td><td>18,04</td><td>32,02</td><td>132,55</td><td>17,48</td><td>115,07</td></tr><tr><th scope="row">2042</th><td>0,00</td><td>0,00</td><td>8,90</td><td>10,88</td><td>0,00</td><td>0,00</td><td>38,49</td><td>0,00</td><td>14,63</td><td>5,04</td><td>18,98</td><td>33,50</td><td>130,43</td><td>10,83</td><td>119,60</td></tr><tr><th scope="row">2043</th><td>0,00</td><td>0,00</td><td>4,40</td><td>9,35</td><td>0,00</td><td>0,00</td><td>39,74</td><td>0,00</td><td>14,76</td><td>5,18</td><td>19,93</td><td>34,99</td><td>128,34</td><td>5,73</td><td>122,62</td></tr><tr><th scope="row">2044</th><td>0,00</td><td>0,00</td><td>1,39</td><td>6,34</td><td>0,00</td><td>0,00</td><td>40,99</td><td>0,00</td><td>14,89</td><td>5,34</td><td>20,87</td><td>36,47</td><td>126,29</td><td>2,08</td><td>124,21</td></tr><tr><th scope="row">2045</th><td>0,00</td><td>0,00</td><td>0,00</td><td>1,75</td><td>0,00</td><td>0,00</td><td>42,23</td><td>0,00</td><td>15,01</td><td>5,49</td><td>21,82</td><td>37,96</td><td>124,27</td><td>0,00</td><td>124,27</td></tr></tbody></table></div></div>
+</div>
 <script>
 const dataFS = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "kurz": "Heiz\u00f6l", "color": "#4A4A4A", "y": [41.55, 38.13, 34.54, 30.97, 27.5, 23.94, 20.62, 17.55, 14.81, 12.29, 10.0, 7.93, 6.05, 4.3, 2.81, 1.58, 0.65, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "kurz": "Kohle", "color": "#7C350B", "y": [0.5, 0.15, 0.04, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "kurz": "Erdgas", "color": "#999999", "y": [92.01, 92.09, 91.29, 89.91, 88.09, 85.07, 81.81, 78.35, 75.1, 71.67, 68.06, 64.29, 60.03, 54.47, 48.41, 41.5, 34.97, 28.43, 20.96, 13.72, 7.95, 3.45, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "kurz": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 1.1, 2.09, 2.97, 3.26, 3.5, 3.68, 3.8, 4.22, 5.81, 7.65, 10.1, 11.87, 13.38, 15.18, 16.76, 16.88, 15.73, 13.55]}, {"name": "Fl\u00fcssiggas", "kurz": "Fl\u00fcssiggas", "color": "#887894", "y": [1.25, 0.81, 0.53, 0.35, 0.22, 0.15, 0.1, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "kurz": "BHKW-W\u00e4rme", "color": "#B22222", "y": [4.35, 2.68, 1.65, 1.01, 0.62, 0.38, 0.24, 0.15, 0.09, 0.06, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Fernw\u00e4rme", "kurz": "Fernw\u00e4rme", "color": "#F39C12", "y": [14.81, 16.78, 18.75, 20.72, 22.7, 24.67, 26.64, 28.61, 30.59, 32.56, 34.53, 36.5, 38.47, 40.45, 42.42, 44.39, 46.36, 48.33, 50.31, 52.28, 54.25, 56.22, 58.2]}, {"name": "Heizstrom", "kurz": "Heizstrom", "color": "#1225A0", "y": [0.22, 0.16, 0.11, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Energieholz", "kurz": "Energieholz", "color": "#6FAC46", "y": [12.43, 12.42, 12.41, 12.4, 12.38, 12.37, 12.36, 12.35, 12.34, 12.32, 12.31, 12.3, 12.29, 12.28, 12.27, 12.25, 12.24, 12.23, 12.22, 12.21, 12.19, 12.18, 12.17]}, {"name": "Solarthermie", "kurz": "Solarthermie", "color": "#FFCF00", "y": [2.91, 3.0, 3.09, 3.18, 3.27, 3.36, 3.46, 3.56, 3.67, 3.78, 3.89, 4.0, 4.12, 4.24, 4.36, 4.49, 4.62, 4.75, 4.89, 5.04, 5.18, 5.34, 5.49]}, {"name": "Oberfl\u00e4chennahe Geothermie", "kurz": "Oberfl. Geothermie", "color": "#83ACFC", "y": [1.03, 1.84, 2.65, 3.46, 4.27, 5.08, 5.89, 6.7, 7.51, 8.32, 9.13, 9.94, 10.75, 11.56, 12.37, 13.18, 13.99, 14.8, 15.61, 16.42, 17.23, 18.04, 18.85]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "kurz": "Luft-Wasser-WP", "color": "#326F90", "y": [5.29, 6.64, 7.99, 9.34, 10.69, 12.04, 13.39, 14.74, 16.09, 17.44, 18.79, 20.14, 21.49, 22.84, 24.19, 25.54, 26.89, 28.24, 29.59, 30.94, 32.29, 33.64, 34.99]}], "total": [176.35, 174.69, 173.05, 171.42, 169.8, 168.21, 166.62, 165.05, 163.5, 161.96, 160.44, 158.93, 157.43, 155.95, 154.49, 153.03, 151.59, 150.17, 148.76, 147.36, 145.97, 144.6, 143.24], "fossil": [145.33, 139.91, 134.43, 128.91, 123.33, 116.59, 109.92, 103.3, 97.21, 91.12, 85.04, 78.96, 72.53, 64.87, 56.9, 48.27, 40.27, 32.47, 24.33, 16.34, 9.76, 4.39, 0.0], "renew": [31.02, 34.78, 38.61, 42.51, 46.48, 51.61, 56.71, 61.75, 66.29, 70.84, 75.4, 79.97, 84.9, 91.08, 97.58, 104.76, 111.32, 117.7, 124.43, 131.02, 136.21, 140.21, 143.24], "fossil_pct": [82.4, 80.1, 77.7, 75.2, 72.6, 69.3, 66.0, 62.6, 59.5, 56.3, 53.0, 49.7, 46.1, 41.6, 36.8, 31.5, 26.6, 21.6, 16.4, 11.1, 6.7, 3.0, 0.0], "renew_pct": [17.6, 19.9, 22.3, 24.8, 27.4, 30.7, 34.0, 37.4, 40.5, 43.7, 47.0, 50.3, 53.9, 58.4, 63.2, 68.5, 73.4, 78.4, 83.6, 88.9, 93.3, 97.0, 100.0]};
 const dataO45 = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "kurz": "Heiz\u00f6l", "color": "#4A4A4A", "y": [41.55, 37.92, 34.16, 30.45, 26.86, 23.23, 19.86, 16.76, 14.0, 11.49, 9.23, 7.21, 5.41, 3.77, 2.41, 1.31, 0.52, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "kurz": "Kohle", "color": "#7C350B", "y": [0.5, 0.15, 0.04, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "kurz": "Erdgas", "color": "#999999", "y": [92.01, 91.59, 90.29, 88.39, 86.05, 82.54, 78.78, 74.84, 71.01, 66.99, 62.81, 58.46, 53.68, 47.75, 41.44, 34.51, 28.03, 21.72, 14.99, 8.9, 4.4, 1.39, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "kurz": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 1.07, 2.01, 2.83, 3.08, 3.27, 3.39, 3.46, 3.77, 5.1, 6.55, 8.4, 9.52, 10.22, 10.86, 10.88, 9.35, 6.34, 1.75]}, {"name": "Fl\u00fcssiggas", "kurz": "Fl\u00fcssiggas", "color": "#887894", "y": [1.25, 0.81, 0.53, 0.35, 0.22, 0.15, 0.1, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "kurz": "BHKW-W\u00e4rme", "color": "#B22222", "y": [4.35, 2.68, 1.65, 1.01, 0.62, 0.38, 0.24, 0.15, 0.09, 0.06, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Fernw\u00e4rme", "kurz": "Fernw\u00e4rme", "color": "#F39C12", "y": [14.81, 16.05, 17.3, 18.55, 19.79, 21.04, 22.29, 23.53, 24.78, 26.03, 27.27, 28.52, 29.77, 31.01, 32.26, 33.51, 34.75, 36.0, 37.25, 38.49, 39.74, 40.99, 42.23]}, {"name": "Heizstrom", "kurz": "Heizstrom", "color": "#1225A0", "y": [0.22, 0.16, 0.11, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Energieholz", "kurz": "Energieholz", "color": "#6FAC46", "y": [12.43, 12.54, 12.65, 12.76, 12.87, 12.98, 13.09, 13.2, 13.31, 13.43, 13.55, 13.66, 13.78, 13.9, 14.02, 14.14, 14.26, 14.38, 14.51, 14.63, 14.76, 14.89, 15.01]}, {"name": "Solarthermie", "kurz": "Solarthermie", "color": "#FFCF00", "y": [2.91, 3.0, 3.09, 3.18, 3.27, 3.36, 3.46, 3.56, 3.67, 3.78, 3.89, 4.0, 4.12, 4.24, 4.36, 4.49, 4.62, 4.75, 4.89, 5.04, 5.18, 5.34, 5.49]}, {"name": "Oberfl\u00e4chennahe Geothermie", "kurz": "Oberfl. Geothermie", "color": "#83ACFC", "y": [1.03, 1.97, 2.92, 3.86, 4.81, 5.75, 6.7, 7.64, 8.59, 9.53, 10.48, 11.42, 12.37, 13.31, 14.26, 15.2, 16.15, 17.09, 18.04, 18.98, 19.93, 20.87, 21.82]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "kurz": "Luft-Wasser-WP", "color": "#326F90", "y": [5.29, 6.77, 8.26, 9.74, 11.23, 12.71, 14.2, 15.68, 17.17, 18.65, 20.14, 21.62, 23.11, 24.59, 26.08, 27.56, 29.05, 30.53, 32.02, 33.5, 34.99, 36.47, 37.96]}], "total": [176.35, 173.65, 170.99, 168.37, 165.79, 163.25, 160.75, 158.28, 155.75, 153.26, 150.81, 148.39, 146.02, 143.68, 141.38, 139.12, 136.9, 134.71, 132.55, 130.43, 128.34, 126.29, 124.27], "fossil": [145.33, 138.95, 132.56, 126.17, 119.78, 112.31, 104.96, 97.73, 90.95, 84.23, 77.56, 70.95, 64.08, 56.2, 48.17, 39.74, 32.04, 24.73, 17.48, 10.83, 5.73, 2.08, 0.0], "renew": [31.02, 34.7, 38.43, 42.2, 46.01, 50.94, 55.79, 60.56, 64.8, 69.03, 73.25, 77.44, 81.94, 87.49, 93.21, 99.38, 104.86, 109.98, 115.07, 119.6, 122.62, 124.21, 124.27], "fossil_pct": [82.4, 80.0, 77.5, 74.9, 72.2, 68.8, 65.3, 61.7, 58.4, 55.0, 51.4, 47.8, 43.9, 39.1, 34.1, 28.6, 23.4, 18.4, 13.2, 8.3, 4.5, 1.6, 0.0], "renew_pct": [17.6, 20.0, 22.5, 25.1, 27.8, 31.2, 34.7, 38.3, 41.6, 45.0, 48.6, 52.2, 56.1, 60.9, 65.9, 71.4, 76.6, 81.6, 86.8, 91.7, 95.5, 98.4, 100.0]};
@@ -141,7 +179,11 @@ function onResize(redraw) {
 
 let aktuellesSzenario = 'Fortschreibung';
 
-const ANIM_DAUER = 450;
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
 
 function animiereLegende(gd, achse) {
   // Ausgangswerte bei jedem Neuzeichnen frisch merken (Szenariowechsel!).
@@ -192,16 +234,113 @@ function animiereLegende(gd, achse) {
   });
 }
 
+
+// Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
+// passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
+// missverstaendlich (gedrueckt = sichtbar oder ausgeblendet?).
+function legendeEigenschaftenSetzen(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    eintrag.setAttribute('tabindex', '0');
+    eintrag.setAttribute('role', 'switch');
+    const text = eintrag.querySelector('text.legendtext');
+    if (text) eintrag.setAttribute('aria-label',
+      text.getAttribute('data-unformatted') || text.textContent);
+  });
+}
+
+// Zustand aus der Darstellung ablesen statt aus den Daten: Plotly setzt einen
+// abgeschalteten Legendeneintrag auf Deckkraft 0.5. Ueber die Datenspuren ginge
+// es nicht verlaesslich, weil die Reihenfolge der Legende nicht der Reihenfolge
+// in gd.data entspricht -- gestapelte Diagramme drehen sie um.
+function legendeZustandNachfuehren(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const sichtbar = parseFloat(eintrag.style.opacity || '1') > 0.9;
+    eintrag.setAttribute('aria-checked', sichtbar ? 'true' : 'false');
+  });
+}
+
+// Die Grafik selbst ist fuer Screenreader stumm: Plotly zeichnet reines SVG
+// ohne Rollen. Die Achsen-, Titel- und Datenbeschriftungen darin wuerden als
+// zusammenhanglose Wortfolge vorgelesen ('2023 2030 ... 10.000 20.000 ...').
+// Deshalb alles ausblenden, was rein grafisch ist; die Werte stehen in der
+// Datentabelle, die Beschriftungen als echter Text im Seitenkopf.
+//
+// aria-hidden muss dabei auf die Geschwister der Legende gesetzt werden, nicht
+// auf ihre Vorfahren: ein 'aria-hidden=false' im Inneren hebt ein
+// 'aria-hidden=true' weiter oben nicht wieder auf.
+function grafikAusZugaenglichkeitsbaum(gd) {
+  const legende = gd.querySelector('g.legend');
+  const legendenEbene = legende && legende.closest('svg.main-svg');
+  gd.querySelectorAll('svg.main-svg').forEach(svg => {
+    if (svg !== legendenEbene) { svg.setAttribute('aria-hidden', 'true'); return; }
+    [...svg.children].forEach(kind => {
+      if (kind !== legende.parentElement) { kind.setAttribute('aria-hidden', 'true'); return; }
+      // In dieser Ebene (infolayer) sitzen neben der Legende die Achsen- und
+      // Diagrammtitel sowie die Annotationen.
+      [...kind.children].forEach(enkel => {
+        if (enkel !== legende) enkel.setAttribute('aria-hidden', 'true');
+      });
+    });
+  });
+}
+
+function a11yAnwenden(gd) {
+  legendeEigenschaftenSetzen(gd);
+  legendeZustandNachfuehren(gd);
+  grafikAusZugaenglichkeitsbaum(gd);
+}
+
+function zugaenglichMachen(gd) {
+  a11yAnwenden(gd);
+  if (gd._a11yVerdrahtet) return;
+  gd._a11yVerdrahtet = true;
+
+  gd.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const eintrag = ev.target.closest && ev.target.closest('g.traces');
+    if (!eintrag) return;
+    ev.preventDefault();      // die Leertaste wuerde sonst die Seite scrollen
+    const ziel = eintrag.querySelector('rect.legendtoggle') || eintrag;
+    ['mousedown', 'mouseup', 'click'].forEach(art => ziel.dispatchEvent(
+      new MouseEvent(art, { bubbles: true, cancelable: true, view: window })));
+  });
+
+  // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
+  // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
+  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
+  // Animation.
+  gd.on('plotly_afterplot', () => a11yAnwenden(gd));
+}
+
+
+function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  ziel.hidden = !auf;
+}
+
 function draw() {
   const traces = buildTraces(aktuellesSzenario === 'Fortschreibung' ? dataFS : dataO45);
+  const gd = document.getElementById('chart');
   Plotly.react('chart', traces, responsive(layout, traces.length),
                {responsive: true, displayModeBar: false})
-    .then(() => animiereLegende(document.getElementById('chart'), 'y'));
+    .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd); });
 }
 function showScenario(sz) {
   aktuellesSzenario = sz;
-  document.getElementById('btn-fs').classList.toggle('active', sz === 'Fortschreibung');
-  document.getElementById('btn-o45').classList.toggle('active', sz === 'O45');
+  const fs = sz === 'Fortschreibung';
+  // aria-pressed zusaetzlich zur Klasse: die Farbumkehr allein sagt einem
+  // Screenreader nicht, welches Szenario gerade aktiv ist.
+  document.getElementById('btn-fs').classList.toggle('active', fs);
+  document.getElementById('btn-o45').classList.toggle('active', !fs);
+  document.getElementById('btn-fs').setAttribute('aria-pressed', fs ? 'true' : 'false');
+  document.getElementById('btn-o45').setAttribute('aria-pressed', fs ? 'false' : 'true');
+  // Datentabelle mitschalten, sonst zeigte sie das andere Szenario.
+  document.getElementById('tab-fs').hidden = !fs;
+  document.getElementById('tab-o45').hidden = fs;
   draw();
 }
 draw();

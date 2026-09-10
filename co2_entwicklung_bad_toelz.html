@@ -23,6 +23,30 @@
     border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
   .toggle button.active { background: #1D4B8F; color: #fff; }
 
+  /* Nur fuer Screenreader: unsichtbar, aber im Zugaenglichkeitsbaum. */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Tastaturfokus auf den Legendeneintraegen. Plotly zeichnet dort reines SVG
+     ohne Rahmen; der Fokus waere sonst unsichtbar (WCAG 2.4.7). Der Rahmen
+     kommt auf das unsichtbare Klickfeld, das Plotly ueber jeden Eintrag legt. */
+  g.traces:focus { outline: none; }
+  g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
+
+  /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
+     nicht hoeher wird als vor der Datentabelle. */
+  .footer-zeile { display: flex; flex-wrap: wrap; gap: 2px 16px; justify-content: space-between; }
+  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
+    border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
+  .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
+  .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
+    white-space: nowrap; }
+  .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
+  .tabelle th[scope="row"] { text-align: left; }
+  .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
   /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
      Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
      die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
@@ -34,17 +58,31 @@
     .toggle { padding: 0 12px 6px 12px; }
     .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
     .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
+    .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
+    /* Schmal reicht die Breite nicht fuer Quelle und Schalter nebeneinander;
+       als Textfluss haengt der Schalter hinter der Quellenangabe und kostet
+       nur dann eine Zeile, wenn dort wirklich kein Platz mehr ist. */
+    .footer-zeile { display: block; }
+    .tabelle-schalter { margin-left: 6px; }
   }
 </style>
 </head>
 <body>
-<div class="header"><h1>Entwicklung CO₂-Emissionen Bad Tölz</h1><p>CO₂-Emissionen nach Energieträgern 2023–2045 (t/a)</p></div>
-<div class="toggle">
-  <button id="btn-fs" class="active" onclick="showScenario('Fortschreibung')">Szenario Fortschreibung</button>
-  <button id="btn-o45" onclick="showScenario('O45')">Szenario O45</button>
+<div class="header"><h1 id="titel">Entwicklung CO₂-Emissionen Bad Tölz</h1><p>CO₂-Emissionen nach Energieträgern 2023–2045 (t/a)</p></div>
+<div class="toggle" role="group" aria-label="Szenario wählen">
+  <button id="btn-fs" class="active" aria-pressed="true" onclick="showScenario('Fortschreibung')">Szenario Fortschreibung</button>
+  <button id="btn-o45" aria-pressed="false" onclick="showScenario('O45')">Szenario O45</button>
 </div>
-<div id="chart"></div>
-<div class="footer">Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</div>
+<p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
+<div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
+<div class="footer">
+  <div class="footer-zeile">
+    <span>Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
+            onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
+  </div>
+  <div id="datentabelle" class="tabelle" hidden><div id="tab-fs"><table><caption>Entwicklung CO₂-Emissionen Bad Tölz, Szenario Fortschreibung – in t CO₂/a</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Heizöl</th><th scope="col">Kohle</th><th scope="col">Erdgas</th><th scope="col">Erfüllung Biotreppe</th><th scope="col">Flüssiggas</th><th scope="col">BHKW-Wärme</th><th scope="col">Fernwärme</th><th scope="col">Heizstrom</th><th scope="col">Energieholz</th><th scope="col">Oberflächennahe Geothermie</th><th scope="col">Luft-Wasser-Wärmepumpe</th><th scope="col">Gesamt</th><th scope="col">fossil</th><th scope="col">erneuerbar</th></tr></thead><tbody><tr><th scope="row">2023</th><td>15.154</td><td>112</td><td>25.979</td><td>0</td><td>353</td><td>922</td><td>1.891</td><td>114</td><td>332</td><td>115</td><td>792</td><td>45.762</td><td>44.268</td><td>1.494</td></tr><tr><th scope="row">2024</th><td>13.906</td><td>33</td><td>26.002</td><td>0</td><td>230</td><td>567</td><td>2.098</td><td>61</td><td>331</td><td>176</td><td>849</td><td>44.253</td><td>42.567</td><td>1.686</td></tr><tr><th scope="row">2025</th><td>12.597</td><td>10</td><td>25.776</td><td>0</td><td>150</td><td>349</td><td>2.280</td><td>37</td><td>331</td><td>217</td><td>874</td><td>42.620</td><td>40.801</td><td>1.819</td></tr><tr><th scope="row">2026</th><td>11.294</td><td>3</td><td>25.385</td><td>0</td><td>98</td><td>215</td><td>2.428</td><td>20</td><td>331</td><td>225</td><td>810</td><td>40.808</td><td>38.992</td><td>1.817</td></tr><tr><th scope="row">2027</th><td>10.029</td><td>1</td><td>24.873</td><td>0</td><td>64</td><td>132</td><td>2.545</td><td>11</td><td>330</td><td>220</td><td>735</td><td>38.941</td><td>37.161</td><td>1.781</td></tr><tr><th scope="row">2028</th><td>8.731</td><td>0</td><td>24.021</td><td>181</td><td>41</td><td>81</td><td>2.634</td><td>6</td><td>330</td><td>208</td><td>657</td><td>36.891</td><td>34.986</td><td>1.905</td></tr><tr><th scope="row">2029</th><td>7.520</td><td>0</td><td>23.100</td><td>344</td><td>27</td><td>50</td><td>2.696</td><td>4</td><td>330</td><td>191</td><td>580</td><td>34.842</td><td>32.840</td><td>2.001</td></tr><tr><th scope="row">2030</th><td>6.401</td><td>0</td><td>22.122</td><td>489</td><td>18</td><td>31</td><td>2.732</td><td>2</td><td>329</td><td>172</td><td>506</td><td>32.801</td><td>30.728</td><td>2.074</td></tr><tr><th scope="row">2031</th><td>5.401</td><td>0</td><td>21.205</td><td>537</td><td>11</td><td>19</td><td>2.755</td><td>1</td><td>329</td><td>167</td><td>476</td><td>30.901</td><td>28.787</td><td>2.114</td></tr><tr><th scope="row">2032</th><td>4.483</td><td>0</td><td>20.236</td><td>576</td><td>7</td><td>12</td><td>2.753</td><td>1</td><td>329</td><td>159</td><td>445</td><td>29.001</td><td>26.863</td><td>2.138</td></tr><tr><th scope="row">2033</th><td>3.647</td><td>0</td><td>19.217</td><td>606</td><td>5</td><td>7</td><td>2.729</td><td>0</td><td>328</td><td>150</td><td>413</td><td>27.103</td><td>24.956</td><td>2.147</td></tr><tr><th scope="row">2034</th><td>2.892</td><td>0</td><td>18.151</td><td>626</td><td>3</td><td>4</td><td>2.680</td><td>0</td><td>328</td><td>141</td><td>382</td><td>25.208</td><td>23.066</td><td>2.142</td></tr><tr><th scope="row">2035</th><td>2.205</td><td>0</td><td>16.950</td><td>695</td><td>2</td><td>3</td><td>2.609</td><td>0</td><td>328</td><td>132</td><td>351</td><td>23.275</td><td>21.091</td><td>2.183</td></tr><tr><th scope="row">2036</th><td>1.569</td><td>0</td><td>15.381</td><td>957</td><td>0</td><td>2</td><td>2.519</td><td>0</td><td>327</td><td>126</td><td>331</td><td>21.212</td><td>18.778</td><td>2.434</td></tr><tr><th scope="row">2037</th><td>1.026</td><td>0</td><td>13.670</td><td>1.261</td><td>0</td><td>1</td><td>2.407</td><td>0</td><td>327</td><td>119</td><td>311</td><td>19.122</td><td>16.400</td><td>2.722</td></tr><tr><th scope="row">2038</th><td>575</td><td>0</td><td>11.718</td><td>1.664</td><td>0</td><td>1</td><td>2.271</td><td>0</td><td>327</td><td>113</td><td>292</td><td>16.961</td><td>13.853</td><td>3.107</td></tr><tr><th scope="row">2039</th><td>238</td><td>0</td><td>9.873</td><td>1.956</td><td>0</td><td>0</td><td>2.114</td><td>0</td><td>326</td><td>106</td><td>273</td><td>14.886</td><td>11.508</td><td>3.379</td></tr><tr><th scope="row">2040</th><td>0</td><td>0</td><td>8.028</td><td>2.204</td><td>0</td><td>0</td><td>1.934</td><td>0</td><td>326</td><td>100</td><td>254</td><td>12.846</td><td>9.241</td><td>3.605</td></tr><tr><th scope="row">2041</th><td>0</td><td>0</td><td>5.919</td><td>2.500</td><td>0</td><td>0</td><td>1.747</td><td>0</td><td>326</td><td>104</td><td>262</td><td>10.858</td><td>6.929</td><td>3.929</td></tr><tr><th scope="row">2042</th><td>0</td><td>0</td><td>3.873</td><td>2.761</td><td>0</td><td>0</td><td>1.538</td><td>0</td><td>326</td><td>107</td><td>270</td><td>8.876</td><td>4.660</td><td>4.215</td></tr><tr><th scope="row">2043</th><td>0</td><td>0</td><td>2.243</td><td>2.781</td><td>0</td><td>0</td><td>1.309</td><td>0</td><td>325</td><td>111</td><td>277</td><td>7.047</td><td>2.788</td><td>4.259</td></tr><tr><th scope="row">2044</th><td>0</td><td>0</td><td>975</td><td>2.591</td><td>0</td><td>0</td><td>1.059</td><td>0</td><td>325</td><td>114</td><td>285</td><td>5.349</td><td>1.257</td><td>4.091</td></tr><tr><th scope="row">2045</th><td>0</td><td>0</td><td>0</td><td>2.232</td><td>0</td><td>0</td><td>787</td><td>0</td><td>325</td><td>118</td><td>292</td><td>3.753</td><td>0</td><td>3.753</td></tr></tbody></table></div><div id="tab-o45" hidden><table><caption>Entwicklung CO₂-Emissionen Bad Tölz, Szenario O45 – in t CO₂/a</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Heizöl</th><th scope="col">Kohle</th><th scope="col">Erdgas</th><th scope="col">Erfüllung Biotreppe</th><th scope="col">Flüssiggas</th><th scope="col">BHKW-Wärme</th><th scope="col">Fernwärme</th><th scope="col">Heizstrom</th><th scope="col">Energieholz</th><th scope="col">Oberflächennahe Geothermie</th><th scope="col">Luft-Wasser-Wärmepumpe</th><th scope="col">Gesamt</th><th scope="col">fossil</th><th scope="col">erneuerbar</th></tr></thead><tbody><tr><th scope="row">2023</th><td>15.154</td><td>112</td><td>25.979</td><td>0</td><td>353</td><td>922</td><td>1.891</td><td>114</td><td>332</td><td>115</td><td>792</td><td>45.762</td><td>44.268</td><td>1.494</td></tr><tr><th scope="row">2024</th><td>13.830</td><td>33</td><td>25.861</td><td>0</td><td>230</td><td>567</td><td>2.007</td><td>61</td><td>334</td><td>189</td><td>867</td><td>43.980</td><td>42.275</td><td>1.705</td></tr><tr><th scope="row">2025</th><td>12.459</td><td>10</td><td>25.492</td><td>0</td><td>150</td><td>349</td><td>2.104</td><td>37</td><td>337</td><td>239</td><td>903</td><td>42.079</td><td>40.233</td><td>1.846</td></tr><tr><th scope="row">2026</th><td>11.103</td><td>3</td><td>24.956</td><td>0</td><td>98</td><td>215</td><td>2.173</td><td>20</td><td>340</td><td>251</td><td>845</td><td>40.005</td><td>38.164</td><td>1.840</td></tr><tr><th scope="row">2027</th><td>9.797</td><td>1</td><td>24.297</td><td>0</td><td>64</td><td>132</td><td>2.220</td><td>11</td><td>343</td><td>248</td><td>773</td><td>37.886</td><td>36.091</td><td>1.795</td></tr><tr><th scope="row">2028</th><td>8.470</td><td>0</td><td>23.304</td><td>176</td><td>41</td><td>81</td><td>2.247</td><td>6</td><td>346</td><td>235</td><td>694</td><td>35.602</td><td>33.700</td><td>1.903</td></tr><tr><th scope="row">2029</th><td>7.242</td><td>0</td><td>22.245</td><td>332</td><td>27</td><td>50</td><td>2.255</td><td>4</td><td>349</td><td>217</td><td>615</td><td>33.335</td><td>31.357</td><td>1.978</td></tr><tr><th scope="row">2030</th><td>6.113</td><td>0</td><td>21.130</td><td>467</td><td>18</td><td>31</td><td>2.247</td><td>2</td><td>352</td><td>197</td><td>539</td><td>31.095</td><td>29.066</td><td>2.029</td></tr><tr><th scope="row">2031</th><td>5.106</td><td>0</td><td>20.049</td><td>508</td><td>11</td><td>19</td><td>2.232</td><td>1</td><td>355</td><td>191</td><td>508</td><td>28.980</td><td>26.928</td><td>2.052</td></tr><tr><th scope="row">2032</th><td>4.190</td><td>0</td><td>18.915</td><td>539</td><td>7</td><td>12</td><td>2.201</td><td>1</td><td>358</td><td>182</td><td>476</td><td>26.881</td><td>24.824</td><td>2.058</td></tr><tr><th scope="row">2033</th><td>3.365</td><td>0</td><td>17.734</td><td>559</td><td>5</td><td>7</td><td>2.155</td><td>0</td><td>361</td><td>173</td><td>443</td><td>24.803</td><td>22.754</td><td>2.048</td></tr><tr><th scope="row">2034</th><td>2.630</td><td>0</td><td>16.507</td><td>569</td><td>3</td><td>4</td><td>2.094</td><td>0</td><td>364</td><td>162</td><td>410</td><td>22.745</td><td>20.720</td><td>2.025</td></tr><tr><th scope="row">2035</th><td>1.972</td><td>0</td><td>15.157</td><td>621</td><td>2</td><td>3</td><td>2.019</td><td>0</td><td>367</td><td>151</td><td>377</td><td>20.670</td><td>18.628</td><td>2.042</td></tr><tr><th scope="row">2036</th><td>1.376</td><td>0</td><td>13.483</td><td>839</td><td>0</td><td>2</td><td>1.932</td><td>0</td><td>371</td><td>145</td><td>357</td><td>18.503</td><td>16.261</td><td>2.242</td></tr><tr><th scope="row">2037</th><td>878</td><td>0</td><td>11.702</td><td>1.079</td><td>0</td><td>1</td><td>1.830</td><td>0</td><td>374</td><td>138</td><td>336</td><td>16.338</td><td>13.876</td><td>2.461</td></tr><tr><th scope="row">2038</th><td>478</td><td>0</td><td>9.743</td><td>1.384</td><td>0</td><td>1</td><td>1.714</td><td>0</td><td>377</td><td>130</td><td>315</td><td>14.142</td><td>11.399</td><td>2.743</td></tr><tr><th scope="row">2039</th><td>191</td><td>0</td><td>7.913</td><td>1.567</td><td>0</td><td>0</td><td>1.584</td><td>0</td><td>380</td><td>123</td><td>295</td><td>12.054</td><td>9.151</td><td>2.903</td></tr><tr><th scope="row">2040</th><td>0</td><td>0</td><td>6.133</td><td>1.684</td><td>0</td><td>0</td><td>1.440</td><td>0</td><td>384</td><td>115</td><td>275</td><td>10.031</td><td>7.036</td><td>2.994</td></tr><tr><th scope="row">2041</th><td>0</td><td>0</td><td>4.233</td><td>1.788</td><td>0</td><td>0</td><td>1.293</td><td>0</td><td>387</td><td>120</td><td>284</td><td>8.105</td><td>4.981</td><td>3.124</td></tr><tr><th scope="row">2042</th><td>0</td><td>0</td><td>2.513</td><td>1.792</td><td>0</td><td>0</td><td>1.133</td><td>0</td><td>390</td><td>124</td><td>292</td><td>6.245</td><td>3.093</td><td>3.152</td></tr><tr><th scope="row">2043</th><td>0</td><td>0</td><td>1.242</td><td>1.539</td><td>0</td><td>0</td><td>959</td><td>0</td><td>394</td><td>128</td><td>301</td><td>4.563</td><td>1.641</td><td>2.922</td></tr><tr><th scope="row">2044</th><td>0</td><td>0</td><td>393</td><td>1.045</td><td>0</td><td>0</td><td>772</td><td>0</td><td>397</td><td>132</td><td>309</td><td>3.048</td><td>599</td><td>2.449</td></tr><tr><th scope="row">2045</th><td>0</td><td>0</td><td>0</td><td>289</td><td>0</td><td>0</td><td>571</td><td>0</td><td>400</td><td>136</td><td>316</td><td>1.713</td><td>0</td><td>1.713</td></tr></tbody></table></div></div>
+</div>
 <script>
 const dataFS = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "kurz": "Heiz\u00f6l", "color": "#4A4A4A", "y": [15153.53, 13905.65, 12597.29, 11294.32, 10029.13, 8730.84, 7520.18, 6400.51, 5400.71, 4482.91, 3646.86, 2891.82, 2205.08, 1569.09, 1025.68, 575.02, 237.73, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "kurz": "Kohle", "color": "#7C350B", "y": [112.15, 33.23, 9.85, 2.92, 0.86, 0.26, 0.08, 0.02, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "kurz": "Erdgas", "color": "#999999", "y": [25978.67, 26002.15, 25776.22, 25385.4, 24872.99, 24020.84, 23100.18, 22122.42, 21205.44, 20235.83, 19216.91, 18151.12, 16950.22, 15380.53, 13669.85, 11718.0, 9873.37, 8028.16, 5918.94, 3872.91, 2243.32, 975.02, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "kurz": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 181.36, 344.31, 488.51, 537.11, 576.2, 605.82, 626.01, 694.69, 957.42, 1260.74, 1664.3, 1955.61, 2203.81, 2500.24, 2761.24, 2780.78, 2591.01, 2231.55]}, {"name": "Fl\u00fcssiggas", "kurz": "Fl\u00fcssiggas", "color": "#887894", "y": [353.04, 229.93, 149.75, 97.53, 63.52, 41.37, 26.94, 17.55, 11.43, 7.44, 4.85, 3.16, 2.06, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "kurz": "BHKW-W\u00e4rme", "color": "#B22222", "y": [921.63, 567.16, 349.03, 214.79, 132.18, 81.34, 50.06, 30.8, 18.96, 11.67, 7.18, 4.42, 2.72, 1.67, 1.03, 0.63, 0.39, 0.24, 0.15, 0.15, 0.15, 0.15, 0.15]}, {"name": "Fernw\u00e4rme", "kurz": "Fernw\u00e4rme", "color": "#F39C12", "y": [1890.68, 2097.9, 2280.15, 2427.78, 2545.36, 2634.28, 2695.99, 2731.81, 2754.6, 2753.44, 2728.63, 2680.48, 2609.29, 2519.27, 2406.57, 2271.34, 2113.74, 1933.9, 1746.7, 1538.41, 1309.05, 1058.61, 787.09]}, {"name": "Heizstrom", "kurz": "Heizstrom", "color": "#1225A0", "y": [113.56, 60.7, 36.55, 20.44, 11.44, 6.42, 3.61, 2.04, 1.26, 0.79, 0.5, 0.33, 0.22, 0.16, 0.12, 0.1, 0.08, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07]}, {"name": "Energieholz", "kurz": "Energieholz", "color": "#6FAC46", "y": [331.51, 331.19, 330.87, 330.55, 330.23, 329.92, 329.6, 329.28, 328.96, 328.65, 328.33, 328.02, 327.7, 327.38, 327.07, 326.76, 326.44, 326.13, 325.81, 325.5, 325.19, 324.87, 324.56]}, {"name": "Oberfl\u00e4chennahe Geothermie", "kurz": "Oberfl. Geothermie", "color": "#83ACFC", "y": [115.12, 176.11, 216.94, 224.76, 220.08, 207.72, 191.06, 172.41, 166.58, 159.08, 150.47, 141.21, 131.63, 125.65, 119.35, 112.88, 106.35, 99.87, 103.73, 107.45, 111.03, 114.47, 117.78]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "kurz": "Luft-Wasser-WP", "color": "#326F90", "y": [791.68, 849.34, 873.53, 809.98, 735.36, 656.97, 579.55, 506.06, 476.14, 444.83, 413.09, 381.64, 351.0, 331.13, 311.29, 291.74, 272.64, 254.16, 262.24, 270.02, 277.49, 284.68, 291.58]}], "total": [45761.57, 44253.35, 42620.18, 40808.47, 38941.15, 36891.31, 34841.56, 32801.42, 30901.2, 29000.84, 27102.64, 25208.2, 23274.6, 21212.31, 19121.7, 16960.77, 14886.37, 12846.33, 10857.88, 8875.73, 7047.07, 5348.87, 3752.78], "fossil": [44267.7, 42567.48, 40801.1, 38991.76, 37160.64, 34985.93, 32840.48, 30727.54, 28786.96, 26862.98, 24956.0, 23066.12, 21091.35, 18778.49, 16399.9, 13853.36, 11507.77, 9241.46, 6929.14, 4660.31, 2788.12, 1257.42, 0.21], "renew": [1493.87, 1685.88, 1819.08, 1816.72, 1780.52, 1905.38, 2001.08, 2073.89, 2114.23, 2137.87, 2146.65, 2142.08, 2183.25, 2433.82, 2721.81, 3107.41, 3378.59, 3604.88, 3928.74, 4215.43, 4258.95, 4091.45, 3752.57], "fossil_pct": [96.7, 96.2, 95.7, 95.5, 95.4, 94.8, 94.3, 93.7, 93.2, 92.6, 92.1, 91.5, 90.6, 88.5, 85.8, 81.7, 77.3, 71.9, 63.8, 52.5, 39.6, 23.5, 0.0], "renew_pct": [3.3, 3.8, 4.3, 4.5, 4.6, 5.2, 5.7, 6.3, 6.8, 7.4, 7.9, 8.5, 9.4, 11.5, 14.2, 18.3, 22.7, 28.1, 36.2, 47.5, 60.4, 76.5, 100.0]};
 const dataO45 = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "kurz": "Heiz\u00f6l", "color": "#4A4A4A", "y": [15153.53, 13830.31, 12458.52, 11103.47, 9797.05, 8470.47, 7241.75, 6113.48, 5106.06, 4190.34, 3365.4, 2629.9, 1971.76, 1375.5, 878.01, 478.1, 190.54, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "kurz": "Kohle", "color": "#7C350B", "y": [112.15, 33.23, 9.85, 2.92, 0.86, 0.26, 0.08, 0.02, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "kurz": "Erdgas", "color": "#999999", "y": [25978.67, 25861.27, 25492.27, 24956.46, 24297.41, 23304.48, 22244.91, 21130.36, 20048.52, 18915.14, 17733.78, 16507.15, 15156.76, 13482.94, 11701.83, 9743.07, 7913.35, 6132.73, 4232.84, 2513.43, 1241.89, 393.18, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "kurz": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 175.96, 331.56, 466.61, 507.81, 538.59, 559.06, 569.31, 621.19, 839.3, 1079.24, 1383.8, 1567.39, 1683.5, 1788.01, 1791.99, 1539.43, 1044.83, 289.0]}, {"name": "Fl\u00fcssiggas", "kurz": "Fl\u00fcssiggas", "color": "#887894", "y": [353.04, 229.93, 149.75, 97.53, 63.52, 41.37, 26.94, 17.55, 11.43, 7.44, 4.85, 3.16, 2.06, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "kurz": "BHKW-W\u00e4rme", "color": "#B22222", "y": [921.63, 567.16, 349.03, 214.79, 132.18, 81.34, 50.06, 30.8, 18.96, 11.67, 7.18, 4.42, 2.72, 1.67, 1.03, 0.63, 0.39, 0.24, 0.15, 0.15, 0.15, 0.15, 0.15]}, {"name": "Fernw\u00e4rme", "kurz": "Fernw\u00e4rme", "color": "#F39C12", "y": [1890.68, 2007.19, 2103.7, 2172.79, 2219.87, 2246.87, 2255.43, 2246.9, 2231.82, 2201.17, 2155.26, 2094.38, 2018.78, 1931.74, 1830.26, 1714.45, 1584.46, 1440.38, 1293.23, 1132.73, 958.89, 771.71, 571.2]}, {"name": "Heizstrom", "kurz": "Heizstrom", "color": "#1225A0", "y": [113.56, 60.7, 36.55, 20.44, 11.44, 6.42, 3.61, 2.04, 1.26, 0.79, 0.5, 0.33, 0.22, 0.16, 0.12, 0.1, 0.08, 0.07, 0.07, 0.07, 0.07, 0.07, 0.07]}, {"name": "Energieholz", "kurz": "Energieholz", "color": "#6FAC46", "y": [331.51, 334.36, 337.25, 340.15, 343.08, 346.04, 349.02, 352.03, 355.07, 358.13, 361.21, 364.33, 367.47, 370.63, 373.83, 377.05, 380.3, 383.58, 386.88, 390.22, 393.58, 396.97, 400.39]}, {"name": "Oberfl\u00e4chennahe Geothermie", "kurz": "Oberfl. Geothermie", "color": "#83ACFC", "y": [115.12, 189.06, 239.08, 251.11, 247.94, 235.34, 217.36, 196.75, 190.55, 182.32, 172.73, 162.31, 151.48, 144.73, 137.59, 130.23, 122.78, 115.36, 119.88, 124.23, 128.43, 132.46, 136.35]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "kurz": "Luft-Wasser-WP", "color": "#326F90", "y": [791.68, 866.61, 903.05, 845.11, 772.51, 693.8, 614.61, 538.51, 508.1, 475.82, 442.77, 409.78, 377.46, 356.57, 335.62, 314.87, 294.54, 274.81, 283.78, 292.4, 300.7, 308.67, 316.33]}], "total": [45761.57, 43979.82, 42079.04, 40004.76, 37885.87, 35602.35, 33335.33, 31095.05, 28979.58, 26881.4, 24802.74, 22745.05, 20669.89, 18503.26, 16337.52, 14142.3, 12053.84, 10030.67, 8104.84, 6245.22, 4563.13, 3048.04, 1713.48], "fossil": [44267.7, 42274.78, 40232.71, 38164.39, 36090.77, 33699.65, 31357.16, 29066.07, 26927.52, 24823.61, 22754.39, 20719.57, 18627.56, 16261.22, 13876.33, 11399.12, 9150.95, 7036.48, 4980.84, 3093.25, 1641.02, 599.11, 0.21], "renew": [1493.87, 1705.04, 1846.33, 1840.37, 1795.1, 1902.7, 1978.16, 2028.98, 2052.06, 2057.79, 2048.35, 2025.48, 2042.33, 2242.03, 2461.19, 2743.18, 2902.88, 2994.19, 3124.0, 3151.96, 2922.11, 2448.93, 1713.27], "fossil_pct": [96.7, 96.1, 95.6, 95.4, 95.3, 94.7, 94.1, 93.5, 92.9, 92.3, 91.7, 91.1, 90.1, 87.9, 84.9, 80.6, 75.9, 70.1, 61.5, 49.5, 36.0, 19.7, 0.0], "renew_pct": [3.3, 3.9, 4.4, 4.6, 4.7, 5.3, 5.9, 6.5, 7.1, 7.7, 8.3, 8.9, 9.9, 12.1, 15.1, 19.4, 24.1, 29.9, 38.5, 50.5, 64.0, 80.3, 100.0]};
@@ -141,7 +179,11 @@ function onResize(redraw) {
 
 let aktuellesSzenario = 'Fortschreibung';
 
-const ANIM_DAUER = 450;
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
 
 function animiereLegende(gd, achse) {
   // Ausgangswerte bei jedem Neuzeichnen frisch merken (Szenariowechsel!).
@@ -192,16 +234,113 @@ function animiereLegende(gd, achse) {
   });
 }
 
+
+// Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
+// passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
+// missverstaendlich (gedrueckt = sichtbar oder ausgeblendet?).
+function legendeEigenschaftenSetzen(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    eintrag.setAttribute('tabindex', '0');
+    eintrag.setAttribute('role', 'switch');
+    const text = eintrag.querySelector('text.legendtext');
+    if (text) eintrag.setAttribute('aria-label',
+      text.getAttribute('data-unformatted') || text.textContent);
+  });
+}
+
+// Zustand aus der Darstellung ablesen statt aus den Daten: Plotly setzt einen
+// abgeschalteten Legendeneintrag auf Deckkraft 0.5. Ueber die Datenspuren ginge
+// es nicht verlaesslich, weil die Reihenfolge der Legende nicht der Reihenfolge
+// in gd.data entspricht -- gestapelte Diagramme drehen sie um.
+function legendeZustandNachfuehren(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const sichtbar = parseFloat(eintrag.style.opacity || '1') > 0.9;
+    eintrag.setAttribute('aria-checked', sichtbar ? 'true' : 'false');
+  });
+}
+
+// Die Grafik selbst ist fuer Screenreader stumm: Plotly zeichnet reines SVG
+// ohne Rollen. Die Achsen-, Titel- und Datenbeschriftungen darin wuerden als
+// zusammenhanglose Wortfolge vorgelesen ('2023 2030 ... 10.000 20.000 ...').
+// Deshalb alles ausblenden, was rein grafisch ist; die Werte stehen in der
+// Datentabelle, die Beschriftungen als echter Text im Seitenkopf.
+//
+// aria-hidden muss dabei auf die Geschwister der Legende gesetzt werden, nicht
+// auf ihre Vorfahren: ein 'aria-hidden=false' im Inneren hebt ein
+// 'aria-hidden=true' weiter oben nicht wieder auf.
+function grafikAusZugaenglichkeitsbaum(gd) {
+  const legende = gd.querySelector('g.legend');
+  const legendenEbene = legende && legende.closest('svg.main-svg');
+  gd.querySelectorAll('svg.main-svg').forEach(svg => {
+    if (svg !== legendenEbene) { svg.setAttribute('aria-hidden', 'true'); return; }
+    [...svg.children].forEach(kind => {
+      if (kind !== legende.parentElement) { kind.setAttribute('aria-hidden', 'true'); return; }
+      // In dieser Ebene (infolayer) sitzen neben der Legende die Achsen- und
+      // Diagrammtitel sowie die Annotationen.
+      [...kind.children].forEach(enkel => {
+        if (enkel !== legende) enkel.setAttribute('aria-hidden', 'true');
+      });
+    });
+  });
+}
+
+function a11yAnwenden(gd) {
+  legendeEigenschaftenSetzen(gd);
+  legendeZustandNachfuehren(gd);
+  grafikAusZugaenglichkeitsbaum(gd);
+}
+
+function zugaenglichMachen(gd) {
+  a11yAnwenden(gd);
+  if (gd._a11yVerdrahtet) return;
+  gd._a11yVerdrahtet = true;
+
+  gd.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const eintrag = ev.target.closest && ev.target.closest('g.traces');
+    if (!eintrag) return;
+    ev.preventDefault();      // die Leertaste wuerde sonst die Seite scrollen
+    const ziel = eintrag.querySelector('rect.legendtoggle') || eintrag;
+    ['mousedown', 'mouseup', 'click'].forEach(art => ziel.dispatchEvent(
+      new MouseEvent(art, { bubbles: true, cancelable: true, view: window })));
+  });
+
+  // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
+  // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
+  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
+  // Animation.
+  gd.on('plotly_afterplot', () => a11yAnwenden(gd));
+}
+
+
+function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  ziel.hidden = !auf;
+}
+
 function draw() {
   const traces = buildTraces(aktuellesSzenario === 'Fortschreibung' ? dataFS : dataO45);
+  const gd = document.getElementById('chart');
   Plotly.react('chart', traces, responsive(layout, traces.length),
                {responsive: true, displayModeBar: false})
-    .then(() => animiereLegende(document.getElementById('chart'), 'y'));
+    .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd); });
 }
 function showScenario(sz) {
   aktuellesSzenario = sz;
-  document.getElementById('btn-fs').classList.toggle('active', sz === 'Fortschreibung');
-  document.getElementById('btn-o45').classList.toggle('active', sz === 'O45');
+  const fs = sz === 'Fortschreibung';
+  // aria-pressed zusaetzlich zur Klasse: die Farbumkehr allein sagt einem
+  // Screenreader nicht, welches Szenario gerade aktiv ist.
+  document.getElementById('btn-fs').classList.toggle('active', fs);
+  document.getElementById('btn-o45').classList.toggle('active', !fs);
+  document.getElementById('btn-fs').setAttribute('aria-pressed', fs ? 'true' : 'false');
+  document.getElementById('btn-o45').setAttribute('aria-pressed', fs ? 'false' : 'true');
+  // Datentabelle mitschalten, sonst zeigte sie das andere Szenario.
+  document.getElementById('tab-fs').hidden = !fs;
+  document.getElementById('tab-o45').hidden = fs;
   draw();
 }
 draw();

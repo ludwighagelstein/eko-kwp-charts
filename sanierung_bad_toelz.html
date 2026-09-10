@@ -23,6 +23,30 @@
     border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
   .toggle button.active { background: #1D4B8F; color: #fff; }
 
+  /* Nur fuer Screenreader: unsichtbar, aber im Zugaenglichkeitsbaum. */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Tastaturfokus auf den Legendeneintraegen. Plotly zeichnet dort reines SVG
+     ohne Rahmen; der Fokus waere sonst unsichtbar (WCAG 2.4.7). Der Rahmen
+     kommt auf das unsichtbare Klickfeld, das Plotly ueber jeden Eintrag legt. */
+  g.traces:focus { outline: none; }
+  g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
+
+  /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
+     nicht hoeher wird als vor der Datentabelle. */
+  .footer-zeile { display: flex; flex-wrap: wrap; gap: 2px 16px; justify-content: space-between; }
+  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
+    border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
+  .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
+  .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
+    white-space: nowrap; }
+  .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
+  .tabelle th[scope="row"] { text-align: left; }
+  .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
   /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
      Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
      die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
@@ -34,16 +58,30 @@
     .toggle { padding: 0 12px 6px 12px; }
     .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
     .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
+    .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
+    /* Schmal reicht die Breite nicht fuer Quelle und Schalter nebeneinander;
+       als Textfluss haengt der Schalter hinter der Quellenangabe und kostet
+       nur dann eine Zeile, wenn dort wirklich kein Platz mehr ist. */
+    .footer-zeile { display: block; }
+    .tabelle-schalter { margin-left: 6px; }
   }
 </style>
 </head>
 <body>
 <div class="header">
-  <h1>Bad Tölz: Sanierungsszenario</h1>
+  <h1 id="titel">Bad Tölz: Sanierungsszenario</h1>
   <p>Nutzenergie [MWh] je Stützjahr, Szenario Fortschreibung/O45</p>
 </div>
-<div id="chart"></div>
-<div class="footer">Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</div>
+<p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
+<div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
+<div class="footer">
+  <div class="footer-zeile">
+    <span>Quelle: Kommunale Wärmeplanung Bad Tölz, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
+            onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
+  </div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Bad Tölz: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2023</th><td>176.351</td><td>176.351</td></tr><tr><th scope="row">2030</th><td>165.054</td><td>158.284</td></tr><tr><th scope="row">2035</th><td>157.434</td><td>146.020</td></tr><tr><th scope="row">2040</th><td>150.169</td><td>134.706</td></tr><tr><th scope="row">2045</th><td>143.242</td><td>124.269</td></tr></tbody></table><p>Fortschreibung 2023→2045: -33.109 MWh (-19 %)</p><p>O45 2023→2045: -52.082 MWh (-30 %)</p></div>
+</div>
 <script>
 const years = [2023, 2030, 2035, 2040, 2045];
 const fort = [176351.2, 165053.6, 157433.8, 150168.9, 143242.3];
@@ -72,7 +110,7 @@ const layout = {
   annotations: [
     { xref: 'paper', yref: 'paper', x: 1, y: 1.02, xanchor: 'right', yanchor: 'bottom', showarrow: false,
        align: 'right', font: { size: 11, color: '#333' },
-       text: ["Fortschreibung 2023\u21922045: -33,109 MWh (-19 %)", "O45 2023\u21922045: -52,082 MWh (-30 %)"].join('<br>') }
+       text: ["Fortschreibung 2023\u21922045: -33.109 MWh (-19 %)", "O45 2023\u21922045: -52.082 MWh (-30 %)"].join('<br>') }
   ],
   separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };
@@ -134,7 +172,11 @@ function onResize(redraw) {
 }
 
 
-const ANIM_DAUER = 450;
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
 
 function animiereLegende(gd, achse) {
   // Ausgangswerte bei jedem Neuzeichnen frisch merken (Szenariowechsel!).
@@ -185,11 +227,100 @@ function animiereLegende(gd, achse) {
   });
 }
 
+
+// Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
+// passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
+// missverstaendlich (gedrueckt = sichtbar oder ausgeblendet?).
+function legendeEigenschaftenSetzen(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    eintrag.setAttribute('tabindex', '0');
+    eintrag.setAttribute('role', 'switch');
+    const text = eintrag.querySelector('text.legendtext');
+    if (text) eintrag.setAttribute('aria-label',
+      text.getAttribute('data-unformatted') || text.textContent);
+  });
+}
+
+// Zustand aus der Darstellung ablesen statt aus den Daten: Plotly setzt einen
+// abgeschalteten Legendeneintrag auf Deckkraft 0.5. Ueber die Datenspuren ginge
+// es nicht verlaesslich, weil die Reihenfolge der Legende nicht der Reihenfolge
+// in gd.data entspricht -- gestapelte Diagramme drehen sie um.
+function legendeZustandNachfuehren(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const sichtbar = parseFloat(eintrag.style.opacity || '1') > 0.9;
+    eintrag.setAttribute('aria-checked', sichtbar ? 'true' : 'false');
+  });
+}
+
+// Die Grafik selbst ist fuer Screenreader stumm: Plotly zeichnet reines SVG
+// ohne Rollen. Die Achsen-, Titel- und Datenbeschriftungen darin wuerden als
+// zusammenhanglose Wortfolge vorgelesen ('2023 2030 ... 10.000 20.000 ...').
+// Deshalb alles ausblenden, was rein grafisch ist; die Werte stehen in der
+// Datentabelle, die Beschriftungen als echter Text im Seitenkopf.
+//
+// aria-hidden muss dabei auf die Geschwister der Legende gesetzt werden, nicht
+// auf ihre Vorfahren: ein 'aria-hidden=false' im Inneren hebt ein
+// 'aria-hidden=true' weiter oben nicht wieder auf.
+function grafikAusZugaenglichkeitsbaum(gd) {
+  const legende = gd.querySelector('g.legend');
+  const legendenEbene = legende && legende.closest('svg.main-svg');
+  gd.querySelectorAll('svg.main-svg').forEach(svg => {
+    if (svg !== legendenEbene) { svg.setAttribute('aria-hidden', 'true'); return; }
+    [...svg.children].forEach(kind => {
+      if (kind !== legende.parentElement) { kind.setAttribute('aria-hidden', 'true'); return; }
+      // In dieser Ebene (infolayer) sitzen neben der Legende die Achsen- und
+      // Diagrammtitel sowie die Annotationen.
+      [...kind.children].forEach(enkel => {
+        if (enkel !== legende) enkel.setAttribute('aria-hidden', 'true');
+      });
+    });
+  });
+}
+
+function a11yAnwenden(gd) {
+  legendeEigenschaftenSetzen(gd);
+  legendeZustandNachfuehren(gd);
+  grafikAusZugaenglichkeitsbaum(gd);
+}
+
+function zugaenglichMachen(gd) {
+  a11yAnwenden(gd);
+  if (gd._a11yVerdrahtet) return;
+  gd._a11yVerdrahtet = true;
+
+  gd.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const eintrag = ev.target.closest && ev.target.closest('g.traces');
+    if (!eintrag) return;
+    ev.preventDefault();      // die Leertaste wuerde sonst die Seite scrollen
+    const ziel = eintrag.querySelector('rect.legendtoggle') || eintrag;
+    ['mousedown', 'mouseup', 'click'].forEach(art => ziel.dispatchEvent(
+      new MouseEvent(art, { bubbles: true, cancelable: true, view: window })));
+  });
+
+  // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
+  // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
+  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
+  // Animation.
+  gd.on('plotly_afterplot', () => a11yAnwenden(gd));
+}
+
+
+function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  ziel.hidden = !auf;
+}
+
 function draw() {
   const traces = [traceFort, traceO45];
+  const gd = document.getElementById('chart');
   Plotly.react('chart', traces, responsive(layout, traces.length),
                {responsive: true, displayModeBar: false})
-    .then(() => animiereLegende(document.getElementById('chart'), 'y'));
+    .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd); });
 }
 draw();
 onResize(draw);

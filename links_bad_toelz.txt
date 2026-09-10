@@ -3,19 +3,19 @@
 # erzwingt StoryMaps eine eigene, flache Blockhöhe.
 
 https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_bad_toelz.html" width="100%" height="550" title="Potenzialanalyse Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_bad_toelz.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_bad_toelz.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_bad_toelz.html" width="100%" height="550" title="Entwicklung CO₂-Emissionen Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html" width="100%" height="550" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_bad_toelz.html" width="100%" height="550" title="Sanierungsszenario Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.html" width="100%" height="750" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.html" width="100%" height="750" title="Endenergieverbrauch Bad Tölz" style="border:0" loading="lazy"></iframe>
