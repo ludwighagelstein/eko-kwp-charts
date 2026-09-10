@@ -74,7 +74,7 @@ function layoutFuer(gruppe) {
               ticktext: ['<b>' + gruppe.achse + '</b>'] },
     legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom',
                font: { size: 12 }, traceorder: 'normal' },
-    plot_bgcolor: '#fff', paper_bgcolor: '#fff'
+    separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
   };
 }
 
@@ -105,23 +105,32 @@ function draw() {
     }
     Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false});
   });
-  balkendickeAusgleichen();
+  zeichenflaechenAusgleichen();
 }
 
-// Die Balkendicke ist ein Anteil der Zeichenflaechenhoehe. Die Legende der
-// Energietraeger braucht mehr Zeilen als die der anderen Panels, Plotly
-// verkleinert dadurch deren Zeichenflaeche - die Balken waeren unterschiedlich
-// dick. Deshalb nach dem Rendern auf die gleiche Pixeldicke nachziehen.
-function balkendickeAusgleichen() {
+// Die Legende der Energietraeger braucht mehr Zeilen als die der anderen
+// Panels; Plotly vergroessert dafuer den oberen Rand und verkleinert die
+// Zeichenflaeche. Folge: kuerzere y-Achse und duennerer Balken in diesem Panel.
+// Deshalb nach dem Rendern alle Zeichenflaechen auf die kleinste angleichen -
+// damit stimmen Achsenlaenge und Balkendicke ueberall ueberein, ohne an der
+// Balkenbreite zu drehen.
+async function zeichenflaechenAusgleichen() {
   const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
-  const hoehen = divs.map(d => d._fullLayout && d._fullLayout.yaxis
-                               ? d._fullLayout.yaxis._length : null);
-  if (hoehen.some(h => !h)) return;
-  const ziel = 0.5 * Math.min(...hoehen);
-  divs.forEach((d, i) => {
-    const breite = ziel / hoehen[i];
-    Plotly.restyle(d, { width: breite });
-  });
+  // Mehrere Durchlaeufe: automargin holt sich einen Teil des zusaetzlichen
+  // Randes wieder zurueck, ein einzelner Schritt trifft die Zielhoehe nicht.
+  for (let durchlauf = 0; durchlauf < 6; durchlauf++) {
+    const laengen = divs.map(d => d._fullLayout && d._fullLayout.yaxis
+                                  ? d._fullLayout.yaxis._length : null);
+    if (laengen.some(l => !l)) return;
+    const ziel = Math.min(...laengen);
+    if (Math.max(...laengen) - ziel <= 1) return;
+    await Promise.all(divs.map((d, i) => {
+      const zusatz = laengen[i] - ziel;
+      return zusatz > 0.5
+        ? Plotly.relayout(d, { 'margin.t': d._fullLayout.margin.t + zusatz })
+        : Promise.resolve();
+    }));
+  }
 }
 
 draw();

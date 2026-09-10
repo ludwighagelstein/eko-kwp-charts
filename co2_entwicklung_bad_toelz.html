@@ -68,11 +68,15 @@ const layout = {
   margin: { t: 20, l: 60, r: 10, b: 40 },
   // automargin: sonst ragt die letzte Jahreszahl (2045) ueber den rechten Rand.
   xaxis: { dtick: 5, gridcolor: '#eee', automargin: true, tickfont: { size: 14 } },
-  yaxis: { title: { text: 't CO₂/a', standoff: 20 }, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)', gridcolor: '#eee', zeroline: false },
+  // Sichtbare Ticks an der y-Achse; tickformat statt Plotly-Standard, der
+  // 60000 zu '60k' kuerzt. Das Trennzeichen kommt aus 'separators'.
+  yaxis: { title: { text: 't CO₂/a', standoff: 20 }, tickformat: ',.0f',
+            ticks: 'outside', ticklen: 8, tickcolor: '#595959', automargin: true,
+            gridcolor: '#eee', zeroline: false },
   // Interaktive Fassung: Legende rechts. In der PNG-Fassung (fig_timeseries)
   // steht sie darunter.
   legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 13 } },
-  plot_bgcolor: '#fff', paper_bgcolor: '#fff', hovermode: 'x unified'
+  separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff', hovermode: 'x unified'
 };
 
 const NARROW_PX = 620;

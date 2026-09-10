@@ -64,7 +64,7 @@ const layout = {
   margin: { t: 52, l: 70, r: 10, b: 10 },
   xaxis: { type: 'linear', tickmode: 'array', tickvals: years, ticktext: years.map(String),
             tickangle: 0, automargin: true, tickfont: { size: 14 } },
-  yaxis: { title: { text: 'Nutzenergie [MWh]', standoff: 20 }, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
+  yaxis: { title: { text: 'Nutzenergie [MWh]', standoff: 20 }, automargin: true, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
             gridcolor: '#eee', zeroline: false, tickformat: ',.0f' },
   // Interaktive Fassung: Legende rechts. In der PNG-Fassung (fig_sanierung)
   // steht sie darunter.
@@ -74,7 +74,7 @@ const layout = {
        align: 'right', font: { size: 11, color: '#333' },
        text: ["Fortschreibung 2023\u21922045: -33,109 MWh (-19 %)", "O45 2023\u21922045: -52,082 MWh (-30 %)"].join('<br>') }
   ],
-  plot_bgcolor: '#fff', paper_bgcolor: '#fff'
+  separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };
 
 
