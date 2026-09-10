@@ -6,11 +6,12 @@
      die fertige Seite herunter: das Desktop-Layout erscheint winzig, und weder
      die Media-Query noch responsive() greifen, weil innerWidth 980 bleibt. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <title>Sanierungsszenario Bad Tölz</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
   html, body { height: 100%; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 1000px;
+  body { font-family: 'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 1000px;
     background: #fff; color: #222; display: flex; flex-direction: column; }
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
@@ -55,7 +56,7 @@ const traceO45 = { x: years, y: o45, type: 'bar', name: 'Sanierungsszenario O45'
 
 const layout = {
   barmode: 'group',
-  font: { family: 'Segoe UI, Arial, sans-serif', size: 13, color: '#333' },
+  font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
   // Legende und Reduktionstext rechts neben die Saeulen statt darueber: der
   // Oberer Rand fuer den Reduktionstext: der sitzt ueber dem Diagramm, weil
   // unten die Legende steht. Annotationen bekommen per automargin keinen Platz
