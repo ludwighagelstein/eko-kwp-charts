@@ -114,7 +114,7 @@ async function draw() {
       l.legend.y = 1.16;
     }
     return Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false})
-      .then(() => legendeVerdrahten(document.getElementById('teil' + i), g.eintraege.length));
+      .then(() => legendeVerdrahten(document.getElementById('teil' + i), g));
   }));
   await zeichenflaechenAusgleichen();
 }
@@ -122,15 +122,50 @@ async function draw() {
 // Der Legendenklick trifft die Punkt-Spur; ohne diese Verdrahtung bliebe der
 // zugehoerige Balken stehen. Nur einmal je Panel anhaengen, sonst wuerde der
 // Handler bei jedem Neuzeichnen doppelt reagieren.
-function legendeVerdrahten(gd, anzahl) {
+//
+// Statt die Balken-Spur auf visible:false zu setzen, laeuft ihr Wert weich auf
+// Null: 'visible' ist in Plotly nicht animierbar und wuerde springen, der
+// Balkenwert dagegen schon. Die uebrigen Segmente schieben sich dadurch
+// fliessend nach. Das Ausgrauen des Legendeneintrags macht Plotly selbst an der
+// Punkt-Spur, deshalb wird das Standardverhalten nicht unterdrueckt.
+function legendeVerdrahten(gd, gruppe) {
   if (gd._legendeVerdrahtet) return;
   gd._legendeVerdrahtet = true;
+  const anzahl = gruppe.eintraege.length;
   gd.on('plotly_legendclick', ev => {
     const balken = ev.curveNumber - anzahl;
     if (balken < 0 || balken >= anzahl) return;
-    const sichtbar = gd.data[balken].visible;
-    Plotly.restyle(gd, { visible: sichtbar === false ? true : false }, [balken]);
+    const ausgeblendet = gd._ausgeblendet || (gd._ausgeblendet = {});
+    const jetztAus = !ausgeblendet[balken];
+    ausgeblendet[balken] = jetztAus;
+    const voll = gruppe.eintraege[balken].wert;
+    weichSetzen(gd, balken, jetztAus ? 0 : voll);
   });
+}
+
+// Plotly kann Balken nicht animieren: 'Plotly.animate' bleibt wirkungslos, und
+// 'Plotly.react' mit layout.transition aendert zwar die Daten, zeichnet aber
+// nicht neu (Darstellung bliebe veraltet stehen). Deshalb selbst schrittweise
+// per restyle interpolieren - das zeichnet zuverlaessig.
+const ANIM_DAUER = 450;
+function weichSetzen(gd, spur, ziel) {
+  const laufend = gd._anim || (gd._anim = {});
+  laufend[spur] = (laufend[spur] || 0) + 1;
+  const marke = laufend[spur];
+  const von = Number(gd.data[spur].x[0]) || 0;
+  const start = performance.now();
+  // Bewusst setTimeout statt requestAnimationFrame: rAF steht in verborgenen
+  // Tabs und iframes still, die Animation waere dort nie fertig und die
+  // Darstellung bliebe auf halbem Weg stehen. Der Fortschritt kommt aus der
+  // Uhrzeit, die Dauer stimmt also auch bei gebremsten Timern.
+  function schritt() {
+    if (laufend[spur] !== marke) return;   // neuerer Klick hat uebernommen
+    const t = Math.min(1, (performance.now() - start) / ANIM_DAUER);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    Plotly.restyle(gd, { x: [[von + (ziel - von) * e]] }, [spur]);
+    if (t < 1) setTimeout(schritt, 16);
+  }
+  schritt();
 }
 
 // Die Legende der Energietraeger braucht mehr Zeilen als die der anderen
