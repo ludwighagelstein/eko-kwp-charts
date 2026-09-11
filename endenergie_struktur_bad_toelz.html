@@ -90,10 +90,12 @@
      ueber dem Panel. Frueher war das eine Plotly-Anmerkung im Diagramm, die
      sich mit der Legende ueberlagert hat -- als eigenes Element im Seitenfluss
      kann das nicht passieren. */
-  /* Kompakt gehalten: die Hoehe dieser drei Zeilen geht der Zeichenflaeche
-     verloren, und an ihr haengt, ob die Legendenschrift im Block bleibt. */
+  /* Zeilenhoehe mit Luft fuer die Unterlaengen: bei line-height 1 ragte das
+     'g' von "Energietraeger" aus der Zeile und wurde vom weissen Diagramm
+     darunter ueberdeckt. Die Hoehe, die das kostet, holt sich
+     panelsAnpassen() aus den Zeichenflaechen zurueck. */
   .teilTitel { display: none; margin: 0 0 1px 2px; font-size: 11px;
-                line-height: 1; font-weight: 700; color: #1D4B8F; }
+                line-height: 1.35; font-weight: 700; color: #1D4B8F; }
   @media (max-width: 619.98px) {
     #charts { min-height: 0; }
     .teil { min-height: 0; }
@@ -339,20 +341,37 @@ async function panelsAnpassen() {
                      .reduce((s, e) => s + e.offsetHeight, 0);
   let schrift = 12;
 
+  // Zusaetzlicher oberer Rand je Panel. Ein Pixel mehr oben verschiebt Hoehe
+  // aus den (geteilten) Zeichenflaechen in dieses eine Panel -- netto bringt es
+  // ihm 2/3 px, weil ein Drittel des Verlusts auf es selbst zurueckfaellt.
+  // Damit laesst sich die Legendenbedingung erfuellen, ohne die Schrift zu
+  // verkleinern: die Balken werden dafuer etwas duenner.
+  const zusatz = [0, 0, 0];
+
   for (let versuch = 0; ; versuch++) {
     const legenden = divs.map(d => Math.ceil(legendenHoehe(d)));
-    const oben = legenden.map(h => h + SCHMAL_LUFT);
+    const oben = legenden.map((h, i) => h + SCHMAL_LUFT + zusatz[i]);
     const unten = divs.map(d => Math.ceil(d._fullLayout.margin.b));
     const rest = charts.clientHeight - titel - summe(oben) - summe(unten);
     // Gleiche Zeichenflaeche fuer alle drei: nur so sind die Balken gleich dick.
     const flaeche = Math.max(SCHMAL_FLAECHE_MIN, Math.floor(rest / 3));
-    // Waere ein Panel zu niedrig fuer seine Legende (s. SCHMAL_LEGENDE_MIN),
-    // lieber die Legendenschrift verkleinern als sie beschneiden zu lassen.
-    const zuEng = divs.some((d, i) => 2 * legenden[i] > oben[i] + flaeche + unten[i]);
-    if (zuEng && schrift > SCHMAL_LEGENDE_MIN && versuch < 4) {
-      schrift -= 1;
-      await Promise.all(divs.map(d => Plotly.relayout(d, { 'legend.font.size': schrift })));
-      continue;
+    // Fehlt einem Panel Hoehe fuer seine Legende, bekommt es sie oben dazu --
+    // solange die Zeichenflaechen das hergeben. Erst wenn die an ihrer
+    // Untergrenze sind, wird die Legendenschrift kleiner (s.
+    // SCHMAL_LEGENDE_MIN); beschneiden lassen wir sie nie.
+    const fehlend = divs.map((d, i) => 2 * legenden[i] - (oben[i] + flaeche + unten[i]));
+    const platzDa = flaeche > SCHMAL_FLAECHE_MIN;
+    if (fehlend.some(f => f > 0) && versuch < 6) {
+      if (platzDa) {
+        fehlend.forEach((f, i) => { if (f > 0) zusatz[i] += Math.ceil(f * 1.5); });
+        continue;
+      }
+      if (schrift > SCHMAL_LEGENDE_MIN) {
+        schrift -= 1;
+        zusatz.fill(0);
+        await Promise.all(divs.map(d => Plotly.relayout(d, { 'legend.font.size': schrift })));
+        continue;
+      }
     }
     await Promise.all(divs.map((d, i) => {
       d.style.flex = '0 0 auto';
