@@ -16,7 +16,7 @@
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
   .header p { font-size: 13px; margin: 0; color: #555; }
-  #chart { width: 100%; flex: 1 1 auto; min-height: 600px; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 460px; }
   .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
   .toggle { padding: 0 30px 8px 30px; flex: none; }
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
@@ -117,6 +117,15 @@ const KUCHEN_LABEL_PLATZ = 76;
 const KUCHEN_LABEL_PLATZ_SCHMAL = 46;
 const KUCHEN_LABEL_GROESSE_SCHMAL = 10;
 
+// Legendenschrift auf schmalen Ansichten. 12 ist der groesste Wert, bei dem die
+// Legende zweispaltig bleibt: ab 13 passen bei 330 px Blockbreite keine zwei
+// Spalten mehr und Plotly bricht auf eine Spalte mit zwoelf Zeilen um.
+// Die Legendenhoehe aendert sich dabei nicht (gemessen 124 px von Schrift 9 bis
+// 12) -- die Zeilenhoehe richtet sich nach dem Symbol, nicht nach der Schrift.
+// Groessere Schrift bringt hier also Lesbarkeit, aber keinen gefuellten
+// Leerraum.
+const KUCHEN_LEGENDE_GROESSE_SCHMAL = 12;
+
 // Feste Zeichenflaeche fuer den Kuchen, damit der Kreis beim Aus- und
 // Einblenden gleich gross bleibt (siehe spurFuer()).
 function kuchenDomain(gd, schmal) {
@@ -188,8 +197,16 @@ async function hoeheAnInhaltAnpassen(gd, schmal) {
   // Flaechenhoehe -- einmal messen genuegt.
   const legendenHoehe = legende.getBBox().height;
   const m = kuchenMasseSchmal(gd);
-  const soll = Math.ceil(2 * m.platz + m.durchmesser + KUCHEN_LEGENDE_ABSTAND
-                         + legendenHoehe) + m.rest;
+  // Erst die eigene Hoehe abgeben, um zu sehen, wie viel der Block ueberhaupt
+  // hergibt. Nur verkleinern, nie vergroessern: der Platzbedarf waechst mit der
+  // Blockbreite (breiterer Block -> groesserer Kreis), und bei einem kurzen
+  // Einbettungsblock wuerde die Seite sonst scrollen. Passt es nicht, wird der
+  // Kreis eben hoehenbegrenzt statt breitenbegrenzt.
+  flaecheZuruecksetzen(gd);
+  const verfuegbar = gd.clientHeight;
+  const gerechnet = Math.ceil(2 * m.platz + m.durchmesser + KUCHEN_LEGENDE_ABSTAND
+                              + legendenHoehe) + m.rest;
+  const soll = Math.min(verfuegbar, gerechnet);
   if (Math.abs(gd.clientHeight - soll) > 2) {
     gd.style.flex = 'none';
     // min-height aus dem CSS (KUCHEN_CHART_MIN_HEIGHT) wuerde die Hoehe sonst
@@ -398,7 +415,7 @@ function layoutFuer(schmal, gd) {
     legend: schmal
       ? { orientation: 'h', x: 0.5, xanchor: 'center',
            y: kuchenLegendeY(kuchenDomain(gd, true)), yanchor: 'top',
-           font: { size: 9 }, tracegroupgap: 2 }
+           font: { size: KUCHEN_LEGENDE_GROESSE_SCHMAL }, tracegroupgap: 2 }
       : { orientation: 'v', x: 1.02, xanchor: 'left', y: 0.5, yanchor: 'middle',
            font: { size: 13 } },
     separators: ',.', paper_bgcolor: '#fff', plot_bgcolor: '#fff'
