@@ -144,7 +144,7 @@ function layoutFuer(gruppe) {
               tickmode: 'array', tickvals: [gruppe.achse],
               ticktext: ['<b>' + gruppe.achse + '</b>'] },
     legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom',
-               font: { size: 14 }, traceorder: 'normal' },
+               font: { size: 16 }, traceorder: 'normal' },
     // Der Strich der letzten Zahl faellt genau auf den rechten Rand der
     // Zeichenflaeche; dort zeichnet Plotly keine Gitterlinie mehr. Deshalb als
     // Linie in Gitterfarbe nachziehen -- verhaelt sich wie eine echte
@@ -195,7 +195,7 @@ async function draw() {
       // abgeschnittene Hoehe.
       l.margin = { t: 140, l: 34, r: 8, b: 26 };
       l.yaxis.showticklabels = false;
-      l.legend.font = { size: 9 };
+      l.legend.font = { size: 12 };
       if (g.eintraege.length > 8) {
         l.legend.entrywidthmode = 'fraction';
         l.legend.entrywidth = 0.5;
@@ -306,6 +306,12 @@ function weichSetzen(gd, spur, ziel) {
 // fuehrt und die beiden anderen nur drei bzw. vier.
 const SCHMAL_LUFT = 6;            // Abstand Legende -> Zeichenflaeche
 const SCHMAL_FLAECHE_MIN = 54;    // Mindesthoehe der Zeichenflaeche je Panel
+// Plotly beschneidet die Legende, sobald sie hoeher ist als die halbe
+// Panelhoehe -- gemessen bei 330 px Breite: eine 124 px hohe Legende blieb bis
+// 248 px Panelhoehe vollstaendig, darunter wurde sie auf genau die Haelfte der
+// Panelhoehe gestutzt und bekam einen Scrollbalken. Passt das nicht, wird die
+// Legendenschrift schrittweise kleiner, bis es aufgeht.
+const SCHMAL_LEGENDE_MIN = 9;
 
 function legendenHoehe(gd) {
   // Plotly fuehrt die Hoehe intern mit; falls sich das aendert, aus dem SVG
@@ -321,26 +327,35 @@ async function panelsAnpassen() {
   const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
   const charts = document.getElementById('charts');
   if (divs.some(d => !d._fullLayout)) return;
-  const oben = divs.map(d => Math.ceil(legendenHoehe(d)) + SCHMAL_LUFT);
-  const unten = divs.map(d => Math.ceil(d._fullLayout.margin.b));
-  // Plotly beschneidet die Legende an der Zeichenflaeche: ist sie hoeher,
-  // bekommt sie einen Scrollbalken und ueberlagert den Balken. Die
-  // Zeichenflaeche muss deshalb mindestens so hoch sein wie die hoechste der
-  // drei Legenden.
-  const mindest = Math.max(SCHMAL_FLAECHE_MIN, ...oben.map(h => h - SCHMAL_LUFT));
+  const summe = werte => werte.reduce((a, b) => a + b, 0);
   const titel = Array.from(document.querySelectorAll('.teilTitel'))
-                     .reduce((summe, e) => summe + e.offsetHeight, 0);
-  const rest = charts.clientHeight - titel
-               - oben.reduce((a, b) => a + b, 0) - unten.reduce((a, b) => a + b, 0);
-  // Gleiche Zeichenflaeche fuer alle drei: nur so sind die Balken gleich dick.
-  const flaeche = Math.max(mindest, Math.floor(rest / 3));
-  await Promise.all(divs.map((d, i) => {
-    d.style.flex = '0 0 auto';
-    d.style.height = (oben[i] + flaeche + unten[i]) + 'px';
-    return Plotly.relayout(d, { 'margin.t': oben[i] });
-  }));
-  // Plotly liest die neue Containerhoehe nicht von selbst.
-  await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+                     .reduce((s, e) => s + e.offsetHeight, 0);
+  let schrift = 12;
+
+  for (let versuch = 0; ; versuch++) {
+    const legenden = divs.map(d => Math.ceil(legendenHoehe(d)));
+    const oben = legenden.map(h => h + SCHMAL_LUFT);
+    const unten = divs.map(d => Math.ceil(d._fullLayout.margin.b));
+    const rest = charts.clientHeight - titel - summe(oben) - summe(unten);
+    // Gleiche Zeichenflaeche fuer alle drei: nur so sind die Balken gleich dick.
+    const flaeche = Math.max(SCHMAL_FLAECHE_MIN, Math.floor(rest / 3));
+    // Waere ein Panel zu niedrig fuer seine Legende (s. SCHMAL_LEGENDE_MIN),
+    // lieber die Legendenschrift verkleinern als sie beschneiden zu lassen.
+    const zuEng = divs.some((d, i) => 2 * legenden[i] > oben[i] + flaeche + unten[i]);
+    if (zuEng && schrift > SCHMAL_LEGENDE_MIN && versuch < 4) {
+      schrift -= 1;
+      await Promise.all(divs.map(d => Plotly.relayout(d, { 'legend.font.size': schrift })));
+      continue;
+    }
+    await Promise.all(divs.map((d, i) => {
+      d.style.flex = '0 0 auto';
+      d.style.height = (oben[i] + flaeche + unten[i]) + 'px';
+      return Plotly.relayout(d, { 'margin.t': oben[i] });
+    }));
+    // Plotly liest die neue Containerhoehe nicht von selbst.
+    await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+    return;
+  }
 }
 
 async function zeichenflaechenAusgleichen() {
