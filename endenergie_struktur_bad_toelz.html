@@ -85,6 +85,18 @@
   #charts { flex: 1 1 auto; display: flex; flex-direction: column;
              min-height: 600px; }
   .teil { flex: 1 1 0; min-height: 200px; }
+  /* Der Kategoriename steht breit als Achsenbeschriftung links am Balken. In
+     der schmalen Ansicht ist dort kein Platz; dann steht er als HTML-Zeile
+     ueber dem Panel. Frueher war das eine Plotly-Anmerkung im Diagramm, die
+     sich mit der Legende ueberlagert hat -- als eigenes Element im Seitenfluss
+     kann das nicht passieren. */
+  .teilTitel { display: none; margin: 0 0 1px 2px; font-size: 11px;
+                font-weight: 700; color: #1D4B8F; }
+  @media (max-width: 619.98px) {
+    #charts { min-height: 0; }
+    .teil { min-height: 0; }
+    .teilTitel { display: block; }
+  }
 </style>
 </head>
 <body>
@@ -94,8 +106,11 @@
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
 <div id="charts">
+  <h2 class="teilTitel" aria-hidden="true">Energieträger</h2>
   <div class="teil" id="teil0" role="group" aria-label="Aufteilung nach Energieträger" aria-describedby="hinweis"></div>
+  <h2 class="teilTitel" aria-hidden="true">Sektor</h2>
   <div class="teil" id="teil1" role="group" aria-label="Aufteilung nach Sektor" aria-describedby="hinweis"></div>
+  <h2 class="teilTitel" aria-hidden="true">Gebäudetyp</h2>
   <div class="teil" id="teil2" role="group" aria-label="Aufteilung nach Gebäudetyp" aria-describedby="hinweis"></div>
 </div>
 <div class="footer">
@@ -109,6 +124,9 @@
 <script>
 const gruppen = [{"achse": "Energietr\u00e4ger", "eintraege": [{"label": "Energieholz", "wert": 16.58, "farbe": "#6FAC46"}, {"label": "Solarthermie", "wert": 2.91, "farbe": "#FFCF00"}, {"label": "Fernw\u00e4rme EE", "wert": 12.78, "farbe": "#F39C12"}, {"label": "Fernw\u00e4rme fossil", "wert": 6.81, "farbe": "#BB5C07"}, {"label": "Luft-Wasser-WP", "wert": 1.76, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 0.26, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 0.22, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 5.12, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 1.47, "farbe": "#887894"}, {"label": "Erdgas", "wert": 108.24, "farbe": "#999999"}, {"label": "Kohle", "wert": 0.62, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 48.88, "farbe": "#4A4A4A"}]}, {"achse": "Sektor", "eintraege": [{"label": "Kommunal", "wert": 2.12, "farbe": "#00A24D"}, {"label": "GHD", "wert": 87.33, "farbe": "#F39C12"}, {"label": "private Haushalte", "wert": 116.22, "farbe": "#326F90"}]}, {"achse": "Geb\u00e4udetyp", "eintraege": [{"label": "Nichtwohngeb\u00e4ude", "wert": 89.46, "farbe": "#1D4B8F"}, {"label": "Wohnen MFH", "wert": 63.34, "farbe": "#6FAC46"}, {"label": "Wohnen EFH/DHH/RH", "wert": 52.86, "farbe": "#E8C547"}]}];
 const OBERGRENZE = 220;
+// Jede zweite Zahl der schmalen Ansicht: 0, 40, 80, ... bis OBERGRENZE.
+const SCHMAL_TICKS = Array.from(
+  { length: Math.floor(OBERGRENZE / (2 * 20)) + 1 }, (_, k) => k * 2 * 20);
 
 function layoutFuer(gruppe) {
   return {
@@ -140,6 +158,14 @@ function layoutFuer(gruppe) {
 
 async function draw() {
   const schmal = window.innerWidth < 620;
+  // Beim Wechsel zurueck in die breite Ansicht die Festhoehen abgeben, die
+  // panelsAnpassen() gesetzt hat -- sonst rechnet Plotly mit der alten Hoehe
+  // weiter und die Panels behalten die schmalen Proportionen.
+  if (!schmal) [0, 1, 2].forEach(i => {
+    const d = document.getElementById('teil' + i);
+    d.style.flex = '';
+    d.style.height = '';
+  });
   await Promise.all(gruppen.map((g, i) => {
     const balken = g.eintraege.map(e => ({
       x: [e.wert], y: [g.achse], type: 'bar', orientation: 'h', name: e.label,
@@ -159,25 +185,57 @@ async function draw() {
     const l = layoutFuer(g);
     if (schmal) {
       // Schmal ist links kein Platz fuer die Kategorienamen; die stehen dann
-      // als Titel ueber dem Panel.
-      l.margin = { t: 8, l: 34, r: 8, b: 40 };
+      // als HTML-Zeile ueber dem Panel (.teilTitel), nicht als Anmerkung im
+      // Diagramm -- die hat sich mit der Legende ueberlagert.
+      //
+      // Der obere Rand ist hier absichtlich grosszuegig: panelsAnpassen() misst
+      // anschliessend die tatsaechliche Legendenhoehe und zieht ihn darauf
+      // zusammen. Zu klein begonnen wuerde Plotly die Legende beschneiden und
+      // ihr einen Scrollbalken geben -- gemessen wird dann nur die
+      // abgeschnittene Hoehe.
+      l.margin = { t: 140, l: 34, r: 8, b: 26 };
       l.yaxis.showticklabels = false;
       l.legend.font = { size: 9 };
       if (g.eintraege.length > 8) {
         l.legend.entrywidthmode = 'fraction';
         l.legend.entrywidth = 0.5;
       }
-      l.xaxis.title.font = { size: 10 };
-      l.annotations = [{ xref: 'paper', yref: 'paper', x: 0, y: 1.02, xanchor: 'left',
-                          yanchor: 'bottom', showarrow: false, text: '<b>' + g.achse + '</b>',
-                          font: { size: 10, color: '#1D4B8F' } }];
-      l.legend.y = 1.16;
+      // Direkt auf der Oberkante der Zeichenflaeche: der Platz darueber ist
+      // durch margin.t reserviert.
+      l.legend.y = 1;
+      l.legend.yanchor = 'bottom';
+      // Waagrechte Zahlen: senkrecht gedreht sind sie schwer zu lesen und
+      // brauchen unten viel Platz. Dafuer nur jede zweite -- alle 20er
+      // Schritte stehen auf einem Handy zu dicht.
+      l.xaxis.tickangle = 0;
+      l.xaxis.tickmode = 'array';
+      l.xaxis.tickvals = SCHMAL_TICKS;
+      l.xaxis.tickfont = { size: 10 };
+      // Der Achsentitel wiederholte sich unter jedem der drei Panels. Er steht
+      // jetzt nur unter dem letzten, das spart zweimal Hoehe zwischen den
+      // Diagrammen.
+      if (i === 2) {
+        l.xaxis.title.font = { size: 10 };
+        l.margin.b = 44;
+      } else {
+        delete l.xaxis.title;
+      }
     }
     const gd = document.getElementById('teil' + i);
     return Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false})
       .then(() => { legendeVerdrahten(gd, g); zugaenglichMachen(gd); });
   }));
-  await zeichenflaechenAusgleichen();
+  if (schmal) {
+    await panelsAnpassen();
+  } else {
+    // Nach dem Wechsel aus der schmalen Ansicht haben die Container eine neue
+    // Hoehe (die Festhoehen sind oben abgegeben). Plotly rechnet erst nach
+    // Plots.resize damit -- ohne das misst zeichenflaechenAusgleichen die
+    // alten Hoehen und die Balken bleiben unterschiedlich dick.
+    await Promise.all([0, 1, 2].map(
+      i => Plotly.Plots.resize(document.getElementById('teil' + i))));
+    await zeichenflaechenAusgleichen();
+  }
 }
 
 // Der Legendenklick trifft die Punkt-Spur; ohne diese Verdrahtung bliebe der
@@ -239,6 +297,52 @@ function weichSetzen(gd, spur, ziel) {
 // Deshalb nach dem Rendern alle Zeichenflaechen auf die kleinste angleichen -
 // damit stimmen Achsenlaenge und Balkendicke ueberall ueberein, ohne an der
 // Balkenbreite zu drehen.
+// Schmale Ansicht: jedes Panel bekommt genau die Hoehe, die es braucht --
+// Legende oben, gleich hohe Zeichenflaeche, Achse unten. Der Ausgleich fuer die
+// breite Ansicht (zeichenflaechenAusgleichen) geht umgekehrt vor: alle Panels
+// sind gleich hoch und der obere Rand wird aufgefuellt, bis die
+// Zeichenflaechen gleich gross sind. Schmal ergibt das viel Leerraum zwischen
+// den Diagrammen, weil die Legende des ersten Panels zwoelf Energietraeger
+// fuehrt und die beiden anderen nur drei bzw. vier.
+const SCHMAL_LUFT = 6;            // Abstand Legende -> Zeichenflaeche
+const SCHMAL_FLAECHE_MIN = 54;    // Mindesthoehe der Zeichenflaeche je Panel
+
+function legendenHoehe(gd) {
+  // Plotly fuehrt die Hoehe intern mit; falls sich das aendert, aus dem SVG
+  // messen. Beides setzt voraus, dass die Legende beim Messen nicht
+  // beschnitten ist -- deshalb wird mit grosszuegigem margin.t gezeichnet.
+  const leg = gd._fullLayout && gd._fullLayout.legend;
+  if (leg && leg._height) return leg._height;
+  const g = gd.querySelector('g.legend');
+  return g ? g.getBoundingClientRect().height : 0;
+}
+
+async function panelsAnpassen() {
+  const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
+  const charts = document.getElementById('charts');
+  if (divs.some(d => !d._fullLayout)) return;
+  const oben = divs.map(d => Math.ceil(legendenHoehe(d)) + SCHMAL_LUFT);
+  const unten = divs.map(d => Math.ceil(d._fullLayout.margin.b));
+  // Plotly beschneidet die Legende an der Zeichenflaeche: ist sie hoeher,
+  // bekommt sie einen Scrollbalken und ueberlagert den Balken. Die
+  // Zeichenflaeche muss deshalb mindestens so hoch sein wie die hoechste der
+  // drei Legenden.
+  const mindest = Math.max(SCHMAL_FLAECHE_MIN, ...oben.map(h => h - SCHMAL_LUFT));
+  const titel = Array.from(document.querySelectorAll('.teilTitel'))
+                     .reduce((summe, e) => summe + e.offsetHeight, 0);
+  const rest = charts.clientHeight - titel
+               - oben.reduce((a, b) => a + b, 0) - unten.reduce((a, b) => a + b, 0);
+  // Gleiche Zeichenflaeche fuer alle drei: nur so sind die Balken gleich dick.
+  const flaeche = Math.max(mindest, Math.floor(rest / 3));
+  await Promise.all(divs.map((d, i) => {
+    d.style.flex = '0 0 auto';
+    d.style.height = (oben[i] + flaeche + unten[i]) + 'px';
+    return Plotly.relayout(d, { 'margin.t': oben[i] });
+  }));
+  // Plotly liest die neue Containerhoehe nicht von selbst.
+  await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+}
+
 async function zeichenflaechenAusgleichen() {
   const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
   // Mehrere Durchlaeufe: automargin holt sich einen Teil des zusaetzlichen
