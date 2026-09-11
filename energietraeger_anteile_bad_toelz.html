@@ -112,15 +112,39 @@ let aktuelleVariante = varianten[0].key;
 // Blockhoehe.
 const KUCHEN_LABEL_PLATZ = 76;
 
+// Schmal stehen die Prozentwerte in kleinerer Schrift, brauchen also weniger
+// Rand. Ebenfalls ausgemessen -- siehe README.
+const KUCHEN_LABEL_PLATZ_SCHMAL = 46;
+const KUCHEN_LABEL_GROESSE_SCHMAL = 10;
+
 // Feste Zeichenflaeche fuer den Kuchen, damit der Kreis beim Aus- und
 // Einblenden gleich gross bleibt (siehe spurFuer()).
-function kuchenDomain(gd) {
-  const rest = 20;   // layout.margin t+b bzw. l+r
+function kuchenDomain(gd, schmal) {
+  const rest = schmal ? 12 : 20;   // layout.margin t+b bzw. l+r
+  const platz = schmal ? KUCHEN_LABEL_PLATZ_SCHMAL : KUCHEN_LABEL_PLATZ;
   const hoehe = Math.max(1, gd.clientHeight - rest);
   const breite = Math.max(1, gd.clientWidth - rest);
-  const anteil = platz => Math.min(0.35, KUCHEN_LABEL_PLATZ / platz);
-  const y = anteil(hoehe), x = anteil(breite);
-  return { x: [x, 1 - x], y: [y, 1 - y] };
+  const anteil = seite => Math.min(0.35, platz / seite);
+  const x = anteil(breite);
+  if (!schmal) {
+    const y = anteil(hoehe);
+    return { x: [x, 1 - x], y: [y, 1 - y] };
+  }
+  // Schmal begrenzt die Breite den Kreis, nicht die Hoehe. Ohne Zutun
+  // zentriert Plotly ihn in der ganzen (hohen) Zeichenflaeche, und zwischen
+  // Kreis und Legende bleibt ein grosses Loch. Deshalb ein Band am oberen
+  // Rand, genau so hoch wie der Kreis -- die Legende rueckt darunter nach
+  // (siehe kuchenLegendeY()).
+  const durchmesser = breite * (1 - 2 * x);
+  const oben = 1 - platz / hoehe;
+  const unten = Math.max(platz / hoehe, oben - durchmesser / hoehe);
+  return { x: [x, 1 - x], y: [unten, oben] };
+}
+
+// Oberkante der Legende dicht unter dem Kreis (nur schmal noetig, sonst steht
+// sie rechts daneben).
+function kuchenLegendeY(domain) {
+  return domain.y[0] - 0.03;
 }
 
 // Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
@@ -290,7 +314,7 @@ function kuchenLegendeVerdrahten(gd) {
 }
 
 
-function layoutFuer(schmal) {
+function layoutFuer(schmal, gd) {
   return {
     font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
     // automargin holt sich den Platz fuer die aussen stehenden Prozentwerte
@@ -305,7 +329,8 @@ function layoutFuer(schmal) {
     // (fig_energietraeger_kuchen) setzt sie dagegen darunter, weil sie mehr
     // Hoehe als Breite hat.
     legend: schmal
-      ? { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.02, yanchor: 'top',
+      ? { orientation: 'h', x: 0.5, xanchor: 'center',
+           y: kuchenLegendeY(kuchenDomain(gd, true)), yanchor: 'top',
            font: { size: 9 }, tracegroupgap: 2 }
       : { orientation: 'v', x: 1.02, xanchor: 'left', y: 0.5, yanchor: 'middle',
            font: { size: 13 } },
@@ -322,11 +347,13 @@ function spurFuer(v, schmal, gd) {
     sort: false, direction: 'clockwise', rotation: 0,
     // texttemplate statt textinfo 'percent': Plotly schreibt sonst drei
     // signifikante Stellen ('0,101%' statt '0,1%').
-    // Schmal ist fuer aussen stehende Werte kein Platz - dort tragen Legende,
-    // Tippen (Hover) und die Datentabelle die Zahlen.
-    textinfo: schmal ? 'none' : 'percent',
-    texttemplate: schmal ? undefined : '%{percent:.1%}',
+    textinfo: 'percent',
+    texttemplate: '%{percent:.1%}',
     textposition: 'outside',
+    // Schmal in kleinerer Schrift: der Kreis wird dadurch kleiner, die Zahlen
+    // sind aber da. Vorher waren sie auf schmalen Ansichten abgeschaltet und
+    // der Kreis nahm die ganze Breite ein.
+    outsidetextfont: schmal ? { size: KUCHEN_LABEL_GROESSE_SCHMAL } : undefined,
     // Feste Zeichenflaeche statt automargin, damit der Kreis beim Aus- und
     // Einblenden gleich gross bleibt. automargin reserviert genau so viel Platz,
     // wie die aussen stehenden Prozentwerte im jeweiligen Zustand brauchen --
@@ -337,10 +364,8 @@ function spurFuer(v, schmal, gd) {
     // kleiner als im bisherigen Bestfall -- konstant und maximal gross geht bei
     // gegebener Blockhoehe nicht zusammen; mehr Hoehe gibt beides.
     //
-    // Schmal bleibt es bei automargin: dort sind die Prozentwerte abgeschaltet,
-    // es gibt also nichts zu reservieren und nichts, was schwanken koennte.
-    automargin: schmal,
-    domain: schmal ? { x: [0, 1], y: [0, 1] } : kuchenDomain(gd),
+    automargin: false,
+    domain: kuchenDomain(gd, schmal),
     hovertemplate: '%{label}: %{value:.2f} GWh/a (%{percent:.1%})<extra></extra>'
   };
 }
@@ -353,7 +378,7 @@ function draw() {
   // ausgeblendeten Stuecke der anderen Fassung sollen nicht mitwandern.
   gd._verborgen = {};
   gd._urwerte = v.werte.slice();
-  const l = layoutFuer(schmal);
+  const l = layoutFuer(schmal, gd);
   l.hiddenlabels = [];
   return Plotly.react('chart', [spurFuer(v, schmal, gd)], l,
                       {responsive: true, displayModeBar: false})
