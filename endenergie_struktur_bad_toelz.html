@@ -217,15 +217,8 @@ async function draw() {
       l.xaxis.tickmode = 'array';
       l.xaxis.tickvals = SCHMAL_TICKS;
       l.xaxis.tickfont = { size: 10 };
-      // Der Achsentitel wiederholte sich unter jedem der drei Panels. Er steht
-      // jetzt nur unter dem letzten, das spart zweimal Hoehe zwischen den
-      // Diagrammen.
-      if (i === 2) {
-        l.xaxis.title.font = { size: 10 };
-        l.margin.b = 44;
-      } else {
-        delete l.xaxis.title;
-      }
+      l.xaxis.title.font = { size: 10 };
+      l.margin.b = 44;
     }
     const gd = document.getElementById('teil' + i);
     return Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false})
