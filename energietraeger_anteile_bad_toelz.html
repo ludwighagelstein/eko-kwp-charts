@@ -126,6 +126,15 @@ const KUCHEN_LABEL_GROESSE_SCHMAL = 10;
 // Leerraum.
 const KUCHEN_LEGENDE_GROESSE_SCHMAL = 12;
 
+// Legendenschrift auf breiten Ansichten. Der Zeilenabstand laesst sich bei
+// Plotly nicht getrennt einstellen: das Legendenschema kennt nur
+// tracegroupgap, und das wirkt zwischen Legendengruppen -- die es bei einem
+// Kuchen mit einer Datenspur nicht gibt (ausprobiert, ohne Wirkung). Die
+// Zeilenhoehe haengt allein an der Schrift, gemessen 20 px bei Schrift 13,
+// 24 px bei 16, 29 px bei 20. Groessere Schrift ist hier also gleichzeitig
+// mehr Zeilenabstand.
+const KUCHEN_LEGENDE_GROESSE_BREIT = 16;
+
 // Feste Zeichenflaeche fuer den Kuchen, damit der Kreis beim Aus- und
 // Einblenden gleich gross bleibt (siehe spurFuer()).
 function kuchenDomain(gd, schmal) {
@@ -417,7 +426,7 @@ function layoutFuer(schmal, gd) {
            y: kuchenLegendeY(kuchenDomain(gd, true)), yanchor: 'top',
            font: { size: KUCHEN_LEGENDE_GROESSE_SCHMAL }, tracegroupgap: 2 }
       : { orientation: 'v', x: 1.02, xanchor: 'left', y: 0.5, yanchor: 'middle',
-           font: { size: 13 } },
+           font: { size: KUCHEN_LEGENDE_GROESSE_BREIT } },
     separators: ',.', paper_bgcolor: '#fff', plot_bgcolor: '#fff'
   };
 }
