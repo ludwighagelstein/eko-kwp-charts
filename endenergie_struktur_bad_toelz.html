@@ -90,8 +90,10 @@
      ueber dem Panel. Frueher war das eine Plotly-Anmerkung im Diagramm, die
      sich mit der Legende ueberlagert hat -- als eigenes Element im Seitenfluss
      kann das nicht passieren. */
+  /* Kompakt gehalten: die Hoehe dieser drei Zeilen geht der Zeichenflaeche
+     verloren, und an ihr haengt, ob die Legendenschrift im Block bleibt. */
   .teilTitel { display: none; margin: 0 0 1px 2px; font-size: 11px;
-                font-weight: 700; color: #1D4B8F; }
+                line-height: 1; font-weight: 700; color: #1D4B8F; }
   @media (max-width: 619.98px) {
     #charts { min-height: 0; }
     .teil { min-height: 0; }
@@ -193,7 +195,9 @@ async function draw() {
       // zusammen. Zu klein begonnen wuerde Plotly die Legende beschneiden und
       // ihr einen Scrollbalken geben -- gemessen wird dann nur die
       // abgeschnittene Hoehe.
-      l.margin = { t: 140, l: 34, r: 8, b: 26 };
+      // Unterer Rand knapp: automargin holt sich zurueck, was die
+      // Achsenbeschriftung wirklich braucht.
+      l.margin = { t: 140, l: 34, r: 8, b: 22 };
       l.yaxis.showticklabels = false;
       l.legend.font = { size: 12 };
       if (g.eintraege.length > 8) {
@@ -304,7 +308,10 @@ function weichSetzen(gd, spur, ziel) {
 // Zeichenflaechen gleich gross sind. Schmal ergibt das viel Leerraum zwischen
 // den Diagrammen, weil die Legende des ersten Panels zwoelf Energietraeger
 // fuehrt und die beiden anderen nur drei bzw. vier.
-const SCHMAL_LUFT = 6;            // Abstand Legende -> Zeichenflaeche
+// Abstand Legende -> Zeichenflaeche. Knapp gehalten: an dieser Stelle haengt,
+// ob die Legendenschrift in den Block passt -- bei 330 x 750 px fehlten mit 6 px
+// genau 5 px, um bei Groesse 12 zu bleiben.
+const SCHMAL_LUFT = 4;
 const SCHMAL_FLAECHE_MIN = 54;    // Mindesthoehe der Zeichenflaeche je Panel
 // Plotly beschneidet die Legende, sobald sie hoeher ist als die halbe
 // Panelhoehe -- gemessen bei 330 px Breite: eine 124 px hohe Legende blieb bis
