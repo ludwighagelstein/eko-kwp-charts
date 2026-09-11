@@ -16,7 +16,7 @@
   .header { padding: 20px 30px 4px 30px; flex: none; }
   .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
   .header p { font-size: 13px; margin: 0; color: #555; }
-  #chart { width: 100%; flex: 1 1 auto; min-height: 400px; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 600px; }
   .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
   .toggle { padding: 0 30px 8px 30px; flex: none; }
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
@@ -103,6 +103,25 @@
 <script>
 const varianten = [{"key": "endenergie", "titel": "Endenergieverbrauch", "labels": ["Energieholz", "Solarthermie", "Fernw\u00e4rme EE", "Fernw\u00e4rme fossil", "Luft-Wasser-WP", "Oberfl. Geothermie", "Heizstrom", "BHKW-W\u00e4rme", "Fl\u00fcssiggas", "Erdgas", "Kohle", "Heiz\u00f6l"], "werte": [16.58, 2.91, 12.78, 6.81, 1.76, 0.26, 0.22, 5.12, 1.47, 108.24, 0.62, 48.88], "farben": ["#6FAC46", "#FFCF00", "#F39C12", "#BB5C07", "#326F90", "#83ACFC", "#1225A0", "#B22222", "#887894", "#999999", "#7C350B", "#4A4A4A"]}, {"key": "nutzenergie", "titel": "Nutzw\u00e4rmeverbrauch", "labels": ["Energieholz", "Solarthermie", "Fernw\u00e4rme EE", "Fernw\u00e4rme fossil", "Luft-Wasser-WP", "Oberfl. Geothermie", "Heizstrom", "BHKW-W\u00e4rme", "Fl\u00fcssiggas", "Erdgas", "Kohle", "Heiz\u00f6l"], "werte": [12.43, 2.91, 9.36, 5.44, 5.29, 1.03, 0.22, 4.35, 1.25, 92.01, 0.5, 41.55], "farben": ["#6FAC46", "#FFCF00", "#F39C12", "#BB5C07", "#326F90", "#83ACFC", "#1225A0", "#B22222", "#887894", "#999999", "#7C350B", "#4A4A4A"]}];
 let aktuelleVariante = varianten[0].key;
+// Platz, den die aussen stehenden Prozentwerte rund um den Kuchen brauchen (px).
+// Ausgemessen, nicht geraten: bei 76 px ist der Radius in zehn geprueften
+// Aus-/Einblend-Kombinationen exakt konstant und nichts wird abgeschnitten; bei
+// 66 px fehlen in manchen Zustaenden 7 px. Als Pixelwert statt als Bruchteil,
+// damit der Kreis in einem hoeheren Einbettungsblock automatisch mitwaechst --
+// der Platzbedarf der Beschriftung haengt an der Schriftgroesse, nicht an der
+// Blockhoehe.
+const KUCHEN_LABEL_PLATZ = 76;
+
+// Feste Zeichenflaeche fuer den Kuchen, damit der Kreis beim Aus- und
+// Einblenden gleich gross bleibt (siehe spurFuer()).
+function kuchenDomain(gd) {
+  const rest = 20;   // layout.margin t+b bzw. l+r
+  const hoehe = Math.max(1, gd.clientHeight - rest);
+  const breite = Math.max(1, gd.clientWidth - rest);
+  const anteil = platz => Math.min(0.35, KUCHEN_LABEL_PLATZ / platz);
+  const y = anteil(hoehe), x = anteil(breite);
+  return { x: [x, 1 - x], y: [y, 1 - y] };
+}
 
 // Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
 // Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
@@ -294,7 +313,7 @@ function layoutFuer(schmal) {
   };
 }
 
-function spurFuer(v, schmal) {
+function spurFuer(v, schmal, gd) {
   return {
     type: 'pie', labels: v.labels, values: v.werte,
     marker: { colors: v.farben, line: { color: '#fff', width: 1 } },
@@ -307,7 +326,21 @@ function spurFuer(v, schmal) {
     // Tippen (Hover) und die Datentabelle die Zahlen.
     textinfo: schmal ? 'none' : 'percent',
     texttemplate: schmal ? undefined : '%{percent:.1%}',
-    textposition: 'outside', automargin: true,
+    textposition: 'outside',
+    // Feste Zeichenflaeche statt automargin, damit der Kreis beim Aus- und
+    // Einblenden gleich gross bleibt. automargin reserviert genau so viel Platz,
+    // wie die aussen stehenden Prozentwerte im jeweiligen Zustand brauchen --
+    // und das schwankt: gemessen bei 900 px Breite wanderte der Radius zwischen
+    // 193 und 222 px, je nachdem welcher Energietraeger ausgeblendet war.
+    //
+    // Der reservierte Rand steckt in KUCHEN_LABEL_PLATZ. Der Kreis ist dadurch
+    // kleiner als im bisherigen Bestfall -- konstant und maximal gross geht bei
+    // gegebener Blockhoehe nicht zusammen; mehr Hoehe gibt beides.
+    //
+    // Schmal bleibt es bei automargin: dort sind die Prozentwerte abgeschaltet,
+    // es gibt also nichts zu reservieren und nichts, was schwanken koennte.
+    automargin: schmal,
+    domain: schmal ? { x: [0, 1], y: [0, 1] } : kuchenDomain(gd),
     hovertemplate: '%{label}: %{value:.2f} GWh/a (%{percent:.1%})<extra></extra>'
   };
 }
@@ -322,7 +355,7 @@ function draw() {
   gd._urwerte = v.werte.slice();
   const l = layoutFuer(schmal);
   l.hiddenlabels = [];
-  return Plotly.react('chart', [spurFuer(v, schmal)], l,
+  return Plotly.react('chart', [spurFuer(v, schmal, gd)], l,
                       {responsive: true, displayModeBar: false})
     .then(() => {
       kuchenLegendeVerdrahten(gd);
