@@ -185,10 +185,17 @@ function responsive(base, legendeEintraege) {
 // Beim Drehen des Geraets bzw. Groessenwechsel neu aufbauen.
 function onResize(redraw) {
   let last = window.innerWidth >= NARROW_PX;
-  window.addEventListener('resize', () => {
+  const pruefen = () => {
     const now = window.innerWidth >= NARROW_PX;
     if (now !== last) { last = now; redraw(); }
-  });
+  };
+  window.addEventListener('resize', pruefen);
+  // Zusaetzlich ein ResizeObserver: Plotly selbst haengt bei
+  // {responsive: true} an einem Observer, nicht am resize-Ereignis. Aendert
+  // sich die Groesse ohne resize-Ereignis, passte Plotly das Diagramm an,
+  // unser Umschalter aber nicht -- dann blieb das Schmal-Layout in einer
+  // breiten Ansicht stehen.
+  if (window.ResizeObserver) new ResizeObserver(pruefen).observe(document.body);
 }
 
 let aktuellesSzenario = 'Fortschreibung';

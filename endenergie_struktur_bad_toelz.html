@@ -348,10 +348,15 @@ function tabelleUmschalten(schalter) {
 
 draw();
 let warSchmal = window.innerWidth < 620;
-window.addEventListener('resize', () => {
+// Siehe onResize() in RESPONSIVE_JS: neben dem resize-Ereignis auch ein
+// ResizeObserver, sonst kann das Schmal-Layout in einer breiten Ansicht
+// stehenbleiben, weil Plotly an einem Observer haengt und wir nicht.
+const breitePruefen = () => {
   const jetzt = window.innerWidth < 620;
   if (jetzt !== warSchmal) { warSchmal = jetzt; draw(); }
-});
+};
+window.addEventListener('resize', breitePruefen);
+if (window.ResizeObserver) new ResizeObserver(breitePruefen).observe(document.body);
 </script>
 </body>
 </html>

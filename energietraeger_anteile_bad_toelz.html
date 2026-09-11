@@ -147,6 +147,73 @@ function kuchenLegendeY(domain) {
   return domain.y[0] - 0.03;
 }
 
+// Auf schmalen Ansichten die Diagrammflaeche auf ihren Inhalt schrumpfen.
+//
+// #chart fuellt sonst die ganze Blockhoehe (flex: 1). Breit ist das richtig,
+// schmal nicht: dort begrenzt die Breite den Kreis, und unter der Legende blieb
+// ein Loch von rund 170 px, bevor die Quellenzeile kam. Jetzt endet die Flaeche
+// hinter der Legende, die Quellenzeile rueckt nach und der freie Platz liegt
+// unterhalb von allem -- dort liest er sich als Blockrand, nicht als Loch.
+//
+// Die Sollhoehe wird direkt gerechnet, nicht iterativ angenaeht: Rand fuer die
+// Beschriftung oben und unten, Kreisdurchmesser, Abstand, Legendenhoehe. Ein
+// erster Versuch mit "messen, verkleinern, wiederholen" driftete -- die Legende
+// hing am Kuchenband, das Band an der Flaechenhoehe, und am Ende stand die
+// Legende 54 px unterhalb der Flaeche.
+const KUCHEN_LEGENDE_ABSTAND = 10;
+
+function kuchenMasseSchmal(gd) {
+  const rest = 12;                                  // layout.margin l+r bzw. t+b
+  const platz = KUCHEN_LABEL_PLATZ_SCHMAL;
+  const breite = Math.max(1, gd.clientWidth - rest);
+  const x = Math.min(0.35, platz / breite);
+  return { rest: rest, platz: platz, x: x, durchmesser: breite * (1 - 2 * x) };
+}
+
+// Die feste Hoehe wieder abgeben. Muss VOR dem Neuzeichnen laufen, nicht
+// danach: kuchenDomain() rechnet aus gd.clientHeight, und mit der noch
+// gesetzten Schmal-Hoehe kam beim Wechsel auf breit ein Radius von 80 px statt
+// 217 px heraus.
+function flaecheZuruecksetzen(gd) {
+  gd.style.flex = '';
+  gd.style.height = '';
+  gd.style.minHeight = '';
+}
+
+async function hoeheAnInhaltAnpassen(gd, schmal) {
+  if (!schmal) return;                 // breit: schon in draw() zurueckgesetzt
+  const legende = gd.querySelector('g.legend');
+  if (!legende) return;
+  // Die Legendenhoehe haengt an Breite und Eintragszahl, nicht an der
+  // Flaechenhoehe -- einmal messen genuegt.
+  const legendenHoehe = legende.getBBox().height;
+  const m = kuchenMasseSchmal(gd);
+  const soll = Math.ceil(2 * m.platz + m.durchmesser + KUCHEN_LEGENDE_ABSTAND
+                         + legendenHoehe) + m.rest;
+  if (Math.abs(gd.clientHeight - soll) > 2) {
+    gd.style.flex = 'none';
+    // min-height aus dem CSS (KUCHEN_CHART_MIN_HEIGHT) wuerde die Hoehe sonst
+    // ueberstimmen -- min-height gewinnt gegen height.
+    gd.style.minHeight = '0';
+    gd.style.height = soll + 'px';
+    // Ohne resize behaelt Plotly seine alte Zeichenflaeche: das Element war
+    // 464 px hoch, fullLayout.height blieb bei 623, und die Legende landete
+    // 47 px unterhalb des Elements. restyle/relayout lesen die Containergroesse
+    // nicht neu ein.
+    await Plotly.Plots.resize(gd);
+  }
+  // Kuchen oben, Legende dicht darunter -- beides auf die neue Hoehe bezogen.
+  const hoehe = Math.max(1, gd.clientHeight - m.rest);
+  const oben = 1 - m.platz / hoehe;
+  const unten = oben - m.durchmesser / hoehe;
+  await Plotly.restyle(gd, { domain: [{ x: [m.x, 1 - m.x], y: [unten, oben] }] }, [0]);
+  // Die unteren Prozentwerte stehen bis zu 'platz' unterhalb des Kreises --
+  // die Legende muss darunter beginnen, nicht direkt am Kreisrand, sonst
+  // schiebt sie sich unter die Zahlen.
+  await Plotly.relayout(gd, {
+    'legend.y': unten - (m.platz + KUCHEN_LEGENDE_ABSTAND) / hoehe });
+}
+
 // Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
 // Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
 const ANIM_DAUER =
@@ -374,6 +441,9 @@ function draw() {
   const schmal = window.innerWidth < 620;
   const v = varianten.find(x => x.key === aktuelleVariante);
   const gd = document.getElementById('chart');
+  // Erst die eventuell gesetzte Schmal-Hoehe abgeben, dann rechnen: sonst
+  // basieren Kuchen und Legende auf der alten, kleineren Flaeche.
+  if (!schmal) flaecheZuruecksetzen(gd);
   // Beim Wechsel der Bezugsgroesse mit frischem Zustand anfangen: die
   // ausgeblendeten Stuecke der anderen Fassung sollen nicht mitwandern.
   gd._verborgen = {};
@@ -382,6 +452,7 @@ function draw() {
   l.hiddenlabels = [];
   return Plotly.react('chart', [spurFuer(v, schmal, gd)], l,
                       {responsive: true, displayModeBar: false})
+    .then(() => hoeheAnInhaltAnpassen(gd, schmal))
     .then(() => {
       kuchenLegendeVerdrahten(gd);
       legendenSymboleRund(gd);
@@ -411,10 +482,15 @@ function zeigeVariante(key) {
 
 draw();
 let warSchmal = window.innerWidth < 620;
-window.addEventListener('resize', () => {
+// Siehe onResize() in RESPONSIVE_JS: neben dem resize-Ereignis auch ein
+// ResizeObserver, sonst kann das Schmal-Layout in einer breiten Ansicht
+// stehenbleiben, weil Plotly an einem Observer haengt und wir nicht.
+const breitePruefen = () => {
   const jetzt = window.innerWidth < 620;
   if (jetzt !== warSchmal) { warSchmal = jetzt; draw(); }
-});
+};
+window.addEventListener('resize', breitePruefen);
+if (window.ResizeObserver) new ResizeObserver(breitePruefen).observe(document.body);
 </script>
 </body>
 </html>
