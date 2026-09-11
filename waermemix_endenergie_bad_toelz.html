@@ -177,10 +177,11 @@ function responsive(base, legendeEintraege, legendenGroesse) {
   if (legendeEintraege > 8) {
     l.legend.entrywidthmode = 'fraction';
     l.legend.entrywidth = 0.5;
-    // Eine Spalte ist hier nur halb so breit; bei Groesse 9 ragt der laengste
-    // Eintrag ('Luft-Wasser-Waermepumpe') 5 px heraus, gemessen bei 330 px.
-    // Deshalb einen Punkt kleiner als sonst.
-    l.legend.font = { size: groesse - 1 };
+    // Eine Spalte ist hier nur halb so breit, lange Namen koennen herausragen.
+    // Ob sie es tun, haengt an der Blockbreite und an der Schrift des Geraets
+    // -- deshalb wird es nach dem Zeichnen gemessen (legendeEinpassen), nicht
+    // hier geraten. xref 'container' waere der naheliegende Ausweg, nimmt der
+    // Legende aber die reservierte Flaeche: sie landet dann im Diagramm.
   }
   // Schmale Seitenraender: die zweispaltige Legende braucht die Breite, sonst
   // ragt der laengste Eintrag ('Luft-Wasser-Waermepumpe') heraus. Was die
@@ -200,6 +201,23 @@ function responsive(base, legendeEintraege, legendenGroesse) {
     l.margin.t = 42;
   }
   return l;
+}
+
+// Die zweispaltige Legende kann mit langen Namen ueber den Blockrand laufen.
+// Wie breit der Text wirklich wird, haengt an der Blockbreite und an der
+// Schrift, die das Geraet einsetzt -- deshalb nach dem Zeichnen messen und
+// notfalls eine Nummer kleiner. So bleibt die gewuenschte Groesse dort, wo sie
+// passt, statt vorsorglich ueberall kleiner zu sein.
+async function legendeEinpassen(gd, mindest) {
+  if (window.innerWidth >= NARROW_PX) return;
+  for (let i = 0; i < 4; i++) {
+    const gr = gd._fullLayout.legend.font.size;
+    if (gr <= mindest) return;
+    const rechts = [...gd.querySelectorAll('g.legend text.legendtext')]
+      .map(t => t.getBoundingClientRect().right);
+    if (!rechts.length || Math.max(...rechts) <= window.innerWidth - 2) return;
+    await Plotly.relayout(gd, { 'legend.font.size': gr - 1 });
+  }
 }
 
 // Beim Drehen des Geraets bzw. Groessenwechsel neu aufbauen.
@@ -366,9 +384,10 @@ function tabelleUmschalten(schalter) {
 function draw() {
   const traces = buildTraces(aktuellesSzenario === 'Fortschreibung' ? dataFS : dataO45);
   const gd = document.getElementById('chart');
-  Plotly.react('chart', traces, responsive(layout, traces.length),
+  Plotly.react('chart', traces, responsive(layout, traces.length, 12),
                {responsive: true, displayModeBar: false})
-    .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd); });
+    .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd);
+                   return legendeEinpassen(gd, 9); });
 }
 function showScenario(sz) {
   aktuellesSzenario = sz;
