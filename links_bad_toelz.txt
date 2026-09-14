@@ -28,3 +28,6 @@ https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_bad_toelz.html
 
 https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_bad_toelz.html
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_bad_toelz.html" width="100%" height="580" title="Wärme leitungsgebunden Bad Tölz" style="border:0" loading="lazy"></iframe>
+
+https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_bad_toelz.html
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_bad_toelz.html" width="100%" height="470" title="Feuerstätten Bad Tölz" style="border:0" loading="lazy"></iframe>
