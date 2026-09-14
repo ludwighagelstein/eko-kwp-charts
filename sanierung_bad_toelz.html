@@ -269,6 +269,28 @@ function legendePasst(gd) {
   return !texte.some(r => spalten.some(x => r.left < x && r.right > x));
 }
 
+// Groesste Schrift, mit der jeder Eintrag vor dem Symbol der naechsten Spalte
+// und vor dem Blockrand endet. Je Eintrag wird gemessen, wie viel Platz ihm
+// bleibt und wie breit er ist; das Verhaeltnis ergibt den Faktor. Die
+// Spaltenpositionen selbst haengen nicht an der Schrift -- Plotly leitet die
+// Legendenbreite aus der Zeichenflaeche ab.
+function legendenGroesseFuerBlock(gd, aktuell, mindest) {
+  const eintraege = [...gd.querySelectorAll('g.legend text.legendtext')]
+    .map(t => t.getBoundingClientRect());
+  if (!eintraege.length) return aktuell;
+  const spalten = [...new Set([...gd.querySelectorAll('g.legend g.traces')]
+    .map(g => Math.round(g.getBoundingClientRect().left)))].sort((a, b) => a - b);
+  let faktor = 1;
+  for (const r of eintraege) {
+    if (!r.width) continue;
+    const naechste = spalten.find(x => x > r.left);
+    const grenze = (naechste === undefined ? window.innerWidth - 2 : naechste - 1);
+    faktor = Math.min(faktor, (grenze - r.left) / r.width);
+  }
+  if (faktor >= 1) return aktuell;
+  return Math.max(mindest, Math.min(aktuell, Math.floor(aktuell * faktor)));
+}
+
 // Passt die Legende in der schmalen Ansicht ein. Zweispaltig (viele Eintraege)
 // bekommt sie die ganze Blockbreite; danach wird gemessen, ob der laengste Name
 // trotzdem ueber den Rand laeuft -- das haengt an der Blockbreite und an der
@@ -280,11 +302,15 @@ async function legendeEinpassen(gd, eintraege, mindest) {
     await legendeUeberBlockbreite(gd);
     await randUnterDiagramm(gd);
   }
-  for (let i = 0; i < 5; i++) {
+  // Die passende Groesse wird gerechnet, nicht Schritt fuer Schritt gesucht:
+  // die Textbreite skaliert linear mit der Schriftgroesse, und ein zweiter
+  // Messdurchgang direkt nach einem relayout ist nicht verlaesslich (in einem
+  // verborgenen Tab zeichnet der Browser nicht sofort neu).
+  for (let i = 0; i < 2; i++) {
     const gr = gd._fullLayout.legend.font.size;
-    if (gr <= mindest) break;
-    if (legendePasst(gd)) break;
-    await Plotly.relayout(gd, { 'legend.font.size': gr - 1 });
+    const neu = legendenGroesseFuerBlock(gd, gr, mindest);
+    if (neu >= gr) break;
+    await Plotly.relayout(gd, { 'legend.font.size': neu });
   }
   if (zweispaltig) await randUnterDiagramm(gd);
 }
