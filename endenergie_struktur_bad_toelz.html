@@ -19,6 +19,15 @@
   #chart { width: 100%; flex: 1 1 auto; min-height: 200px; }
   .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
   .toggle { padding: 0 30px 8px 30px; flex: none; }
+
+  /* Diagramme ohne sichtbaren Kopf (body.ohne-kopf): Umschalter bzw. Diagramm
+     saessen sonst direkt auf der Oberkante des Rahmens. Der Abstand kommt auf
+     die Kinder, nicht auf body -- body steht auf height:100%, ein padding dort
+     ergaebe einen Scrollbalken. Folgt das Diagramm auf den Umschalter, hat es
+     dessen Abstand schon. */
+  body.ohne-kopf .toggle { padding-top: 12px; }
+  body.ohne-kopf #chart, body.ohne-kopf #charts { margin-top: 10px; }
+  body.ohne-kopf .toggle + #chart { margin-top: 0; }
   .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
     border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
   .toggle button.active { background: #1D4B8F; color: #fff; }

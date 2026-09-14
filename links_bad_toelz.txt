@@ -21,13 +21,13 @@ https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_bad_toelz.html" width="100%" height="750" title="Endenergieverbrauch Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_bad_toelz.html" width="100%" height="610" title="Anteile der Energieträger Bad Tölz" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_bad_toelz.html" width="100%" height="561" title="Anteile der Energieträger Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_bad_toelz.html" width="100%" height="570" title="CO₂-Äquivalente Bad Tölz" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_bad_toelz.html" width="100%" height="521" title="CO₂-Äquivalente Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_bad_toelz.html" width="100%" height="580" title="Wärme leitungsgebunden Bad Tölz" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_bad_toelz.html" width="100%" height="531" title="Wärme leitungsgebunden Bad Tölz" style="border:0" loading="lazy"></iframe>
 
 https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_bad_toelz.html
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_bad_toelz.html" width="100%" height="470" title="Feuerstätten Bad Tölz" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_bad_toelz.html" width="100%" height="421" title="Feuerstätten Bad Tölz" style="border:0" loading="lazy"></iframe>
