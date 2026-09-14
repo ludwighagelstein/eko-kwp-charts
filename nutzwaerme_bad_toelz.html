@@ -125,7 +125,9 @@ const layout = {
             ticks: 'outside', ticklen: 8, tickcolor: '#eee' },
   // Sichtbare Ticks an der y-Achse; tickformat statt Plotly-Standard, der
   // 60000 zu '60k' kuerzt. Das Trennzeichen kommt aus 'separators'.
-  yaxis: { title: { text: 'GWh/a', standoff: 20 }, tickformat: ',.0f',
+  // <b> statt font.weight: Schriftgewicht kennt erst neueres Plotly, wir binden
+  // 2.32 per CDN ein.
+  yaxis: { title: { text: '<b>Nutzenergie [GWh/a]</b>', standoff: 20 }, tickformat: ',.0f',
             ticks: 'outside', ticklen: 8, tickcolor: '#eee', automargin: true,
             tickfont: { size: 14 },
             ticksuffix: '  ', gridcolor: '#eee', zeroline: false },
