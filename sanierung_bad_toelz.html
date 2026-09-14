@@ -117,7 +117,8 @@ const layout = {
   xaxis: { type: 'linear', tickmode: 'array', tickvals: years, ticktext: years.map(String),
             tickangle: 0, automargin: true, tickfont: { size: 14 } },
   yaxis: { title: { text: 'Nutzenergie [MWh]', standoff: 20 }, automargin: true, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
-            gridcolor: '#eee', zeroline: false, tickformat: ',.0f' },
+            gridcolor: '#eee', zeroline: false, tickformat: ',.0f',
+            tickfont: { size: 14 } },
   // Interaktive Fassung: Legende rechts. In der PNG-Fassung (fig_sanierung)
   // steht sie darunter.
   legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top',
