@@ -104,8 +104,9 @@ const FARBEN = eintraege.map(e => e.farbe);
 // Zahlen mit Tausenderpunkt. Breit mit ausgeschriebener Einheit wie in der
 // Vorlage, schmal nur 't' -- sonst laeuft die Zeile aus dem Block.
 const de0 = w => w.toLocaleString('de-DE', { maximumFractionDigits: 0 });
-const TEXT_BREIT = WERTE.map(w => de0(w) + ' Tonnen CO₂-Äquivalent');
-const TEXT_SCHMAL = WERTE.map(w => de0(w) + ' t');
+const ABSTAND = '  ';
+const TEXT_BREIT = WERTE.map(w => ABSTAND + de0(w) + ' Tonnen CO₂-Äquivalent');
+const TEXT_SCHMAL = WERTE.map(w => ABSTAND + de0(w) + ' t');
 
 
 const NARROW_PX = 620;
@@ -473,9 +474,15 @@ function draw() {
     // Keine x-Achse: die Werte stehen an den Balken.
     xaxis: { visible: false, fixedrange: true, range: [0, Math.max(...WERTE)] },
     // autorange 'reversed': sonst steht der erste Energietraeger unten.
+    // Die Namen stehen fett; <b> statt font.weight, weil Schriftgewicht erst
+    // neueres Plotly kennt und wir 2.32 per CDN einbinden. Dafuer tickmode
+    // 'array': die y-Werte selbst bleiben unausgezeichnet, sonst stuende das
+    // Markup im Hovertext und in der Zuordnung der Balken.
     yaxis: { automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showline: true, linecolor: '#595959', linewidth: 1,
+              tickmode: 'array', tickvals: LABELS,
+              ticktext: LABELS.map(l => '<b>' + l + '</b>'),
               tickfont: { size: schmal ? 10 : 14 }, fixedrange: true },
     showlegend: false,
     separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
