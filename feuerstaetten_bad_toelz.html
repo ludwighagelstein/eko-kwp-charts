@@ -416,22 +416,35 @@ function layoutFuer(schmal) {
   return {
     barmode: 'stack',
     font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
-    margin: { t: 8, l: 8, r: 16, b: 8 },
+    margin: { t: 8, l: schmal ? 4 : 8, r: 16, b: 8 },
     xaxis: { automargin: true, gridcolor: '#eee', zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showline: true, linecolor: '#595959', linewidth: 1,
               tickfont: { size: schmal ? 10 : 13 }, tickformat: ',.0f' },
+    // Schmal stehen die Kategorienamen als Anmerkung ueber dem Balken statt
+    // links daneben: 'Einzelraumfeuerstätten' nimmt dort sonst rund 175 px von
+    // 330 px Blockbreite. Die Legende bricht nach der Zeichenflaeche um -- mit
+    // der schmalen Flaeche passte nur ein Eintrag je Zeile, die Legende wurde
+    // sieben Zeilen hoch und lief ueber die Quellenzeile.
     yaxis: { automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
+              showticklabels: !schmal,
               showline: true, linecolor: '#595959', linewidth: 1,
-              tickfont: { size: schmal ? 10 : 14 } },
+              tickfont: { size: 14 } },
+    // y als Zahl statt als Kategoriename: der Balken nimmt 0,55 der
+    // Kategorieeinheit ein, 0,33 darueber steht die Zeile knapp ueber ihm
+    // statt mitten darin.
+    annotations: schmal ? KATEGORIEN.map((k, i) => ({
+      x: 0, xref: 'paper', y: i - 0.33, yref: 'y', xanchor: 'left', yanchor: 'bottom',
+      showarrow: false, text: '<b>' + k + '</b>',
+      font: { size: 11, color: '#1D4B8F' }
+    })) : [],
     // y deutlich unter 0: dazwischen steht die Achsenbeschriftung.
-    // Schmal zweispaltig: einspaltig wurde die Legende mit sieben
-    // Energietraegern 143 px hoch und lief unten aus dem Block heraus.
+    // Keine feste Spaltenbreite: mit entrywidth 0.5 kuerzt Plotly Eintraege,
+    // die nicht in die halbe Legendenbreite passen ('Sonstige Biomasse' wurde
+    // zu 'Sonstige Bio'). Ohne die Vorgabe bricht es selbst um.
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: -0.16, yanchor: 'top',
                traceorder: 'normal',
-               entrywidthmode: schmal ? 'fraction' : undefined,
-               entrywidth: schmal ? 0.5 : undefined,
                font: { size: schmal ? 12 : 16 } },
     separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
   };
