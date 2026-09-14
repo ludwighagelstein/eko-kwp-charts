@@ -112,6 +112,17 @@
 const TRAEGER = [{"label": "Hackschnitzel Fernw\u00e4rme", "wert": 12778.3, "farbe": "#6FAC46"}, {"label": "Erdgas Fernw\u00e4rme", "wert": 6812.8, "farbe": "#C9C9C9"}, {"label": "Erdgas", "wert": 108244.4, "farbe": "#999999"}];
 const ANTEILE = [{"label": "Erneuerbar", "wert": 10.0, "farbe": "#6FAC46"}, {"label": "Konventionell", "wert": 90.0, "farbe": "#4A4A4A"}];
 
+// Raum fuer die Prozentwerte ausserhalb des Kreises. Fest reserviert, weil die
+// Zeichenflaeche fest ist: mit automargin schwankt der Kreis, je nachdem wie
+// viel Beschriftung im jeweiligen Zustand aussen steht.
+const LEIT_LABEL_PLATZ = 30;
+const LEIT_LABEL_PLATZ_SCHMAL = 22;
+// Abstand zwischen Kreis und Legende.
+const LEIT_LEGENDE_ABSTAND = 8;
+// Anteil der moeglichen Kreisgroesse in der breiten Ansicht. Voll ausgereizt
+// fuellt der Kreis den Block; ein Drittel kleiner wirkt im Bericht ruhiger.
+const LEIT_KREIS_ANTEIL = 2 / 3;
+
 
 const NARROW_PX = 620;
 const LEGENDE_MITTEL = 14;
@@ -313,6 +324,11 @@ function onResize(redraw) {
   if (window.ResizeObserver) new ResizeObserver(pruefen).observe(document.body);
 }
 
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
 
 // Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
 // passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
@@ -402,55 +418,178 @@ function tabelleUmschalten(schalter) {
 }
 
 
-function kuchen(eintraege, schmal, einheit) {
+// Plotly zeichnet fuer Kuchenstuecke ein Quadrat als Legendensymbol und kennt
+// keine Option fuer die Form. Beim Balkendiagramm ging das nur ueber leere
+// Punkt-Spuren; hier genuegt es, den gezeichneten Pfad nachtraeglich durch
+// einen Kreis zu ersetzen -- Position, Farbe und Klickverhalten bleiben
+// Plotlys. Muss nach jedem Neuzeichnen wieder laufen, weil Plotly die Legende
+// dabei neu aufbaut.
+function legendenSymboleRund(gd) {
+  const r = 5.5;
+  const kreis = `M0,-${r}A${r},${r} 0 1,1 0,${r}A${r},${r} 0 1,1 0,-${r}Z`;
+  gd.querySelectorAll('path.legendpie').forEach(pfad => {
+    pfad.setAttribute('d', kreis);
+    // Der weisse Trennstrich zwischen den Stuecken gehoert nicht ans Symbol.
+    pfad.style.strokeWidth = '0';
+  });
+}
+
+// Weiches Aus-/Einblenden. Plotly wuerde das Stueck sofort entfernen und alle
+// Prozentwerte neu berechnen -- ein sichtbarer Sprung. Stattdessen laeuft der
+// Wert des Stuecks auf Null, die uebrigen Anteile wachsen dabei von selbst
+// mit. Erst am Ende wird Plotlys eigener Zustand (hiddenlabels) gesetzt: nur
+// dann graut der Legendeneintrag aus und das Stueck ist wirklich weg.
+function kuchenLegendeVerdrahten(gd) {
+  if (gd._kuchenVerdrahtet) return;
+  gd._kuchenVerdrahtet = true;
+
+  gd.on('plotly_legendclick', ev => {
+    const labels = gd.data[0].labels;
+    const i = labels.indexOf(ev.label);
+    if (i < 0) return;
+
+    const verborgen = gd._verborgen || (gd._verborgen = {});
+    const ausblenden = !verborgen[ev.label];
+    verborgen[ev.label] = ausblenden;
+    const versteckteListe = () => labels.filter(l => verborgen[l]);
+
+    const marken = gd._marken || (gd._marken = {});
+    marken[i] = (marken[i] || 0) + 1;
+    const meine = marken[i];
+
+    const voll = gd._urwerte[i];
+    const lauf = () => {
+      const von = ausblenden ? Number(gd.data[0].values[i]) : 0;
+      const start = performance.now();
+      function schritt() {
+        if (marken[i] !== meine) return;   // neuerer Klick hat uebernommen
+        const t = Math.min(1, (performance.now() - start) / ANIM_DAUER);
+        const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        const werte = gd.data[0].values.slice();
+        werte[i] = von + ((ausblenden ? 0 : voll) - von) * e;
+        Plotly.restyle(gd, { values: [werte] }, [0]);
+        if (t < 1) { setTimeout(schritt, 16); return; }
+        Plotly.relayout(gd, { hiddenlabels: versteckteListe() });
+      }
+      schritt();
+    };
+
+    if (ausblenden) {
+      lauf();
+    } else {
+      // Einblenden: erst aus hiddenlabels nehmen und auf Null setzen, sonst
+      // gaebe es nichts zu animieren -- und das Stueck blitzte in voller
+      // Groesse auf, bevor die Animation greift.
+      const werte = gd.data[0].values.slice();
+      werte[i] = 0;
+      Plotly.relayout(gd, { hiddenlabels: versteckteListe() })
+        .then(() => Plotly.restyle(gd, { values: [werte] }, [0]))
+        .then(lauf);
+    }
+    return false;
+  });
+}
+
+
+function kuchenSpur(eintraege, schmal) {
   return {
     type: 'pie', labels: eintraege.map(e => e.label),
     values: eintraege.map(e => e.wert),
     marker: { colors: eintraege.map(e => e.farbe), line: { color: '#fff', width: 1 } },
     sort: false, direction: 'clockwise', rotation: 0,
     // Nur der Prozentwert am Kuchen, die Namen stehen in der Legende darunter.
-    // Name und Prozentwert zusammen (wie in der Berichtsvorlage und in der
-    // Bildfassung) braucht Platz: bei zwei Kuchen nebeneinander bleiben je rund
-    // 450 px, davon giengen fuer 'Hackschnitzel Fernwärme 10%' etwa 170 px auf
-    // jeder Seite ab -- fuer den Kreis blieben 110 px.
-    textinfo: 'none',
-    texttemplate: '%{percent:.0%}',
+    // Name und Prozentwert zusammen (wie in der Bildfassung) braucht Platz: bei
+    // zwei Kuchen nebeneinander bleiben je rund 450 px, davon giengen fuer
+    // 'Hackschnitzel Fernwärme 10%' etwa 170 px auf jeder Seite ab.
+    textinfo: 'none', texttemplate: '%{percent:.0%}',
     textposition: 'outside',
     outsidetextfont: { size: schmal ? 10 : 13 },
-    // automargin haelt den Platz der aussen stehenden Beschriftung frei --
-    // aber nur innerhalb der Zeichenflaeche. Die endet deshalb ueber der
-    // Legende, sonst laege der unterste Prozentwert mitten darin.
-    automargin: true, domain: { x: [0, 1], y: [0.17, 1] },
-    hovertemplate: '%{label}: %{value:,.0f} ' + einheit + ' (%{percent:.1%})<extra></extra>'
+    // Feste Zeichenflaeche statt automargin -- siehe flaechen().
+    automargin: false,
+    hovertemplate: '%{label}: %{value:,.0f} ' + (eintraege === ANTEILE ? '%' : 'MWh')
+                   + ' (%{percent:.1%})<extra></extra>'
   };
+}
+
+// Gemeinsame Geometrie beider Diagramme: gleicher Kreisdurchmesser, gleiche
+// Legendenhoehe. Ohne das haengt die Kreisgroesse an der Zahl der
+// Legendeneintraege -- links drei, rechts zwei -- und die Kreise fallen
+// unterschiedlich aus.
+function flaechen(divs, schmal, band) {
+  const platz = schmal ? LEIT_LABEL_PLATZ_SCHMAL : LEIT_LABEL_PLATZ;
+  const masse = divs.map(gd => {
+    const b = gd.clientWidth, h = gd.clientHeight;
+    const frei = h - band - LEIT_LEGENDE_ABSTAND;
+    return { b: b, h: h, frei: frei,
+             moeglich: Math.min(b - 2 * platz, frei - 2 * platz) };
+  });
+  let d = Math.min(...masse.map(m => m.moeglich));
+  if (!schmal) d = d * LEIT_KREIS_ANTEIL;
+  d = Math.max(60, Math.floor(d));
+  // Kreis und Legende als Gruppe mittig setzen: der Kreis allein zentriert
+  // liesse die Legende weit unten alleine stehen.
+  return masse.map(m => {
+    const gesamt = 2 * platz + d + LEIT_LEGENDE_ABSTAND + band;
+    const oben = Math.max(platz, (m.h - gesamt) / 2 + platz);
+    return {
+      domain: { x: [(m.b - d) / 2 / m.b, (m.b + d) / 2 / m.b],
+                y: [1 - (oben + d) / m.h, 1 - oben / m.h] },
+      // Unter dem Kreis erst Platz fuer die unterste Prozentangabe, dann die
+      // Legende. Beide Diagramme rechnen mit demselben d und demselben oben,
+      // die Legenden stehen dadurch auf gleicher Hoehe.
+      legendeY: 1 - (oben + d + platz + LEIT_LEGENDE_ABSTAND) / m.h
+    };
+  });
 }
 
 function layoutFuer(schmal) {
   return {
     font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
-    margin: { t: 6, l: 6, r: 6, b: 6 },
-    // Legende unter dem jeweiligen Kuchen.
+    margin: { t: 0, l: 0, r: 0, b: 0 },
     // Legende unter dem jeweiligen Kuchen. Kleinere Schrift als sonst breit:
     // die Legende teilt sich die Breite mit dem zweiten Kuchen, 'Hackschnitzel
     // Fernwärme' ragte bei Groesse 16 aus dem Diagramm.
-    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 0.14, yanchor: 'top',
+    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 0, yanchor: 'top',
                traceorder: 'normal',
                font: { size: 12 } },
     separators: ',.', paper_bgcolor: '#fff', plot_bgcolor: '#fff'
   };
 }
 
-function draw() {
+async function draw() {
   const schmal = window.innerWidth < NARROW_PX;
+  const divs = [document.getElementById('k1'), document.getElementById('k2')];
+  const daten = [TRAEGER, ANTEILE];
   const l = layoutFuer(schmal);
-  return Promise.all([
-    Plotly.react('k1', [kuchen(TRAEGER, schmal, 'MWh')], l,
-                 {responsive: true, displayModeBar: false}),
-    Plotly.react('k2', [kuchen(ANTEILE, schmal, '%')], l,
-                 {responsive: true, displayModeBar: false})
-  ]).then(() => {
-    zugaenglichMachen(document.getElementById('k1'));
-    zugaenglichMachen(document.getElementById('k2'));
+
+  // Erster Durchgang: zeichnen, um die Legendenhoehe zu messen. Wie viele
+  // Zeilen die Legende braucht, entscheidet Plotly nach der Blockbreite --
+  // schaetzen waere unzuverlaessig.
+  await Promise.all(divs.map((gd, i) => {
+    gd._urwerte = daten[i].map(e => e.wert);
+    gd._verborgen = {};
+    return Plotly.react(gd, [kuchenSpur(daten[i], schmal)],
+                        Object.assign({}, l, { hiddenlabels: [] }),
+                        {responsive: true, displayModeBar: false});
+  }));
+  const band = Math.max(...divs.map(gd => Math.ceil(gd._fullLayout.legend._height)));
+
+  // Zweiter Durchgang: feste Zeichenflaeche und Legendenposition setzen.
+  const geo = flaechen(divs, schmal, band);
+  await Promise.all(divs.map((gd, i) => Plotly.relayout(gd, {
+    'legend.y': geo[i].legendeY
+  }).then(() => Plotly.restyle(gd, { domain: [geo[i].domain] }, [0]))));
+
+  divs.forEach(gd => {
+    kuchenLegendeVerdrahten(gd);
+    legendenSymboleRund(gd);
+    zugaenglichMachen(gd);
+    if (!gd._symbolNachgefuehrt) {
+      gd._symbolNachgefuehrt = true;
+      // Plotly baut die Legende bei jedem Neuzeichnen neu auf - die runden
+      // Symbole waeren sonst nach dem ersten Klick wieder Quadrate.
+      gd.on('plotly_afterplot', () => legendenSymboleRund(gd));
+    }
   });
 }
 draw();
