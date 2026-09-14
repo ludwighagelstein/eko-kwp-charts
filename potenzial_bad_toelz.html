@@ -222,16 +222,90 @@ function responsive(base, legendeEintraege, legendenGroesse) {
 // Schrift, die das Geraet einsetzt -- deshalb nach dem Zeichnen messen und
 // notfalls eine Nummer kleiner. So bleibt die gewuenschte Groesse dort, wo sie
 // passt, statt vorsorglich ueberall kleiner zu sein.
-async function legendeEinpassen(gd, mindest) {
-  if (window.innerWidth >= NARROW_PX) return;
+// Linke Kante der Legende und Luft darum -- 12 px ist derselbe Rand, den
+// .footer (Quellenzeile) im schmalen Layout hat.
+const LEGENDE_RAND_PX = 12;
+const LEGENDE_LUFT_PX = 6;
+
+// Zweispaltige Legende an der ganzen Blockbreite ausrichten statt an der
+// Zeichenflaeche: die beginnt erst hinter der y-Achsenbeschriftung, wodurch die
+// beiden Spalten zu schmal werden und lange Namen in die Nachbarspalte laufen.
+// Beim Kuchendiagramm faellt das nicht auf, weil es keine y-Achse hat.
+//
+// Der Haken: mit xref/yref 'container' haelt Plotly keinen Platz mehr frei --
+// das tut es nur fuer 'paper'. Ohne Gegenmassnahme wandert die Legende ins
+// Diagramm. Der untere Rand wird deshalb selbst gesetzt (randUnterDiagramm).
+async function legendeUeberBlockbreite(gd) {
+  await Plotly.relayout(gd, {
+    'legend.xref': 'container', 'legend.xanchor': 'left',
+    'legend.x': LEGENDE_RAND_PX / Math.max(1, gd.clientWidth),
+    'legend.yref': 'container', 'legend.yanchor': 'bottom',
+    'legend.y': LEGENDE_LUFT_PX / Math.max(1, gd.clientHeight)
+  });
+}
+
+// Unterer Rand = Achsenbeschriftung + Legende + Luft. Die Hoehe der
+// Achsenbeschriftung wird gemessen, weil automargin sie sonst selbst
+// bestimmt haette.
+async function randUnterDiagramm(gd) {
   for (let i = 0; i < 4; i++) {
+    const fl = gd._fullLayout;
+    const oben = gd.getBoundingClientRect().top;
+    const plotUnten = fl.margin.t + fl.yaxis._length;
+    const ticks = [...gd.querySelectorAll('g.xaxislayer-above text')];
+    const tickUnten = ticks.length
+      ? Math.max(...ticks.map(t => t.getBoundingClientRect().bottom)) - oben
+      : plotUnten;
+    const soll = Math.ceil(fl.legend._height) + Math.max(0, Math.ceil(tickUnten - plotUnten))
+                 + 2 * LEGENDE_LUFT_PX;
+    if (Math.abs(fl.margin.b - soll) <= 1) return;
+    await Plotly.relayout(gd, { 'margin.b': soll });
+  }
+}
+
+// Passt die Legende noch in den Block? Zwei Dinge koennen schiefgehen: der
+// laengste Name laeuft rechts aus dem Block, oder er laeuft in das Symbol der
+// Nachbarspalte. Beides haengt an der Blockbreite und an der Schrift des
+// Geraets und wird deshalb gemessen, nicht gerechnet.
+//
+// Die Spaltenbreite laesst sich nicht vergroessern: Plotly leitet die
+// Legendenbreite aus der Zeichenflaeche ab, auch mit xref 'container'
+// (gemessen 272 px bei 330 px Block, unabhaengig von der Position). Bleibt also
+// die Schrift.
+function legendePasst(gd) {
+  const texte = [...gd.querySelectorAll('g.legend text.legendtext')]
+    .map(t => t.getBoundingClientRect());
+  if (!texte.length) return true;
+  if (Math.max(...texte.map(r => r.right)) > window.innerWidth - 2) return false;
+  const spalten = [...new Set([...gd.querySelectorAll('g.legend g.traces')]
+    .map(g => Math.round(g.getBoundingClientRect().left)))].sort((a, b) => a - b);
+  if (spalten.length < 2) return true;
+  // Der Text darf das Symbol der naechsten Spalte nicht beruehren. Gemessen bei
+  // 330 px Blockbreite ('erneuerbarer Anteil', der laengste Eintrag):
+  // Groesse 12 ragt 17 px hinein, 11 noch 8 px, 10 laesst 1 px Luft. Mehr als
+  // diesen einen Pixel zu verlangen kostet gleich die naechste Schriftgroesse,
+  // deshalb wird hier nur auf echte Ueberschneidung geprueft.
+  return !texte.some(r => spalten.some(x => r.left < x && r.right > x));
+}
+
+// Passt die Legende in der schmalen Ansicht ein. Zweispaltig (viele Eintraege)
+// bekommt sie die ganze Blockbreite; danach wird gemessen, ob der laengste Name
+// trotzdem ueber den Rand laeuft -- das haengt an der Blockbreite und an der
+// Schrift des Geraets, laesst sich also nicht vorher ausrechnen.
+async function legendeEinpassen(gd, eintraege, mindest) {
+  if (window.innerWidth >= NARROW_PX) return;
+  const zweispaltig = eintraege > 8;
+  if (zweispaltig) {
+    await legendeUeberBlockbreite(gd);
+    await randUnterDiagramm(gd);
+  }
+  for (let i = 0; i < 5; i++) {
     const gr = gd._fullLayout.legend.font.size;
-    if (gr <= mindest) return;
-    const rechts = [...gd.querySelectorAll('g.legend text.legendtext')]
-      .map(t => t.getBoundingClientRect().right);
-    if (!rechts.length || Math.max(...rechts) <= window.innerWidth - 2) return;
+    if (gr <= mindest) break;
+    if (legendePasst(gd)) break;
     await Plotly.relayout(gd, { 'legend.font.size': gr - 1 });
   }
+  if (zweispaltig) await randUnterDiagramm(gd);
 }
 
 // Beim Drehen des Geraets bzw. Groessenwechsel neu aufbauen.
@@ -400,7 +474,8 @@ function draw() {
   Plotly.react('chart', traces, responsive(layout, traces.length, 12),
                {responsive: true, displayModeBar: false})
     .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd);
-                   return legendeEinpassen(gd, 9); });
+                   return legendeEinpassen(gd, traces.length,
+                                           9); });
 }
 draw();
 onResize(draw);
