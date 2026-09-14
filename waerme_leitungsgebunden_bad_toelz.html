@@ -506,8 +506,11 @@ function kuchenSpur(eintraege, schmal) {
     outsidetextfont: { size: schmal ? 10 : 13 },
     // Feste Zeichenflaeche statt automargin -- siehe flaechen().
     automargin: false,
-    hovertemplate: '%{label}: %{value:,.0f} ' + (eintraege === ANTEILE ? '%' : 'MWh')
-                   + ' (%{percent:.1%})<extra></extra>'
+    // Beim rechten Kuchen sind die Werte schon Prozent -- der Anteil in
+    // Klammern wuerde dieselbe Zahl ein zweites Mal nennen.
+    hovertemplate: eintraege === ANTEILE
+      ? '%{label}: %{value:,.0f} %<extra></extra>'
+      : '%{label}: %{value:,.0f} MWh (%{percent:.1%})<extra></extra>'
   };
 }
 
@@ -546,12 +549,14 @@ function layoutFuer(schmal) {
   return {
     font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
     margin: { t: 0, l: 0, r: 0, b: 0 },
-    // Legende unter dem jeweiligen Kuchen. Kleinere Schrift als sonst breit:
-    // die Legende teilt sich die Breite mit dem zweiten Kuchen, 'Hackschnitzel
-    // Fernwärme' ragte bei Groesse 16 aus dem Diagramm.
+    // Legende unter dem jeweiligen Kuchen, in derselben Groesse wie beim
+    // Diagramm 'Anteile Energietraeger'. Sie teilt sich die Breite mit dem
+    // zweiten Kuchen; Plotly bricht sie dann um (gemessen bei 450 px
+    // Diagrammbreite: Groesse 16 ergibt drei Zeilen, 237 px breit). Die
+    // Legendenhoehe wird ohnehin gemessen, der Umbruch geht also auf.
     legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 0, yanchor: 'top',
                traceorder: 'normal',
-               font: { size: 12 } },
+               font: { size: schmal ? 12 : 16 } },
     separators: ',.', paper_bgcolor: '#fff', plot_bgcolor: '#fff'
   };
 }
