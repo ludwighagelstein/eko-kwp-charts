@@ -400,7 +400,8 @@ function spuren(schmal) {
   const balken = EINTRAEGE.map(e => ({
     x: e.werte, y: KATEGORIEN, type: 'bar', orientation: 'h', name: e.label,
     marker: { color: e.farbe }, width: 0.55, showlegend: false,
-    hovertemplate: '%{y} – ' + e.label + ': %{x:,.0f} Feuerstätten<extra></extra>'
+    // Nur Energietraeger und Zahl: die Kategorie steht schon links am Balken.
+    hovertemplate: e.label + ': %{x:,.0f}<extra></extra>'
   }));
   // ... und je Energietraeger eine leere Punkt-Spur fuer die Legende: fuer
   // Balken zeichnet Plotly ein Rechteck und kennt keine Option fuer die Form.
