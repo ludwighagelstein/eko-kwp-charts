@@ -471,8 +471,93 @@ function a11yAnwenden(gd) {
   grafikAusZugaenglichkeitsbaum(gd);
 }
 
+
+// ---------------------------------------------------------------------------
+// Hervorheben beim Zeigen auf einen Legendeneintrag: der gezeigte Teil bleibt
+// kraeftig, alle uebrigen werden blasser.
+//
+// Plotly kennt dafuer kein Ereignis -- es gibt nur plotly_legendclick und
+// plotly_legenddoubleclick -- deshalb eigene Zuhoerer auf den Eintraegen.
+//
+// Zugeordnet wird ueber den NAMEN der Spur, beim Kuchen ueber das Label der
+// Stuecke. Nicht ueber Index oder uid: im Feuerstaetten-Diagramm gehoeren die
+// Legendeneintraege zu unsichtbaren Punktspuren (die tragen die runden
+// Symbole), gezeichnet werden aber Balkenspuren -- gemeinsam ist beiden nur
+// der Name.
+// ---------------------------------------------------------------------------
+const HERVOR_BLASS = '0.2';
+// Was in einem Legendeneintrag mit abblasst: Beschriftung und Symbol.
+const HERVOR_LEGENDE_TEILE =
+  'text.legendtext, g.legendpoints, g.legendlines, g.legendfill';
+const HERVOR_DAUER = (window.matchMedia
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : 150;
+
+function spurVonElement(el) {
+  let d = el.__data__;
+  if (Array.isArray(d)) d = d[0];
+  return (d && d.trace) || (d && d[0] && d[0].trace) || null;
+}
+
+function legendenSchluessel(eintrag) {
+  let d = eintrag.__data__;
+  if (Array.isArray(d)) d = d[0];
+  if (!d) return null;
+  // Kuchen: ein Eintrag steht fuer ein Stueck, nicht fuer eine ganze Spur.
+  if (d.label !== undefined) return { art: 'label', wert: d.label };
+  return d.trace ? { art: 'name', wert: d.trace.name } : null;
+}
+
+function hervorheben(gd, ziel) {
+  gd.querySelectorAll('g.slice').forEach(stueck => {
+    const label = stueck.__data__ && stueck.__data__.label;
+    const blass = ziel && ziel.art === 'label' && label !== ziel.wert;
+    stueck.style.opacity = blass ? HERVOR_BLASS : '';
+  });
+  gd.querySelectorAll('g.trace').forEach(el => {
+    const spur = spurVonElement(el);
+    // Die Kuchenspur enthaelt alle Stuecke und wird oben behandelt.
+    if (!spur || spur.type === 'pie') return;
+    const blass = ziel && ziel.art === 'name' && spur.name !== ziel.wert;
+    el.style.opacity = blass ? HERVOR_BLASS : '';
+  });
+  // Die uebrigen Legendeneintraege blassen mit. Abgeblendet werden Text und
+  // Symbol, NICHT der Eintrag selbst: an dessen Deckkraft liest
+  // legendeZustandNachfuehren() ab, ob eine Reihe ausgeblendet ist.
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const eigen = legendenSchluessel(eintrag);
+    const blass = ziel && eigen
+                  && !(eigen.art === ziel.art && eigen.wert === ziel.wert);
+    eintrag.querySelectorAll(HERVOR_LEGENDE_TEILE).forEach(teil => {
+      teil.style.opacity = blass ? HERVOR_BLASS : '';
+    });
+  });
+}
+
+function hervorhebenVerdrahten(gd) {
+  const verdrahten = () => {
+    gd.querySelectorAll('g.slice, g.trace, ' + HERVOR_LEGENDE_TEILE)
+      .forEach(el => { el.style.transition = 'opacity ' + HERVOR_DAUER + 'ms'; });
+    gd.querySelectorAll('g.traces').forEach(eintrag => {
+      if (eintrag._hervorVerdrahtet) return;
+      eintrag._hervorVerdrahtet = true;
+      eintrag.addEventListener('mouseenter',
+        () => hervorheben(gd, legendenSchluessel(eintrag)));
+      eintrag.addEventListener('mouseleave', () => hervorheben(gd, null));
+    });
+  };
+  verdrahten();
+  if (gd._hervorAngemeldet) return;
+  gd._hervorAngemeldet = true;
+  // Plotly baut Legende und Zeichenflaeche bei jedem Neuzeichnen neu auf; die
+  // Zuhoerer haengen dann an weggeworfenen Knoten.
+  gd.on('plotly_afterplot', verdrahten);
+}
+
 function zugaenglichMachen(gd) {
   a11yAnwenden(gd);
+  // Reitet hier mit: jedes Diagramm laeuft nach dem Zeichnen durch diese
+  // Funktion, so gibt es nur eine Stelle statt neun.
+  hervorhebenVerdrahten(gd);
   if (gd._a11yVerdrahtet) return;
   gd._a11yVerdrahtet = true;
 
