@@ -148,12 +148,12 @@ function layoutFuer(gruppe) {
     margin: { t: 8, l: 110, r: 20, b: 44 },
     // Feste, gemeinsame Achse: sonst skaliert jeder Balken eigenstaendig und
     // die drei Balken waeren trotz gleicher Summe unterschiedlich lang.
-    xaxis: { range: [0, OBERGRENZE], dtick: 20, gridcolor: '#eee', automargin: true,
+    xaxis: { fixedrange: true, range: [0, OBERGRENZE], dtick: 20, gridcolor: '#eee', automargin: true,
               title: { text: "<b>Endenergieverbrauch 2023 [GWh/a]</b>", standoff: 12, font: { size: 13 } },
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               tickfont: { size: 14 },
               showline: true, linecolor: '#595959', linewidth: 1, zeroline: false },
-    yaxis: { showgrid: false, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
+    yaxis: { fixedrange: true, showgrid: false, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
               showline: true, linecolor: '#595959', linewidth: 1,
               tickfont: { size: 14 },
               tickmode: 'array', tickvals: [gruppe.achse],

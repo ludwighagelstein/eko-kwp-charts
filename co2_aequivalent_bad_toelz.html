@@ -585,7 +585,7 @@ function draw() {
     // neueres Plotly kennt und wir 2.32 per CDN einbinden. Dafuer tickmode
     // 'array': die y-Werte selbst bleiben unausgezeichnet, sonst stuende das
     // Markup im Hovertext und in der Zuordnung der Balken.
-    yaxis: { automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
+    yaxis: { fixedrange: true, automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showline: true, linecolor: '#595959', linewidth: 1,
               tickmode: 'array', tickvals: LABELS,

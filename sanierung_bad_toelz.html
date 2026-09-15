@@ -123,9 +123,9 @@ const layout = {
   // unten die Legende steht. Annotationen bekommen per automargin keinen Platz
   // reserviert, anders als die Legende -- deshalb hier fest.
   margin: { t: 52, l: 70, r: 10, b: 10 },
-  xaxis: { type: 'linear', tickmode: 'array', tickvals: years, ticktext: years.map(String),
+  xaxis: { fixedrange: true, type: 'linear', tickmode: 'array', tickvals: years, ticktext: years.map(String),
             tickangle: 0, automargin: true, tickfont: { size: 14 } },
-  yaxis: { title: { text: 'Nutzenergie [MWh]', standoff: 20 }, automargin: true, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
+  yaxis: { fixedrange: true, title: { text: 'Nutzenergie [MWh]', standoff: 20 }, automargin: true, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
             gridcolor: '#eee', zeroline: false, tickformat: ',.0f',
             tickfont: { size: 14 } },
   // Interaktive Fassung: Legende rechts. In der PNG-Fassung (fig_sanierung)

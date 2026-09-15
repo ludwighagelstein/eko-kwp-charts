@@ -144,9 +144,9 @@ const layout = {
   margin: { t: 10, l: 60, r: 10, b: 10 },
   // 45 Grad gedreht: waagrecht ueberlappen die langen Energietraeger-Namen bei
   // zehn Kategorien. automargin holt sich den noetigen Platz unten selbst.
-  xaxis: { tickangle: -45, automargin: true, showline: true, linecolor: '#595959', linewidth: 1,
+  xaxis: { fixedrange: true, tickangle: -45, automargin: true, showline: true, linecolor: '#595959', linewidth: 1,
             tickfont: { size: 14 } },
-  yaxis: { title: { text: 'Nutzenergie [GWh/a]', standoff: 20 }, automargin: true, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
+  yaxis: { fixedrange: true, title: { text: 'Nutzenergie [GWh/a]', standoff: 20 }, automargin: true, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
             gridcolor: '#eee', zeroline: false, tickfont: { size: 14 },
             rangemode: 'nonnegative', showline: true, linecolor: '#595959', linewidth: 1 },
   // Interaktive Fassung: Legende rechts neben dem Diagramm. In der PNG-Fassung

@@ -507,8 +507,9 @@ function spuren(schmal) {
   const balken = EINTRAEGE.map(e => ({
     x: e.werte, y: KATEGORIEN, type: 'bar', orientation: 'h', name: e.label,
     marker: { color: e.farbe }, width: 0.55, showlegend: false,
-    // Nur Energietraeger und Zahl: die Kategorie steht schon links am Balken.
-    hovertemplate: e.label + ': %{x:,.0f}<extra></extra>'
+    // Zwei Zeilen: oben fett Energietraeger und Zahl, darunter mager die
+    // Bauart. Plotly setzt von sich aus nichts fett, das <b> ist noetig.
+    hovertemplate: '<b>' + e.label + ': %{x:,.0f}</b><br>%{y}<extra></extra>'
   }));
   // ... und je Energietraeger eine leere Punkt-Spur fuer die Legende: fuer
   // Balken zeichnet Plotly ein Rechteck und kennt keine Option fuer die Form.
@@ -525,7 +526,7 @@ function layoutFuer(schmal) {
     barmode: 'stack',
     font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
     margin: { t: 8, l: schmal ? 4 : 8, r: 16, b: 8 },
-    xaxis: { automargin: true, gridcolor: '#eee', zeroline: false,
+    xaxis: { fixedrange: true, automargin: true, gridcolor: '#eee', zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showline: true, linecolor: '#595959', linewidth: 1,
               tickfont: { size: schmal ? 10 : 14 }, tickformat: ',.0f' },
@@ -534,7 +535,7 @@ function layoutFuer(schmal) {
     // 330 px Blockbreite. Die Legende bricht nach der Zeichenflaeche um -- mit
     // der schmalen Flaeche passte nur ein Eintrag je Zeile, die Legende wurde
     // sieben Zeilen hoch und lief ueber die Quellenzeile.
-    yaxis: { automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
+    yaxis: { fixedrange: true, automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showticklabels: !schmal,
               showline: true, linecolor: '#595959', linewidth: 1,
