@@ -471,6 +471,10 @@ const HERVOR_BLASS = '0.2';
 // Was in einem Legendeneintrag mit abblasst: Beschriftung und Symbol.
 const HERVOR_LEGENDE_TEILE =
   'text.legendtext, g.legendpoints, g.legendlines, g.legendfill';
+// Der Eintrag unter der Maus wird nur leicht zurueckgenommen. Nicht so stark
+// wie die Flaechen im Diagramm: 0.5 benutzt Plotly fuer ausgeschaltete Reihen,
+// so weit heruntergedimmt saehe der Eintrag aus, als waere er abgewaehlt.
+const HERVOR_LEGENDE_BLASS = '0.55';
 const HERVOR_DAUER = (window.matchMedia
   && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : 150;
 
@@ -502,15 +506,19 @@ function hervorheben(gd, ziel) {
     const blass = ziel && ziel.art === 'name' && spur.name !== ziel.wert;
     el.style.opacity = blass ? HERVOR_BLASS : '';
   });
-  // Die uebrigen Legendeneintraege blassen mit. Abgeblendet werden Text und
-  // Symbol, NICHT der Eintrag selbst: an dessen Deckkraft liest
-  // legendeZustandNachfuehren() ab, ob eine Reihe ausgeblendet ist.
+  // In der Legende blasst NUR der Eintrag unter der Maus ab -- als Rueckmeldung,
+  // worauf man gerade zeigt. Die uebrigen bleiben unveraendert lesbar; sie
+  // mitzudimmen macht die Legende waehrend des Zeigens unbrauchbar.
+  //
+  // Abgeblendet werden Text und Symbol, NICHT der Eintrag selbst: an dessen
+  // Deckkraft liest legendeZustandNachfuehren() ab, ob eine Reihe ausgeblendet
+  // ist.
   gd.querySelectorAll('g.traces').forEach(eintrag => {
     const eigen = legendenSchluessel(eintrag);
-    const blass = ziel && eigen
-                  && !(eigen.art === ziel.art && eigen.wert === ziel.wert);
+    const gezeigt = ziel && eigen
+                    && eigen.art === ziel.art && eigen.wert === ziel.wert;
     eintrag.querySelectorAll(HERVOR_LEGENDE_TEILE).forEach(teil => {
-      teil.style.opacity = blass ? HERVOR_BLASS : '';
+      teil.style.opacity = gezeigt ? HERVOR_LEGENDE_BLASS : '';
     });
   });
 }
