@@ -507,9 +507,14 @@ function spuren(schmal) {
   const balken = EINTRAEGE.map(e => ({
     x: e.werte, y: KATEGORIEN, type: 'bar', orientation: 'h', name: e.label,
     marker: { color: e.farbe }, width: 0.55, showlegend: false,
+    // Die Bauart nochmal als customdata, obwohl sie schon in y steht: %{y}
+    // liefert bei einer Kategorieachse mit ticktext dessen Beschriftung --
+    // und die traegt seit der fetten Achsenbeschriftung ein <b>, das sonst
+    // in der zweiten Hoverzeile landet.
+    customdata: KATEGORIEN,
     // Zwei Zeilen: oben fett Energietraeger und Zahl, darunter mager die
     // Bauart. Plotly setzt von sich aus nichts fett, das <b> ist noetig.
-    hovertemplate: '<b>' + e.label + ': %{x:,.0f}</b><br>%{y}<extra></extra>'
+    hovertemplate: '<b>' + e.label + ': %{x:,.0f}</b><br>%{customdata}<extra></extra>'
   }));
   // ... und je Energietraeger eine leere Punkt-Spur fuer die Legende: fuer
   // Balken zeichnet Plotly ein Rechteck und kennt keine Option fuer die Form.
@@ -535,9 +540,17 @@ function layoutFuer(schmal) {
     // 330 px Blockbreite. Die Legende bricht nach der Zeichenflaeche um -- mit
     // der schmalen Flaeche passte nur ein Eintrag je Zeile, die Legende wurde
     // sieben Zeilen hoch und lief ueber die Quellenzeile.
+    // Bauarten fett: ueber ticktext mit <b>, nicht ueber font.weight -- das
+    // kennt erst neueres Plotly, eingebunden ist 2.32. Dafuer braucht die
+    // Achse tickmode 'array' mit tickvals. Die y-Werte der Balken bleiben
+    // unausgezeichnet, sonst stuende das Markup im Hovertext (%{y}).
+    // Schmal uebernehmen das die Anmerkungen ueber den Balken, dort steht das
+    // <b> schon.
     yaxis: { fixedrange: true, automargin: true, autorange: 'reversed', showgrid: false, zeroline: false,
               ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
               showticklabels: !schmal,
+              tickmode: 'array', tickvals: KATEGORIEN,
+              ticktext: KATEGORIEN.map(k => '<b>' + k + '</b>'),
               showline: true, linecolor: '#595959', linewidth: 1,
               tickfont: { size: 14 } },
     // y als Zahl statt als Kategoriename: der Balken nimmt 0,55 der
