@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<!-- Ohne diese Zeile nehmen mobile Browser 980 px Layoutbreite an und skalieren
+     die fertige Seite herunter: das Desktop-Layout erscheint winzig, und weder
+     die Media-Query noch responsive() greifen, weil innerWidth 980 bleibt. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Entwicklung Wärmemix Endenergie Geretsried</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  body { font-family: 'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 1000px;
+    background: #fff; color: #222; display: flex; flex-direction: column; }
+  .header { padding: 20px 30px 4px 30px; flex: none; }
+  .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
+  .header p { font-size: 13px; margin: 0; color: #555; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 400px; }
+  .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
+  .toggle { padding: 0 30px 8px 30px; flex: none; }
+
+  /* Diagramme ohne sichtbaren Kopf (body.ohne-kopf): Umschalter bzw. Diagramm
+     saessen sonst direkt auf der Oberkante des Rahmens. Der Abstand kommt auf
+     die Kinder, nicht auf body -- body steht auf height:100%, ein padding dort
+     ergaebe einen Scrollbalken. Folgt das Diagramm auf den Umschalter, hat es
+     dessen Abstand schon. */
+  body.ohne-kopf .toggle { padding-top: 12px; }
+  body.ohne-kopf #chart, body.ohne-kopf #charts { margin-top: 10px; }
+  body.ohne-kopf .toggle + #chart { margin-top: 0; }
+  .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
+    border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
+  .toggle button.active { background: #1D4B8F; color: #fff; }
+
+  /* Nur fuer Screenreader: unsichtbar, aber im Zugaenglichkeitsbaum. */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Tastaturfokus auf den Legendeneintraegen. Plotly zeichnet dort reines SVG
+     ohne Rahmen; der Fokus waere sonst unsichtbar (WCAG 2.4.7). Der Rahmen
+     kommt auf das unsichtbare Klickfeld, das Plotly ueber jeden Eintrag legt. */
+  g.traces:focus { outline: none; }
+  g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
+
+  /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
+     nicht hoeher wird als vor der Datentabelle. Bewusst als Textfluss und
+     nicht als Flexbox mit space-between: die schiebt den Schalter an den
+     rechten Rand und braucht dadurch die volle Breite beider Teile. Zwischen
+     etwa 620 und 760 px Blockbreite reicht die nicht, die Zeile brach um und
+     die Fusszeile wurde 17 px hoeher. Im Textfluss haengt der Schalter direkt
+     hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
+     wirklich kein Platz mehr ist. */
+  .footer-zeile { display: block; }
+  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
+    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
+  .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
+  .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
+    white-space: nowrap; }
+  .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
+  .tabelle th[scope="row"] { text-align: left; }
+  .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
+  /* Mittlere Breiten (schmaler Einbettungsblock, Tablet): nur die Seitenraender
+     schrumpfen, Schriftgroessen bleiben. Grund ist die Fusszeile -- bei 30 px
+     Rand reicht die Breite fuer Quellenangabe und Tabellenschalter knapp nicht
+     mehr, die Zeile bricht um und kostet 15 px Diagrammhoehe. Im
+     Kuchendiagramm, das die Hoehe am knappsten braucht, entstand daraus in
+     StoryMaps ein Scrollbalken. Muss VOR dem 620-px-Block stehen: der setzt
+     dieselben Eigenschaften und soll darunter gewinnen. */
+  @media (max-width: 760px) {
+    .header { padding-left: 12px; padding-right: 12px; }
+    .toggle { padding-left: 12px; padding-right: 12px; }
+    .footer { padding-left: 12px; padding-right: 12px; }
+  }
+
+  /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
+     Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
+     die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
+     embed_snippet(). */
+  @media (max-width: 620px) {
+    .header { padding: 10px 12px 2px 12px; }
+    .header h1 { font-size: 15px; }
+    .header p { font-size: 11px; }
+    .toggle { padding: 0 12px 6px 12px; }
+    .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
+    .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
+    .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+<div class="header"><h1 id="titel">Entwicklung Wärmemix Endenergie Geretsried</h1><p>Endenergieverbrauch nach Energieträgern 2023–2045 (GWh/a)</p></div>
+<div class="toggle" role="group" aria-label="Szenario wählen">
+  <button id="btn-fs" class="active" aria-pressed="true" onclick="showScenario('Fortschreibung')">Szenario Fortschreibung</button>
+  <button id="btn-o45" aria-pressed="false" onclick="showScenario('O45')">Szenario O45</button>
+</div>
+<p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
+<div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
+<div class="footer">
+  <div class="footer-zeile">
+    <span>Quelle: Kommunale Wärmeplanung Geretsried, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
+            onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
+  </div>
+  <div id="datentabelle" class="tabelle" hidden><div id="tab-fs"><table><caption>Entwicklung Wärmemix Endenergie Geretsried, Szenario Fortschreibung – in GWh/a</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Heizöl</th><th scope="col">Kohle</th><th scope="col">Erdgas</th><th scope="col">Erfüllung Biotreppe</th><th scope="col">Flüssiggas</th><th scope="col">BHKW-Wärme</th><th scope="col">Fernwärme</th><th scope="col">Heizstrom</th><th scope="col">Energieholz</th><th scope="col">Solarthermie</th><th scope="col">Oberflächennahe Geothermie</th><th scope="col">Luft-Wasser-Wärmepumpe</th><th scope="col">Gesamt</th><th scope="col">fossil</th><th scope="col">erneuerbar</th></tr></thead><tbody><tr><th scope="row">2023</th><td>48,88</td><td>0,62</td><td>108,24</td><td>0,00</td><td>1,47</td><td>5,12</td><td>19,59</td><td>0,22</td><td>16,58</td><td>2,91</td><td>0,26</td><td>1,76</td><td>205,66</td><td>171,38</td><td>34,29</td></tr><tr><th scope="row">2024</th><td>44,86</td><td>0,18</td><td>108,34</td><td>0,00</td><td>0,96</td><td>3,15</td><td>21,79</td><td>0,16</td><td>16,56</td><td>3,00</td><td>0,46</td><td>2,21</td><td>201,67</td><td>165,02</td><td>36,65</td></tr><tr><th scope="row">2025</th><td>40,64</td><td>0,05</td><td>107,40</td><td>0,00</td><td>0,62</td><td>1,94</td><td>23,89</td><td>0,11</td><td>16,54</td><td>3,09</td><td>0,66</td><td>2,66</td><td>197,61</td><td>158,61</td><td>39,00</td></tr><tr><th scope="row">2026</th><td>36,43</td><td>0,02</td><td>105,77</td><td>0,00</td><td>0,41</td><td>1,19</td><td>25,89</td><td>0,08</td><td>16,53</td><td>3,18</td><td>0,86</td><td>3,11</td><td>193,47</td><td>152,13</td><td>41,33</td></tr><tr><th scope="row">2027</th><td>32,35</td><td>0,00</td><td>103,64</td><td>0,00</td><td>0,26</td><td>0,73</td><td>27,79</td><td>0,06</td><td>16,51</td><td>3,27</td><td>1,07</td><td>3,56</td><td>189,25</td><td>145,59</td><td>43,66</td></tr><tr><th scope="row">2028</th><td>28,16</td><td>0,00</td><td>100,09</td><td>1,30</td><td>0,17</td><td>0,45</td><td>29,60</td><td>0,04</td><td>16,50</td><td>3,36</td><td>1,27</td><td>4,01</td><td>184,95</td><td>137,69</td><td>47,27</td></tr><tr><th scope="row">2029</th><td>24,26</td><td>0,00</td><td>96,25</td><td>2,46</td><td>0,11</td><td>0,28</td><td>31,31</td><td>0,03</td><td>16,48</td><td>3,46</td><td>1,47</td><td>4,46</td><td>180,57</td><td>129,84</td><td>50,73</td></tr><tr><th scope="row">2030</th><td>20,65</td><td>0,00</td><td>92,18</td><td>3,49</td><td>0,07</td><td>0,17</td><td>32,92</td><td>0,02</td><td>16,46</td><td>3,56</td><td>1,67</td><td>4,91</td><td>176,11</td><td>122,06</td><td>54,05</td></tr><tr><th scope="row">2031</th><td>17,42</td><td>0,00</td><td>88,36</td><td>3,84</td><td>0,05</td><td>0,11</td><td>34,44</td><td>0,01</td><td>16,45</td><td>3,67</td><td>1,88</td><td>5,36</td><td>171,57</td><td>114,90</td><td>56,68</td></tr><tr><th scope="row">2032</th><td>14,46</td><td>0,00</td><td>84,32</td><td>4,12</td><td>0,03</td><td>0,06</td><td>35,86</td><td>0,01</td><td>16,43</td><td>3,78</td><td>2,08</td><td>5,81</td><td>166,95</td><td>107,73</td><td>59,22</td></tr><tr><th scope="row">2033</th><td>11,76</td><td>0,00</td><td>80,07</td><td>4,33</td><td>0,02</td><td>0,04</td><td>37,18</td><td>0,01</td><td>16,42</td><td>3,89</td><td>2,28</td><td>6,26</td><td>162,25</td><td>100,57</td><td>61,69</td></tr><tr><th scope="row">2034</th><td>9,33</td><td>0,00</td><td>75,63</td><td>4,47</td><td>0,01</td><td>0,02</td><td>38,40</td><td>0,00</td><td>16,40</td><td>4,00</td><td>2,48</td><td>6,71</td><td>157,47</td><td>93,40</td><td>64,07</td></tr><tr><th scope="row">2035</th><td>7,11</td><td>0,00</td><td>70,63</td><td>4,96</td><td>0,01</td><td>0,02</td><td>39,53</td><td>0,00</td><td>16,39</td><td>4,12</td><td>2,69</td><td>7,16</td><td>152,61</td><td>85,81</td><td>66,80</td></tr><tr><th scope="row">2036</th><td>5,06</td><td>0,00</td><td>64,09</td><td>6,84</td><td>0,00</td><td>0,01</td><td>40,56</td><td>0,00</td><td>16,37</td><td>4,24</td><td>2,89</td><td>7,61</td><td>147,67</td><td>76,77</td><td>70,89</td></tr><tr><th scope="row">2037</th><td>3,31</td><td>0,00</td><td>56,96</td><td>9,01</td><td>0,00</td><td>0,01</td><td>41,49</td><td>0,00</td><td>16,35</td><td>4,36</td><td>3,09</td><td>8,06</td><td>142,64</td><td>67,37</td><td>75,27</td></tr><tr><th scope="row">2038</th><td>1,85</td><td>0,00</td><td>48,83</td><td>11,89</td><td>0,00</td><td>0,00</td><td>42,33</td><td>0,00</td><td>16,34</td><td>4,49</td><td>3,29</td><td>8,51</td><td>137,53</td><td>57,18</td><td>80,35</td></tr><tr><th scope="row">2039</th><td>0,77</td><td>0,00</td><td>41,14</td><td>13,97</td><td>0,00</td><td>0,00</td><td>43,07</td><td>0,00</td><td>16,32</td><td>4,62</td><td>3,50</td><td>8,96</td><td>132,35</td><td>47,73</td><td>84,62</td></tr><tr><th scope="row">2040</th><td>0,00</td><td>0,00</td><td>33,45</td><td>15,74</td><td>0,00</td><td>0,00</td><td>43,71</td><td>0,00</td><td>16,31</td><td>4,75</td><td>3,70</td><td>9,41</td><td>127,07</td><td>38,51</td><td>88,57</td></tr><tr><th scope="row">2041</th><td>0,00</td><td>0,00</td><td>24,66</td><td>17,86</td><td>0,00</td><td>0,00</td><td>44,25</td><td>0,00</td><td>16,29</td><td>4,89</td><td>3,90</td><td>9,86</td><td>121,72</td><td>28,87</td><td>92,85</td></tr><tr><th scope="row">2042</th><td>0,00</td><td>0,00</td><td>16,14</td><td>19,72</td><td>0,00</td><td>0,00</td><td>44,70</td><td>0,00</td><td>16,27</td><td>5,04</td><td>4,10</td><td>10,31</td><td>116,29</td><td>19,42</td><td>96,87</td></tr><tr><th scope="row">2043</th><td>0,00</td><td>0,00</td><td>9,35</td><td>19,86</td><td>0,00</td><td>0,00</td><td>45,05</td><td>0,00</td><td>16,26</td><td>5,18</td><td>4,31</td><td>10,76</td><td>110,77</td><td>11,62</td><td>99,16</td></tr><tr><th scope="row">2044</th><td>0,00</td><td>0,00</td><td>4,06</td><td>18,51</td><td>0,00</td><td>0,00</td><td>45,30</td><td>0,00</td><td>16,24</td><td>5,34</td><td>4,51</td><td>11,21</td><td>105,17</td><td>5,24</td><td>99,93</td></tr><tr><th scope="row">2045</th><td>0,00</td><td>0,00</td><td>0,00</td><td>15,94</td><td>0,00</td><td>0,00</td><td>45,46</td><td>0,00</td><td>16,23</td><td>5,49</td><td>4,71</td><td>11,66</td><td>99,49</td><td>0,00</td><td>99,49</td></tr></tbody></table></div><div id="tab-o45" hidden><table><caption>Entwicklung Wärmemix Endenergie Geretsried, Szenario O45 – in GWh/a</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Heizöl</th><th scope="col">Kohle</th><th scope="col">Erdgas</th><th scope="col">Erfüllung Biotreppe</th><th scope="col">Flüssiggas</th><th scope="col">BHKW-Wärme</th><th scope="col">Fernwärme</th><th scope="col">Heizstrom</th><th scope="col">Energieholz</th><th scope="col">Solarthermie</th><th scope="col">Oberflächennahe Geothermie</th><th scope="col">Luft-Wasser-Wärmepumpe</th><th scope="col">Gesamt</th><th scope="col">fossil</th><th scope="col">erneuerbar</th></tr></thead><tbody><tr><th scope="row">2023</th><td>48,88</td><td>0,62</td><td>108,24</td><td>0,00</td><td>1,47</td><td>5,12</td><td>19,59</td><td>0,22</td><td>16,58</td><td>2,91</td><td>0,26</td><td>1,76</td><td>205,66</td><td>171,38</td><td>34,29</td></tr><tr><th scope="row">2024</th><td>44,61</td><td>0,18</td><td>107,76</td><td>0,00</td><td>0,96</td><td>3,15</td><td>20,84</td><td>0,16</td><td>16,72</td><td>3,00</td><td>0,49</td><td>2,26</td><td>200,13</td><td>163,87</td><td>36,26</td></tr><tr><th scope="row">2025</th><td>40,19</td><td>0,05</td><td>106,22</td><td>0,00</td><td>0,62</td><td>1,94</td><td>22,04</td><td>0,11</td><td>16,86</td><td>3,09</td><td>0,73</td><td>2,75</td><td>194,60</td><td>156,37</td><td>38,23</td></tr><tr><th scope="row">2026</th><td>35,82</td><td>0,02</td><td>103,99</td><td>0,00</td><td>0,41</td><td>1,19</td><td>23,17</td><td>0,08</td><td>17,01</td><td>3,18</td><td>0,97</td><td>3,25</td><td>189,06</td><td>148,87</td><td>40,20</td></tr><tr><th scope="row">2027</th><td>31,60</td><td>0,00</td><td>101,24</td><td>0,00</td><td>0,26</td><td>0,73</td><td>24,24</td><td>0,06</td><td>17,15</td><td>3,27</td><td>1,20</td><td>3,74</td><td>183,51</td><td>141,35</td><td>42,15</td></tr><tr><th scope="row">2028</th><td>27,32</td><td>0,00</td><td>97,10</td><td>1,26</td><td>0,17</td><td>0,45</td><td>25,25</td><td>0,04</td><td>17,30</td><td>3,36</td><td>1,44</td><td>4,24</td><td>177,94</td><td>132,57</td><td>45,36</td></tr><tr><th scope="row">2029</th><td>23,36</td><td>0,00</td><td>92,69</td><td>2,37</td><td>0,11</td><td>0,28</td><td>26,19</td><td>0,03</td><td>17,45</td><td>3,46</td><td>1,67</td><td>4,73</td><td>172,35</td><td>123,92</td><td>48,42</td></tr><tr><th scope="row">2030</th><td>19,72</td><td>0,00</td><td>88,04</td><td>3,33</td><td>0,07</td><td>0,17</td><td>27,08</td><td>0,02</td><td>17,60</td><td>3,56</td><td>1,91</td><td>5,23</td><td>166,74</td><td>115,41</td><td>51,33</td></tr><tr><th scope="row">2031</th><td>16,47</td><td>0,00</td><td>83,54</td><td>3,63</td><td>0,05</td><td>0,11</td><td>27,90</td><td>0,01</td><td>17,75</td><td>3,67</td><td>2,15</td><td>5,72</td><td>160,99</td><td>107,43</td><td>53,57</td></tr><tr><th scope="row">2032</th><td>13,52</td><td>0,00</td><td>78,81</td><td>3,85</td><td>0,03</td><td>0,06</td><td>28,66</td><td>0,01</td><td>17,91</td><td>3,78</td><td>2,38</td><td>6,22</td><td>155,23</td><td>99,51</td><td>55,72</td></tr><tr><th scope="row">2033</th><td>10,86</td><td>0,00</td><td>73,89</td><td>3,99</td><td>0,02</td><td>0,04</td><td>29,37</td><td>0,01</td><td>18,06</td><td>3,89</td><td>2,62</td><td>6,71</td><td>149,45</td><td>91,66</td><td>57,79</td></tr><tr><th scope="row">2034</th><td>8,48</td><td>0,00</td><td>68,78</td><td>4,07</td><td>0,01</td><td>0,02</td><td>30,01</td><td>0,00</td><td>18,22</td><td>4,00</td><td>2,86</td><td>7,21</td><td>143,66</td><td>83,87</td><td>59,79</td></tr><tr><th scope="row">2035</th><td>6,36</td><td>0,00</td><td>63,15</td><td>4,44</td><td>0,01</td><td>0,02</td><td>30,58</td><td>0,00</td><td>18,37</td><td>4,12</td><td>3,09</td><td>7,70</td><td>137,85</td><td>75,77</td><td>62,08</td></tr><tr><th scope="row">2036</th><td>4,44</td><td>0,00</td><td>56,18</td><td>5,99</td><td>0,00</td><td>0,01</td><td>31,10</td><td>0,00</td><td>18,53</td><td>4,24</td><td>3,33</td><td>8,20</td><td>132,02</td><td>66,46</td><td>65,55</td></tr><tr><th scope="row">2037</th><td>2,83</td><td>0,00</td><td>48,76</td><td>7,71</td><td>0,00</td><td>0,01</td><td>31,56</td><td>0,00</td><td>18,69</td><td>4,36</td><td>3,56</td><td>8,69</td><td>126,17</td><td>56,99</td><td>69,18</td></tr><tr><th scope="row">2038</th><td>1,54</td><td>0,00</td><td>40,60</td><td>9,88</td><td>0,00</td><td>0,00</td><td>31,95</td><td>0,00</td><td>18,85</td><td>4,49</td><td>3,80</td><td>9,19</td><td>120,31</td><td>47,05</td><td>73,26</td></tr><tr><th scope="row">2039</th><td>0,61</td><td>0,00</td><td>32,97</td><td>11,20</td><td>0,00</td><td>0,00</td><td>32,28</td><td>0,00</td><td>19,01</td><td>4,62</td><td>4,04</td><td>9,68</td><td>114,42</td><td>37,95</td><td>76,47</td></tr><tr><th scope="row">2040</th><td>0,00</td><td>0,00</td><td>25,55</td><td>12,02</td><td>0,00</td><td>0,00</td><td>32,55</td><td>0,00</td><td>19,18</td><td>4,75</td><td>4,27</td><td>10,18</td><td>108,52</td><td>29,32</td><td>79,20</td></tr><tr><th scope="row">2041</th><td>0,00</td><td>0,00</td><td>17,64</td><td>12,77</td><td>0,00</td><td>0,00</td><td>32,76</td><td>0,00</td><td>19,34</td><td>4,89</td><td>4,51</td><td>10,67</td><td>102,59</td><td>20,75</td><td>81,84</td></tr><tr><th scope="row">2042</th><td>0,00</td><td>0,00</td><td>10,47</td><td>12,80</td><td>0,00</td><td>0,00</td><td>32,91</td><td>0,00</td><td>19,51</td><td>5,04</td><td>4,75</td><td>11,17</td><td>96,65</td><td>12,89</td><td>83,76</td></tr><tr><th scope="row">2043</th><td>0,00</td><td>0,00</td><td>5,17</td><td>11,00</td><td>0,00</td><td>0,00</td><td>33,00</td><td>0,00</td><td>19,68</td><td>5,18</td><td>4,98</td><td>11,66</td><td>90,68</td><td>6,84</td><td>83,84</td></tr><tr><th scope="row">2044</th><td>0,00</td><td>0,00</td><td>1,64</td><td>7,46</td><td>0,00</td><td>0,00</td><td>33,02</td><td>0,00</td><td>19,85</td><td>5,34</td><td>5,22</td><td>12,16</td><td>84,69</td><td>2,50</td><td>82,19</td></tr><tr><th scope="row">2045</th><td>0,00</td><td>0,00</td><td>0,00</td><td>2,06</td><td>0,00</td><td>0,00</td><td>32,99</td><td>0,00</td><td>20,02</td><td>5,49</td><td>5,45</td><td>12,65</td><td>78,67</td><td>0,00</td><td>78,67</td></tr></tbody></table></div></div>
+</div>
+<script>
+const dataFS = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "kurz": "Heiz\u00f6l", "color": "#4A4A4A", "y": [48.88, 44.86, 40.64, 36.43, 32.35, 28.16, 24.26, 20.65, 17.42, 14.46, 11.76, 9.33, 7.11, 5.06, 3.31, 1.85, 0.77, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "kurz": "Kohle", "color": "#7C350B", "y": [0.62, 0.18, 0.05, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "kurz": "Erdgas", "color": "#999999", "y": [108.24, 108.34, 107.4, 105.77, 103.64, 100.09, 96.25, 92.18, 88.36, 84.32, 80.07, 75.63, 70.63, 64.09, 56.96, 48.83, 41.14, 33.45, 24.66, 16.14, 9.35, 4.06, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "kurz": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 1.3, 2.46, 3.49, 3.84, 4.12, 4.33, 4.47, 4.96, 6.84, 9.01, 11.89, 13.97, 15.74, 17.86, 19.72, 19.86, 18.51, 15.94]}, {"name": "Fl\u00fcssiggas", "kurz": "Fl\u00fcssiggas", "color": "#887894", "y": [1.47, 0.96, 0.62, 0.41, 0.26, 0.17, 0.11, 0.07, 0.05, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "kurz": "BHKW-W\u00e4rme", "color": "#B22222", "y": [5.12, 3.15, 1.94, 1.19, 0.73, 0.45, 0.28, 0.17, 0.11, 0.06, 0.04, 0.02, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Fernw\u00e4rme", "kurz": "Fernw\u00e4rme", "color": "#F39C12", "y": [19.59, 21.79, 23.89, 25.89, 27.79, 29.6, 31.31, 32.92, 34.44, 35.86, 37.18, 38.4, 39.53, 40.56, 41.49, 42.33, 43.07, 43.71, 44.25, 44.7, 45.05, 45.3, 45.46]}, {"name": "Heizstrom", "kurz": "Heizstrom", "color": "#1225A0", "y": [0.22, 0.16, 0.11, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Energieholz", "kurz": "Energieholz", "color": "#6FAC46", "y": [16.58, 16.56, 16.54, 16.53, 16.51, 16.5, 16.48, 16.46, 16.45, 16.43, 16.42, 16.4, 16.39, 16.37, 16.35, 16.34, 16.32, 16.31, 16.29, 16.27, 16.26, 16.24, 16.23]}, {"name": "Solarthermie", "kurz": "Solarthermie", "color": "#FFCF00", "y": [2.91, 3.0, 3.09, 3.18, 3.27, 3.36, 3.46, 3.56, 3.67, 3.78, 3.89, 4.0, 4.12, 4.24, 4.36, 4.49, 4.62, 4.75, 4.89, 5.04, 5.18, 5.34, 5.49]}, {"name": "Oberfl\u00e4chennahe Geothermie", "kurz": "Oberfl. Geothermie", "color": "#83ACFC", "y": [0.26, 0.46, 0.66, 0.86, 1.07, 1.27, 1.47, 1.67, 1.88, 2.08, 2.28, 2.48, 2.69, 2.89, 3.09, 3.29, 3.5, 3.7, 3.9, 4.1, 4.31, 4.51, 4.71]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "kurz": "Luft-Wasser-WP", "color": "#326F90", "y": [1.76, 2.21, 2.66, 3.11, 3.56, 4.01, 4.46, 4.91, 5.36, 5.81, 6.26, 6.71, 7.16, 7.61, 8.06, 8.51, 8.96, 9.41, 9.86, 10.31, 10.76, 11.21, 11.66]}], "total": [205.66, 201.67, 197.61, 193.47, 189.25, 184.95, 180.57, 176.11, 171.57, 166.95, 162.25, 157.47, 152.61, 147.67, 142.64, 137.53, 132.35, 127.07, 121.72, 116.29, 110.77, 105.17, 99.49], "fossil": [171.38, 165.02, 158.61, 152.13, 145.59, 137.69, 129.84, 122.06, 114.9, 107.73, 100.57, 93.4, 85.81, 76.77, 67.37, 57.18, 47.73, 38.51, 28.87, 19.42, 11.62, 5.24, 0.0], "renew": [34.29, 36.65, 39.0, 41.33, 43.66, 47.27, 50.73, 54.05, 56.68, 59.22, 61.69, 64.07, 66.8, 70.89, 75.27, 80.35, 84.62, 88.57, 92.85, 96.87, 99.16, 99.93, 99.49], "fossil_pct": [83.3, 81.8, 80.3, 78.6, 76.9, 74.4, 71.9, 69.3, 67.0, 64.5, 62.0, 59.3, 56.2, 52.0, 47.2, 41.6, 36.1, 30.3, 23.7, 16.7, 10.5, 5.0, 0.0], "renew_pct": [16.7, 18.2, 19.7, 21.4, 23.1, 25.6, 28.1, 30.7, 33.0, 35.5, 38.0, 40.7, 43.8, 48.0, 52.8, 58.4, 63.9, 69.7, 76.3, 83.3, 89.5, 95.0, 100.0]};
+const dataO45 = {"years": [2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045], "traces": [{"name": "Heiz\u00f6l", "kurz": "Heiz\u00f6l", "color": "#4A4A4A", "y": [48.88, 44.61, 40.19, 35.82, 31.6, 27.32, 23.36, 19.72, 16.47, 13.52, 10.86, 8.48, 6.36, 4.44, 2.83, 1.54, 0.61, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Kohle", "kurz": "Kohle", "color": "#7C350B", "y": [0.62, 0.18, 0.05, 0.02, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Erdgas", "kurz": "Erdgas", "color": "#999999", "y": [108.24, 107.76, 106.22, 103.99, 101.24, 97.1, 92.69, 88.04, 83.54, 78.81, 73.89, 68.78, 63.15, 56.18, 48.76, 40.6, 32.97, 25.55, 17.64, 10.47, 5.17, 1.64, 0.0]}, {"name": "Erf\u00fcllung Biotreppe", "kurz": "Erf\u00fcllung Biotreppe", "color": "#B5E6A2", "y": [0.0, 0.0, 0.0, 0.0, 0.0, 1.26, 2.37, 3.33, 3.63, 3.85, 3.99, 4.07, 4.44, 5.99, 7.71, 9.88, 11.2, 12.02, 12.77, 12.8, 11.0, 7.46, 2.06]}, {"name": "Fl\u00fcssiggas", "kurz": "Fl\u00fcssiggas", "color": "#887894", "y": [1.47, 0.96, 0.62, 0.41, 0.26, 0.17, 0.11, 0.07, 0.05, 0.03, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "BHKW-W\u00e4rme", "kurz": "BHKW-W\u00e4rme", "color": "#B22222", "y": [5.12, 3.15, 1.94, 1.19, 0.73, 0.45, 0.28, 0.17, 0.11, 0.06, 0.04, 0.02, 0.02, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Fernw\u00e4rme", "kurz": "Fernw\u00e4rme", "color": "#F39C12", "y": [19.59, 20.84, 22.04, 23.17, 24.24, 25.25, 26.19, 27.08, 27.9, 28.66, 29.37, 30.01, 30.58, 31.1, 31.56, 31.95, 32.28, 32.55, 32.76, 32.91, 33.0, 33.02, 32.99]}, {"name": "Heizstrom", "kurz": "Heizstrom", "color": "#1225A0", "y": [0.22, 0.16, 0.11, 0.08, 0.06, 0.04, 0.03, 0.02, 0.01, 0.01, 0.01, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]}, {"name": "Energieholz", "kurz": "Energieholz", "color": "#6FAC46", "y": [16.58, 16.72, 16.86, 17.01, 17.15, 17.3, 17.45, 17.6, 17.75, 17.91, 18.06, 18.22, 18.37, 18.53, 18.69, 18.85, 19.01, 19.18, 19.34, 19.51, 19.68, 19.85, 20.02]}, {"name": "Solarthermie", "kurz": "Solarthermie", "color": "#FFCF00", "y": [2.91, 3.0, 3.09, 3.18, 3.27, 3.36, 3.46, 3.56, 3.67, 3.78, 3.89, 4.0, 4.12, 4.24, 4.36, 4.49, 4.62, 4.75, 4.89, 5.04, 5.18, 5.34, 5.49]}, {"name": "Oberfl\u00e4chennahe Geothermie", "kurz": "Oberfl. Geothermie", "color": "#83ACFC", "y": [0.26, 0.49, 0.73, 0.97, 1.2, 1.44, 1.67, 1.91, 2.15, 2.38, 2.62, 2.86, 3.09, 3.33, 3.56, 3.8, 4.04, 4.27, 4.51, 4.75, 4.98, 5.22, 5.45]}, {"name": "Luft-Wasser-W\u00e4rmepumpe", "kurz": "Luft-Wasser-WP", "color": "#326F90", "y": [1.76, 2.26, 2.75, 3.25, 3.74, 4.24, 4.73, 5.23, 5.72, 6.22, 6.71, 7.21, 7.7, 8.2, 8.69, 9.19, 9.68, 10.18, 10.67, 11.17, 11.66, 12.16, 12.65]}], "total": [205.66, 200.13, 194.6, 189.06, 183.51, 177.94, 172.35, 166.74, 160.99, 155.23, 149.45, 143.66, 137.85, 132.02, 126.17, 120.31, 114.42, 108.52, 102.59, 96.65, 90.68, 84.69, 78.67], "fossil": [171.38, 163.87, 156.37, 148.87, 141.35, 132.57, 123.92, 115.41, 107.43, 99.51, 91.66, 83.87, 75.77, 66.46, 56.99, 47.05, 37.95, 29.32, 20.75, 12.89, 6.84, 2.5, 0.0], "renew": [34.29, 36.26, 38.23, 40.2, 42.15, 45.36, 48.42, 51.33, 53.57, 55.72, 57.79, 59.79, 62.08, 65.55, 69.18, 73.26, 76.47, 79.2, 81.84, 83.76, 83.84, 82.19, 78.67], "fossil_pct": [83.3, 81.9, 80.4, 78.7, 77.0, 74.5, 71.9, 69.2, 66.7, 64.1, 61.3, 58.4, 55.0, 50.3, 45.2, 39.1, 33.2, 27.0, 20.2, 13.3, 7.5, 2.9, 0.0], "renew_pct": [16.7, 18.1, 19.6, 21.3, 23.0, 25.5, 28.1, 30.8, 33.3, 35.9, 38.7, 41.6, 45.0, 49.7, 54.8, 60.9, 66.8, 73.0, 79.8, 86.7, 92.5, 97.1, 100.0]};
+function buildTraces(dd) {
+  const schmal = window.innerWidth < 620;
+  const areaTraces = dd.traces.map(t => ({
+    x: dd.years, y: t.y, name: schmal ? (t.kurz || t.name) : t.name, type: 'scatter', mode: 'none',
+    stackgroup: 'one', fillcolor: t.color, line: { width: 0 },
+    hoverinfo: 'skip' }));
+  const lineTraces = [
+    { x: dd.years, y: dd.total, name: 'Gesamt', type: 'scatter', mode: 'lines',
+       line: { color: '#FF6602', width: 2.5 }, hoverinfo: 'skip' },
+    { x: dd.years, y: dd.fossil, customdata: dd.fossil_pct, name: 'fossiler Anteil', type: 'scatter', mode: 'lines',
+       line: { color: '#333333', width: 2 }, hovertemplate: 'fossil: %{customdata:.0f}%<extra></extra>' },
+    { x: dd.years, y: dd.renew, customdata: dd.renew_pct, name: 'erneuerbarer Anteil', type: 'scatter', mode: 'lines',
+       line: { color: '#00A24D', width: 2 }, hovertemplate: 'erneuerbar: %{customdata:.0f}%<extra></extra>' },
+  ];
+  return areaTraces.concat(lineTraces);
+}
+const layout = {
+  font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
+  margin: { t: 20, l: 60, r: 10, b: 40 },
+  // automargin: sonst ragt die letzte Jahreszahl (2045) ueber den rechten Rand.
+  xaxis: { fixedrange: true, dtick: 5, gridcolor: '#eee', automargin: true,
+            tickfont: { size: 14 },
+            ticks: 'outside', ticklen: 8, tickcolor: '#eee' },
+  // Sichtbare Ticks an der y-Achse; tickformat statt Plotly-Standard, der
+  // 60000 zu '60k' kuerzt. Das Trennzeichen kommt aus 'separators'.
+  // <b> statt font.weight: Schriftgewicht kennt erst neueres Plotly, wir binden
+  // 2.32 per CDN ein.
+  yaxis: { fixedrange: true, title: { text: '<b>Endenergie [GWh/a]</b>', standoff: 20 }, tickformat: ',.0f',
+            ticks: 'outside', ticklen: 8, tickcolor: '#eee', automargin: true,
+            tickfont: { size: 14 },
+            ticksuffix: '  ', gridcolor: '#eee', zeroline: false },
+  // Interaktive Fassung: Legende rechts. In der PNG-Fassung (fig_timeseries)
+  // steht sie darunter.
+  legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top', font: { size: 13 } },
+  shapes: [{ type: 'line', xref: 'x', yref: 'paper', layer: 'below',
+              x0: 2045, x1: 2045, y0: 0, y1: 1,
+              line: { color: '#eee', width: 1 } }],
+  separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff', hovermode: 'x unified'
+};
+
+const NARROW_PX = 620;
+const LEGENDE_MITTEL = 14;
+const LEGENDE_BLOCK_BREIT = 820;
+
+
+// legendenGroesse: Schriftgroesse der schmalen Legende. Ohne Angabe 9 -- die
+// Flaechendiagramme fuehren lange Namen und brauchen es klein. Die
+// Balkendiagramme geben die Groesse des Kuchendiagramms mit.
+function responsive(base, legendeEintraege, legendenGroesse) {
+  if (window.innerWidth >= NARROW_PX) {
+    // Senkrechte Legende rechts: die grosse Schrift erst, wenn der Block breit
+    // genug ist (s. LEGENDE_HTML_MITTEL). Waagrechte Legenden ueber oder unter
+    // dem Diagramm kosten keine Diagrammbreite und bleiben unberuehrt.
+    if (base.legend && base.legend.orientation === 'v' && base.legend.font
+        && base.legend.font.size > LEGENDE_MITTEL
+        && window.innerWidth < LEGENDE_BLOCK_BREIT) {
+      const b = JSON.parse(JSON.stringify(base));
+      b.legend.font.size = LEGENDE_MITTEL;
+      return b;
+    }
+    return base;
+  }
+  const l = JSON.parse(JSON.stringify(base));
+  const groesse = legendenGroesse || 9;
+  const gedrehteTicks = !!(l.xaxis && l.xaxis.tickangle);
+  const traceorder = base.legend && base.legend.traceorder;
+  l.legend = { orientation: 'h', x: 0, xanchor: 'left', yanchor: 'top',
+               font: { size: groesse }, tracegroupgap: 2,
+               // Gedrehte Achsenbeschriftungen brauchen unter dem Diagramm
+               // Platz; eine Legende direkt darunter landet sonst mitten drin.
+               y: gedrehteTicks ? -0.5 : -0.12 };
+  // l.legend wird komplett ersetzt -- eine gesetzte Reihenfolge mitnehmen.
+  if (traceorder) l.legend.traceorder = traceorder;
+  // Zwei Spalten (entrywidth als Bruchteil der Legendenbreite) nur bei vielen
+  // Eintraegen: einspaltig wird die Legende dann so hoch, dass Plotly sie
+  // scrollbar macht und abschneidet. Bei wenigen Eintraegen waere es schaedlich,
+  // weil lange Namen wie "konservatives Sanierungsszenario (2045)" nicht in eine
+  // halbe Spalte passen und in die Nachbarspalte laufen.
+  if (legendeEintraege > 8) {
+    l.legend.entrywidthmode = 'fraction';
+    l.legend.entrywidth = 0.5;
+    // Eine Spalte ist hier nur halb so breit, lange Namen koennen herausragen.
+    // Ob sie es tun, haengt an der Blockbreite und an der Schrift des Geraets
+    // -- deshalb wird es nach dem Zeichnen gemessen (legendeEinpassen), nicht
+    // hier geraten. xref 'container' waere der naheliegende Ausweg, nimmt der
+    // Legende aber die reservierte Flaeche: sie landet dann im Diagramm.
+  }
+  // Schmale Seitenraender: die zweispaltige Legende braucht die Breite, sonst
+  // ragt der laengste Eintrag ('Luft-Wasser-Waermepumpe') heraus. Was die
+  // Achsenbeschriftung wirklich braucht, holt sich automargin zurueck.
+  l.margin = { t: 8, l: 32, r: 4, b: 8 };
+  if (l.yaxis) { l.yaxis.title = ''; l.yaxis.tickfont = { size: 9 }; l.yaxis.automargin = true; }
+  if (l.xaxis) { l.xaxis.tickfont = { size: 9 }; l.xaxis.automargin = true; }
+  // Annotationen bleiben ueber dem Diagramm, linksbuendig. Unter die Legende
+  // gesetzt rutschten sie aus dem Block heraus, weil deren Hoehe hier nicht
+  // bekannt ist. Der obere Rand muss dafuer per Hand aufgehen -- Annotationen
+  // bekommen von automargin keinen Platz reserviert, anders als die Legende.
+  if (l.annotations && l.annotations.length) {
+    l.annotations.forEach(a => {
+      a.font = { size: 8 };
+      a.x = 0; a.xanchor = 'left'; a.y = 1.02; a.yanchor = 'bottom'; a.align = 'left';
+    });
+    l.margin.t = 42;
+  }
+  return l;
+}
+
+// Die zweispaltige Legende kann mit langen Namen ueber den Blockrand laufen.
+// Wie breit der Text wirklich wird, haengt an der Blockbreite und an der
+// Schrift, die das Geraet einsetzt -- deshalb nach dem Zeichnen messen und
+// notfalls eine Nummer kleiner. So bleibt die gewuenschte Groesse dort, wo sie
+// passt, statt vorsorglich ueberall kleiner zu sein.
+// Linke Kante der Legende und Luft darum -- 12 px ist derselbe Rand, den
+// .footer (Quellenzeile) im schmalen Layout hat.
+const LEGENDE_RAND_PX = 12;
+const LEGENDE_LUFT_PX = 6;
+
+// Zweispaltige Legende an der ganzen Blockbreite ausrichten statt an der
+// Zeichenflaeche: die beginnt erst hinter der y-Achsenbeschriftung, wodurch die
+// beiden Spalten zu schmal werden und lange Namen in die Nachbarspalte laufen.
+// Beim Kuchendiagramm faellt das nicht auf, weil es keine y-Achse hat.
+//
+// Der Haken: mit xref/yref 'container' haelt Plotly keinen Platz mehr frei --
+// das tut es nur fuer 'paper'. Ohne Gegenmassnahme wandert die Legende ins
+// Diagramm. Der untere Rand wird deshalb selbst gesetzt (randUnterDiagramm).
+async function legendeUeberBlockbreite(gd) {
+  await Plotly.relayout(gd, {
+    'legend.xref': 'container', 'legend.xanchor': 'left',
+    'legend.x': LEGENDE_RAND_PX / Math.max(1, gd.clientWidth),
+    'legend.yref': 'container', 'legend.yanchor': 'bottom',
+    'legend.y': LEGENDE_LUFT_PX / Math.max(1, gd.clientHeight)
+  });
+}
+
+// Unterer Rand = Achsenbeschriftung + Legende + Luft. Die Hoehe der
+// Achsenbeschriftung wird gemessen, weil automargin sie sonst selbst
+// bestimmt haette.
+async function randUnterDiagramm(gd) {
+  for (let i = 0; i < 4; i++) {
+    const fl = gd._fullLayout;
+    const oben = gd.getBoundingClientRect().top;
+    const plotUnten = fl.margin.t + fl.yaxis._length;
+    const ticks = [...gd.querySelectorAll('g.xaxislayer-above text')];
+    const tickUnten = ticks.length
+      ? Math.max(...ticks.map(t => t.getBoundingClientRect().bottom)) - oben
+      : plotUnten;
+    const soll = Math.ceil(fl.legend._height) + Math.max(0, Math.ceil(tickUnten - plotUnten))
+                 + 2 * LEGENDE_LUFT_PX;
+    if (Math.abs(fl.margin.b - soll) <= 1) return;
+    await Plotly.relayout(gd, { 'margin.b': soll });
+  }
+}
+
+// Passt die Legende noch in den Block? Zwei Dinge koennen schiefgehen: der
+// laengste Name laeuft rechts aus dem Block, oder er laeuft in das Symbol der
+// Nachbarspalte. Beides haengt an der Blockbreite und an der Schrift des
+// Geraets und wird deshalb gemessen, nicht gerechnet.
+//
+// Die Spaltenbreite laesst sich nicht vergroessern: Plotly leitet die
+// Legendenbreite aus der Zeichenflaeche ab, auch mit xref 'container'
+// (gemessen 272 px bei 330 px Block, unabhaengig von der Position). Bleibt also
+// die Schrift.
+function legendePasst(gd) {
+  const texte = [...gd.querySelectorAll('g.legend text.legendtext')]
+    .map(t => t.getBoundingClientRect());
+  if (!texte.length) return true;
+  if (Math.max(...texte.map(r => r.right)) > window.innerWidth - 2) return false;
+  const spalten = [...new Set([...gd.querySelectorAll('g.legend g.traces')]
+    .map(g => Math.round(g.getBoundingClientRect().left)))].sort((a, b) => a - b);
+  if (spalten.length < 2) return true;
+  // Der Text darf das Symbol der naechsten Spalte nicht beruehren. Gemessen bei
+  // 330 px Blockbreite ('erneuerbarer Anteil', der laengste Eintrag):
+  // Groesse 12 ragt 17 px hinein, 11 noch 8 px, 10 laesst 1 px Luft. Mehr als
+  // diesen einen Pixel zu verlangen kostet gleich die naechste Schriftgroesse,
+  // deshalb wird hier nur auf echte Ueberschneidung geprueft.
+  return !texte.some(r => spalten.some(x => r.left < x && r.right > x));
+}
+
+// Groesste Schrift, mit der jeder Eintrag vor dem Symbol der naechsten Spalte
+// und vor dem Blockrand endet. Je Eintrag wird gemessen, wie viel Platz ihm
+// bleibt und wie breit er ist; das Verhaeltnis ergibt den Faktor. Die
+// Spaltenpositionen selbst haengen nicht an der Schrift -- Plotly leitet die
+// Legendenbreite aus der Zeichenflaeche ab.
+function legendenGroesseFuerBlock(gd, aktuell, mindest) {
+  const eintraege = [...gd.querySelectorAll('g.legend text.legendtext')]
+    .map(t => t.getBoundingClientRect());
+  if (!eintraege.length) return aktuell;
+  const spalten = [...new Set([...gd.querySelectorAll('g.legend g.traces')]
+    .map(g => Math.round(g.getBoundingClientRect().left)))].sort((a, b) => a - b);
+  let faktor = 1;
+  for (const r of eintraege) {
+    if (!r.width) continue;
+    const naechste = spalten.find(x => x > r.left);
+    const grenze = (naechste === undefined ? window.innerWidth - 2 : naechste - 1);
+    faktor = Math.min(faktor, (grenze - r.left) / r.width);
+  }
+  if (faktor >= 1) return aktuell;
+  return Math.max(mindest, Math.min(aktuell, Math.floor(aktuell * faktor)));
+}
+
+// Passt die Legende in der schmalen Ansicht ein. Zweispaltig (viele Eintraege)
+// bekommt sie die ganze Blockbreite; danach wird gemessen, ob der laengste Name
+// trotzdem ueber den Rand laeuft -- das haengt an der Blockbreite und an der
+// Schrift des Geraets, laesst sich also nicht vorher ausrechnen.
+async function legendeEinpassen(gd, eintraege, mindest) {
+  if (window.innerWidth >= NARROW_PX) return;
+  const zweispaltig = eintraege > 8;
+  if (zweispaltig) {
+    await legendeUeberBlockbreite(gd);
+    await randUnterDiagramm(gd);
+  }
+  // Die passende Groesse wird gerechnet, nicht Schritt fuer Schritt gesucht:
+  // die Textbreite skaliert linear mit der Schriftgroesse, und ein zweiter
+  // Messdurchgang direkt nach einem relayout ist nicht verlaesslich (in einem
+  // verborgenen Tab zeichnet der Browser nicht sofort neu).
+  for (let i = 0; i < 2; i++) {
+    const gr = gd._fullLayout.legend.font.size;
+    const neu = legendenGroesseFuerBlock(gd, gr, mindest);
+    if (neu >= gr) break;
+    await Plotly.relayout(gd, { 'legend.font.size': neu });
+  }
+  if (zweispaltig) await randUnterDiagramm(gd);
+}
+
+// Beim Drehen des Geraets bzw. Groessenwechsel neu aufbauen.
+function onResize(redraw) {
+  let last = window.innerWidth >= NARROW_PX;
+  const pruefen = () => {
+    const now = window.innerWidth >= NARROW_PX;
+    if (now !== last) { last = now; redraw(); }
+  };
+  window.addEventListener('resize', pruefen);
+  // Zusaetzlich ein ResizeObserver: Plotly selbst haengt bei
+  // {responsive: true} an einem Observer, nicht am resize-Ereignis. Aendert
+  // sich die Groesse ohne resize-Ereignis, passte Plotly das Diagramm an,
+  // unser Umschalter aber nicht -- dann blieb das Schmal-Layout in einer
+  // breiten Ansicht stehen.
+  if (window.ResizeObserver) new ResizeObserver(pruefen).observe(document.body);
+}
+
+let aktuellesSzenario = 'Fortschreibung';
+
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
+
+function animiereLegende(gd, achse) {
+  // Ausgangswerte bei jedem Neuzeichnen frisch merken (Szenariowechsel!).
+  gd._urwerte = gd.data.map(t => Array.isArray(t[achse]) ? t[achse].map(Number) : null);
+  gd._verborgen = {};
+  if (gd._animVerdrahtet) return;
+  gd._animVerdrahtet = true;
+
+  gd.on('plotly_legendclick', ev => {
+    const i = ev.curveNumber;
+    const urwerte = gd._urwerte[i];
+    // Flaechen und Balken schrumpfen auf Null; eine Linie auf Null waere eine
+    // falsche Aussage, die wird stattdessen weich ausgeblendet.
+    const alsWerte = urwerte !== null && gd.data[i].mode !== 'lines';
+    const ausblenden = !gd._verborgen[i];
+    gd._verborgen[i] = ausblenden;
+
+    const marken = gd._marken || (gd._marken = {});
+    marken[i] = (marken[i] || 0) + 1;
+    const meine = marken[i];
+
+    if (!ausblenden) {
+      // Erst unsichtbar auf Null setzen, dann hochlaufen - sonst blitzt die
+      // Spur in voller Groesse auf.
+      Plotly.restyle(gd, alsWerte ? { [achse]: [urwerte.map(() => 0)], visible: true }
+                                  : { opacity: 0, visible: true }, [i]);
+    }
+    const vonWerte = alsWerte ? (gd.data[i][achse] || []).map(Number) : null;
+    const vonOpa = alsWerte ? null
+                            : (gd.data[i].opacity === undefined ? 1 : gd.data[i].opacity);
+    const start = performance.now();
+
+    function schritt() {
+      if (marken[i] !== meine) return;   // neuerer Klick hat uebernommen
+      const t = Math.min(1, (performance.now() - start) / ANIM_DAUER);
+      const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      if (alsWerte) {
+        const jetzt = vonWerte.map((v, k) => v + ((ausblenden ? 0 : urwerte[k]) - v) * e);
+        Plotly.restyle(gd, { [achse]: [jetzt] }, [i]);
+      } else {
+        Plotly.restyle(gd, { opacity: vonOpa + ((ausblenden ? 0 : 1) - vonOpa) * e }, [i]);
+      }
+      if (t < 1) { setTimeout(schritt, 16); return; }
+      if (ausblenden) Plotly.restyle(gd, { visible: 'legendonly' }, [i]);
+    }
+    schritt();
+    return false;
+  });
+}
+
+
+// Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
+// passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
+// missverstaendlich (gedrueckt = sichtbar oder ausgeblendet?).
+function legendeEigenschaftenSetzen(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    eintrag.setAttribute('tabindex', '0');
+    eintrag.setAttribute('role', 'switch');
+    const text = eintrag.querySelector('text.legendtext');
+    if (text) eintrag.setAttribute('aria-label',
+      text.getAttribute('data-unformatted') || text.textContent);
+  });
+}
+
+// Zustand aus der Darstellung ablesen statt aus den Daten: Plotly setzt einen
+// abgeschalteten Legendeneintrag auf Deckkraft 0.5. Ueber die Datenspuren ginge
+// es nicht verlaesslich, weil die Reihenfolge der Legende nicht der Reihenfolge
+// in gd.data entspricht -- gestapelte Diagramme drehen sie um.
+function legendeZustandNachfuehren(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const sichtbar = parseFloat(eintrag.style.opacity || '1') > 0.9;
+    eintrag.setAttribute('aria-checked', sichtbar ? 'true' : 'false');
+  });
+}
+
+// Die Grafik selbst ist fuer Screenreader stumm: Plotly zeichnet reines SVG
+// ohne Rollen. Die Achsen-, Titel- und Datenbeschriftungen darin wuerden als
+// zusammenhanglose Wortfolge vorgelesen ('2023 2030 ... 10.000 20.000 ...').
+// Deshalb alles ausblenden, was rein grafisch ist; die Werte stehen in der
+// Datentabelle, die Beschriftungen als echter Text im Seitenkopf.
+//
+// aria-hidden muss dabei auf die Geschwister der Legende gesetzt werden, nicht
+// auf ihre Vorfahren: ein 'aria-hidden=false' im Inneren hebt ein
+// 'aria-hidden=true' weiter oben nicht wieder auf.
+function grafikAusZugaenglichkeitsbaum(gd) {
+  const legende = gd.querySelector('g.legend');
+  const legendenEbene = legende && legende.closest('svg.main-svg');
+  gd.querySelectorAll('svg.main-svg').forEach(svg => {
+    if (svg !== legendenEbene) { svg.setAttribute('aria-hidden', 'true'); return; }
+    [...svg.children].forEach(kind => {
+      if (kind !== legende.parentElement) { kind.setAttribute('aria-hidden', 'true'); return; }
+      // In dieser Ebene (infolayer) sitzen neben der Legende die Achsen- und
+      // Diagrammtitel sowie die Annotationen.
+      [...kind.children].forEach(enkel => {
+        if (enkel !== legende) enkel.setAttribute('aria-hidden', 'true');
+      });
+    });
+  });
+}
+
+function a11yAnwenden(gd) {
+  legendeEigenschaftenSetzen(gd);
+  legendeZustandNachfuehren(gd);
+  grafikAusZugaenglichkeitsbaum(gd);
+}
+
+
+// ---------------------------------------------------------------------------
+// Hervorheben beim Zeigen auf einen Legendeneintrag: der gezeigte Teil bleibt
+// kraeftig, alle uebrigen werden blasser.
+//
+// Plotly kennt dafuer kein Ereignis -- es gibt nur plotly_legendclick und
+// plotly_legenddoubleclick -- deshalb eigene Zuhoerer auf den Eintraegen.
+//
+// Zugeordnet wird ueber den NAMEN der Spur, beim Kuchen ueber das Label der
+// Stuecke. Nicht ueber Index oder uid: im Feuerstaetten-Diagramm gehoeren die
+// Legendeneintraege zu unsichtbaren Punktspuren (die tragen die runden
+// Symbole), gezeichnet werden aber Balkenspuren -- gemeinsam ist beiden nur
+// der Name.
+// ---------------------------------------------------------------------------
+const HERVOR_BLASS = '0.2';
+// Was in einem Legendeneintrag mit abblasst: Beschriftung und Symbol.
+const HERVOR_LEGENDE_TEILE =
+  'text.legendtext, g.legendpoints, g.legendlines, g.legendfill';
+// Der Eintrag unter der Maus wird nur leicht zurueckgenommen. Nicht so stark
+// wie die Flaechen im Diagramm: 0.5 benutzt Plotly fuer ausgeschaltete Reihen,
+// so weit heruntergedimmt saehe der Eintrag aus, als waere er abgewaehlt.
+const HERVOR_LEGENDE_BLASS = '0.55';
+const HERVOR_DAUER = (window.matchMedia
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : 150;
+
+function spurVonElement(el) {
+  let d = el.__data__;
+  if (Array.isArray(d)) d = d[0];
+  return (d && d.trace) || (d && d[0] && d[0].trace) || null;
+}
+
+function legendenSchluessel(eintrag) {
+  let d = eintrag.__data__;
+  if (Array.isArray(d)) d = d[0];
+  if (!d) return null;
+  // Kuchen: ein Eintrag steht fuer ein Stueck, nicht fuer eine ganze Spur.
+  if (d.label !== undefined) return { art: 'label', wert: d.label };
+  return d.trace ? { art: 'name', wert: d.trace.name } : null;
+}
+
+function hervorheben(gd, ziel) {
+  gd.querySelectorAll('g.slice').forEach(stueck => {
+    const label = stueck.__data__ && stueck.__data__.label;
+    const blass = ziel && ziel.art === 'label' && label !== ziel.wert;
+    stueck.style.opacity = blass ? HERVOR_BLASS : '';
+  });
+  gd.querySelectorAll('g.trace').forEach(el => {
+    const spur = spurVonElement(el);
+    // Die Kuchenspur enthaelt alle Stuecke und wird oben behandelt.
+    if (!spur || spur.type === 'pie') return;
+    const blass = ziel && ziel.art === 'name' && spur.name !== ziel.wert;
+    el.style.opacity = blass ? HERVOR_BLASS : '';
+  });
+  // In der Legende blasst NUR der Eintrag unter der Maus ab -- als Rueckmeldung,
+  // worauf man gerade zeigt. Die uebrigen bleiben unveraendert lesbar; sie
+  // mitzudimmen macht die Legende waehrend des Zeigens unbrauchbar.
+  //
+  // Abgeblendet werden Text und Symbol, NICHT der Eintrag selbst: an dessen
+  // Deckkraft liest legendeZustandNachfuehren() ab, ob eine Reihe ausgeblendet
+  // ist.
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const eigen = legendenSchluessel(eintrag);
+    const gezeigt = ziel && eigen
+                    && eigen.art === ziel.art && eigen.wert === ziel.wert;
+    eintrag.querySelectorAll(HERVOR_LEGENDE_TEILE).forEach(teil => {
+      teil.style.opacity = gezeigt ? HERVOR_LEGENDE_BLASS : '';
+    });
+  });
+}
+
+function hervorhebenVerdrahten(gd) {
+  const verdrahten = () => {
+    gd.querySelectorAll('g.slice, g.trace, ' + HERVOR_LEGENDE_TEILE)
+      .forEach(el => { el.style.transition = 'opacity ' + HERVOR_DAUER + 'ms'; });
+    gd.querySelectorAll('g.traces').forEach(eintrag => {
+      if (eintrag._hervorVerdrahtet) return;
+      eintrag._hervorVerdrahtet = true;
+      eintrag.addEventListener('mouseenter',
+        () => hervorheben(gd, legendenSchluessel(eintrag)));
+      eintrag.addEventListener('mouseleave', () => hervorheben(gd, null));
+    });
+  };
+  verdrahten();
+  if (gd._hervorAngemeldet) return;
+  gd._hervorAngemeldet = true;
+  // Plotly baut Legende und Zeichenflaeche bei jedem Neuzeichnen neu auf; die
+  // Zuhoerer haengen dann an weggeworfenen Knoten.
+  gd.on('plotly_afterplot', verdrahten);
+}
+
+function zugaenglichMachen(gd) {
+  a11yAnwenden(gd);
+  // Reitet hier mit: jedes Diagramm laeuft nach dem Zeichnen durch diese
+  // Funktion, so gibt es nur eine Stelle statt neun.
+  hervorhebenVerdrahten(gd);
+  if (gd._a11yVerdrahtet) return;
+  gd._a11yVerdrahtet = true;
+
+  gd.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const eintrag = ev.target.closest && ev.target.closest('g.traces');
+    if (!eintrag) return;
+    ev.preventDefault();      // die Leertaste wuerde sonst die Seite scrollen
+    const ziel = eintrag.querySelector('rect.legendtoggle') || eintrag;
+    ['mousedown', 'mouseup', 'click'].forEach(art => ziel.dispatchEvent(
+      new MouseEvent(art, { bubbles: true, cancelable: true, view: window })));
+  });
+
+  // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
+  // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
+  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
+  // Animation.
+  gd.on('plotly_afterplot', () => a11yAnwenden(gd));
+}
+
+
+function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  ziel.hidden = !auf;
+}
+
+function draw() {
+  const traces = buildTraces(aktuellesSzenario === 'Fortschreibung' ? dataFS : dataO45);
+  const gd = document.getElementById('chart');
+  Plotly.react('chart', traces, responsive(layout, traces.length, 12),
+               {responsive: true, displayModeBar: false})
+    .then(() => { animiereLegende(gd, 'y'); zugaenglichMachen(gd);
+                   return legendeEinpassen(gd, traces.length,
+                                           9); });
+}
+function showScenario(sz) {
+  aktuellesSzenario = sz;
+  const fs = sz === 'Fortschreibung';
+  // aria-pressed zusaetzlich zur Klasse: die Farbumkehr allein sagt einem
+  // Screenreader nicht, welches Szenario gerade aktiv ist.
+  document.getElementById('btn-fs').classList.toggle('active', fs);
+  document.getElementById('btn-o45').classList.toggle('active', !fs);
+  document.getElementById('btn-fs').setAttribute('aria-pressed', fs ? 'true' : 'false');
+  document.getElementById('btn-o45').setAttribute('aria-pressed', fs ? 'false' : 'true');
+  // Datentabelle mitschalten, sonst zeigte sie das andere Szenario.
+  document.getElementById('tab-fs').hidden = !fs;
+  document.getElementById('tab-o45').hidden = fs;
+  draw();
+}
+draw();
+onResize(draw);
+</script>
+</body>
+</html>
