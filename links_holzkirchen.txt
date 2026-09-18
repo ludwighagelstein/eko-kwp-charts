@@ -4,28 +4,28 @@
 # StoryMaps eine eigene, flache Blockhöhe.
 
 Potenzialanalyse
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_holzkirchen.html" width="100%" height="550" title="Potenzialanalyse Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_holzkirchen.html" width="100%" height="550" title="Potenzialanalyse holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Entwicklung Wärmemix Endenergie
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_holzkirchen.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_holzkirchen.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Entwicklung Wärmemix Nutzenergie
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_holzkirchen.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_holzkirchen.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Entwicklung CO₂-Emissionen
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_holzkirchen.html" width="100%" height="550" title="Entwicklung CO₂-Emissionen Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_holzkirchen.html" width="100%" height="550" title="Entwicklung CO₂-Emissionen holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Sanierungsszenario
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_holzkirchen.html" width="100%" height="550" title="Sanierungsszenario Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_holzkirchen.html" width="100%" height="550" title="Sanierungsszenario holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Endenergieverbrauch
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_holzkirchen.html" width="100%" height="750" title="Endenergieverbrauch Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_holzkirchen.html" width="100%" height="750" title="Endenergieverbrauch holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Anteile der Energieträger
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_holzkirchen.html" width="100%" height="561" title="Anteile der Energieträger Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_holzkirchen.html" width="100%" height="561" title="Anteile der Energieträger holzkirchen" style="border:0" loading="lazy"></iframe>
 
 CO₂-Äquivalente
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_holzkirchen.html" width="100%" height="521" title="CO₂-Äquivalente Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_holzkirchen.html" width="100%" height="521" title="CO₂-Äquivalente holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Wärme leitungsgebunden
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_holzkirchen.html" width="100%" height="531" title="Wärme leitungsgebunden Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_holzkirchen.html" width="100%" height="531" title="Wärme leitungsgebunden holzkirchen" style="border:0" loading="lazy"></iframe>
