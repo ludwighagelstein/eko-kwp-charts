@@ -29,3 +29,6 @@ CO₂-Äquivalente
 
 Wärme leitungsgebunden
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_holzkirchen.html" width="100%" height="531" title="Wärme leitungsgebunden holzkirchen" style="border:0" loading="lazy"></iframe>
+
+Feuerstätten
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_holzkirchen.html" width="100%" height="421" title="Feuerstätten holzkirchen" style="border:0" loading="lazy"></iframe>
