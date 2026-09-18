@@ -7,7 +7,7 @@
      die Media-Query noch responsive() greifen, weil innerWidth 980 bleibt. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<title>Sanierungsszenario holzkirchen</title>
+<title>Sanierungsszenario Holzkirchen</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
   html, body { height: 100%; }
@@ -92,18 +92,18 @@
 </head>
 <body>
 <div class="header">
-  <h1 id="titel">holzkirchen: Sanierungsszenario</h1>
+  <h1 id="titel">Holzkirchen: Sanierungsszenario</h1>
   <p>Nutzenergie [MWh] je Stützjahr, Szenario Fortschreibung/O45</p>
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
 <div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
 <div class="footer">
   <div class="footer-zeile">
-    <span>Quelle: Kommunale Wärmeplanung holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <span>Quelle: Kommunale Wärmeplanung Holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario holzkirchen: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2024</th><td>168.246</td><td>168.246</td></tr><tr><th scope="row">2030</th><td>156.941</td><td>151.808</td></tr><tr><th scope="row">2035</th><td>148.751</td><td>140.045</td></tr><tr><th scope="row">2040</th><td>140.993</td><td>129.195</td></tr><tr><th scope="row">2045</th><td>133.646</td><td>119.184</td></tr></tbody></table><p>Fortschreibung 2024→2045: -34.600 MWh (-21 %)</p><p>O45 2024→2045: -49.061 MWh (-29 %)</p></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Holzkirchen: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2024</th><td>168.246</td><td>168.246</td></tr><tr><th scope="row">2030</th><td>156.941</td><td>151.808</td></tr><tr><th scope="row">2035</th><td>148.751</td><td>140.045</td></tr><tr><th scope="row">2040</th><td>140.993</td><td>129.195</td></tr><tr><th scope="row">2045</th><td>133.646</td><td>119.184</td></tr></tbody></table><p>Fortschreibung 2024→2045: -34.600 MWh (-21 %)</p><p>O45 2024→2045: -49.061 MWh (-29 %)</p></div>
 </div>
 <script>
 const years = [2024, 2030, 2035, 2040, 2045];

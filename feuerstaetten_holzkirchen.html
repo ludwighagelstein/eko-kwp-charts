@@ -7,7 +7,7 @@
      die Media-Query noch responsive() greifen, weil innerWidth 980 bleibt. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<title>Feuerstätten holzkirchen</title>
+<title>Feuerstätten Holzkirchen</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
   html, body { height: 100%; }
@@ -97,18 +97,18 @@
      (gemessen, Desktop; schmal 49 px). Ersatzlos streichen geht nicht -- der
      Diagrammbereich benennt sich per aria-labelledby ueber die h1. -->
 <div class="sr-only">
-  <h1 id="titel">holzkirchen: Feuerstätten nach Energieträger</h1>
+  <h1 id="titel">Holzkirchen: Feuerstätten nach Energieträger</h1>
   <p>Anzahl der Feuerstätten nach Bauart</p>
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
 <div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
 <div class="footer">
   <div class="footer-zeile">
-    <span>Quelle: Kommunale Wärmeplanung holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <span>Quelle: Kommunale Wärmeplanung Holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Feuerstätten holzkirchen – Anzahl nach Bauart und Energieträger</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Zentralheizungen</th><th scope="col">Einzelraumfeuerstätten</th></tr></thead><tbody><tr><th scope="row">Öl</th><td>1.161</td><td>0</td></tr><tr><th scope="row">Erdgas</th><td>1.863</td><td>0</td></tr><tr><th scope="row">Flüssiggas</th><td>31</td><td>0</td></tr><tr><th scope="row">Scheitholz</th><td>57</td><td>3.678</td></tr><tr><th scope="row">Pellets</th><td>156</td><td>23</td></tr><tr><th scope="row">Hackschnitzel</th><td>19</td><td>0</td></tr><tr><th scope="row">Sonstige Biomasse</th><td>34</td><td>0</td></tr><tr><th scope="row">Kohle</th><td>0</td><td>15</td></tr><tr><th scope="row">Summe</th><td>3.321</td><td>3.716</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Feuerstätten Holzkirchen – Anzahl nach Bauart und Energieträger</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Zentralheizungen</th><th scope="col">Einzelraumfeuerstätten</th></tr></thead><tbody><tr><th scope="row">Öl</th><td>1.161</td><td>0</td></tr><tr><th scope="row">Erdgas</th><td>1.863</td><td>0</td></tr><tr><th scope="row">Flüssiggas</th><td>31</td><td>0</td></tr><tr><th scope="row">Scheitholz</th><td>57</td><td>3.678</td></tr><tr><th scope="row">Pellets</th><td>156</td><td>23</td></tr><tr><th scope="row">Hackschnitzel</th><td>19</td><td>0</td></tr><tr><th scope="row">Sonstige Biomasse</th><td>34</td><td>0</td></tr><tr><th scope="row">Kohle</th><td>0</td><td>15</td></tr><tr><th scope="row">Summe</th><td>3.321</td><td>3.716</td></tr></tbody></table></div>
 </div>
 <script>
 const EINTRAEGE = [{"label": "\u00d6l", "farbe": "#4A4A4A", "werte": [1161, 0]}, {"label": "Erdgas", "farbe": "#999999", "werte": [1863, 0]}, {"label": "Fl\u00fcssiggas", "farbe": "#887894", "werte": [31, 0]}, {"label": "Scheitholz", "farbe": "#6FAC46", "werte": [57, 3678]}, {"label": "Pellets", "farbe": "#2E6B2B", "werte": [156, 23]}, {"label": "Hackschnitzel", "farbe": "#9CCB72", "werte": [19, 0]}, {"label": "Sonstige Biomasse", "farbe": "#C6E0B4", "werte": [34, 0]}, {"label": "Kohle", "farbe": "#7C350B", "werte": [0, 15]}];
