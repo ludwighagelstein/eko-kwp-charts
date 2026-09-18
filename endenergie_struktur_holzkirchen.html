@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<!-- Ohne diese Zeile nehmen mobile Browser 980 px Layoutbreite an und skalieren
+     die fertige Seite herunter: das Desktop-Layout erscheint winzig, und weder
+     die Media-Query noch responsive() greifen, weil innerWidth 980 bleibt. -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Endenergieverbrauch Holzkirchen</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+  html, body { height: 100%; }
+  body { font-family: 'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif; margin: 0 auto; max-width: 1000px;
+    background: #fff; color: #222; display: flex; flex-direction: column; }
+  .header { padding: 20px 30px 4px 30px; flex: none; }
+  .header h1 { font-size: 20px; margin: 0 0 2px 0; color: #1D4B8F; }
+  .header p { font-size: 13px; margin: 0; color: #555; }
+  #chart { width: 100%; flex: 1 1 auto; min-height: 200px; }
+  .footer { padding: 4px 30px 16px 30px; font-size: 11px; color: #888; flex: none; }
+  .toggle { padding: 0 30px 8px 30px; flex: none; }
+
+  /* Diagramme ohne sichtbaren Kopf (body.ohne-kopf): Umschalter bzw. Diagramm
+     saessen sonst direkt auf der Oberkante des Rahmens. Der Abstand kommt auf
+     die Kinder, nicht auf body -- body steht auf height:100%, ein padding dort
+     ergaebe einen Scrollbalken. Folgt das Diagramm auf den Umschalter, hat es
+     dessen Abstand schon. */
+  body.ohne-kopf .toggle { padding-top: 12px; }
+  body.ohne-kopf #chart, body.ohne-kopf #charts { margin-top: 10px; }
+  body.ohne-kopf .toggle + #chart { margin-top: 0; }
+  .toggle button { font-family: inherit; font-size: 13px; padding: 6px 16px; margin-right: 8px;
+    border: 1px solid #1D4B8F; background: #fff; color: #1D4B8F; border-radius: 4px; cursor: pointer; }
+  .toggle button.active { background: #1D4B8F; color: #fff; }
+
+  /* Nur fuer Screenreader: unsichtbar, aber im Zugaenglichkeitsbaum. */
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  /* Tastaturfokus auf den Legendeneintraegen. Plotly zeichnet dort reines SVG
+     ohne Rahmen; der Fokus waere sonst unsichtbar (WCAG 2.4.7). Der Rahmen
+     kommt auf das unsichtbare Klickfeld, das Plotly ueber jeden Eintrag legt. */
+  g.traces:focus { outline: none; }
+  g.traces:focus-visible rect.legendtoggle { stroke: #1D4B8F; stroke-width: 2px; }
+
+  /* Quellenangabe und Tabellenschalter in einer Zeile, damit die Fusszeile
+     nicht hoeher wird als vor der Datentabelle. Bewusst als Textfluss und
+     nicht als Flexbox mit space-between: die schiebt den Schalter an den
+     rechten Rand und braucht dadurch die volle Breite beider Teile. Zwischen
+     etwa 620 und 760 px Blockbreite reicht die nicht, die Zeile brach um und
+     die Fusszeile wurde 17 px hoeher. Im Textfluss haengt der Schalter direkt
+     hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
+     wirklich kein Platz mehr ist. */
+  .footer-zeile { display: block; }
+  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
+    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
+  .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
+  .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
+    white-space: nowrap; }
+  .tabelle thead th, .tabelle th[scope="row"] { background: #f7f7f7; }
+  .tabelle th[scope="row"] { text-align: left; }
+  .tabelle p { font-size: 11px; margin: 0 0 6px; color: #333; }
+
+  /* Mittlere Breiten (schmaler Einbettungsblock, Tablet): nur die Seitenraender
+     schrumpfen, Schriftgroessen bleiben. Grund ist die Fusszeile -- bei 30 px
+     Rand reicht die Breite fuer Quellenangabe und Tabellenschalter knapp nicht
+     mehr, die Zeile bricht um und kostet 15 px Diagrammhoehe. Im
+     Kuchendiagramm, das die Hoehe am knappsten braucht, entstand daraus in
+     StoryMaps ein Scrollbalken. Muss VOR dem 620-px-Block stehen: der setzt
+     dieselben Eigenschaften und soll darunter gewinnen. */
+  @media (max-width: 760px) {
+    .header { padding-left: 12px; padding-right: 12px; }
+    .toggle { padding-left: 12px; padding-right: 12px; }
+    .footer { padding-left: 12px; padding-right: 12px; }
+  }
+
+  /* Schmale Ansichten (Handy): Kopf und Raender schrumpfen, damit vom knappen
+     Platz mehr beim Diagramm ankommt. Die Hoehe selbst ist kein Engpass, wenn
+     die Einbettung per iFrame-Code mit fester Hoehe erfolgt -- siehe
+     embed_snippet(). */
+  @media (max-width: 620px) {
+    .header { padding: 10px 12px 2px 12px; }
+    .header h1 { font-size: 15px; }
+    .header p { font-size: 11px; }
+    .toggle { padding: 0 12px 6px 12px; }
+    .toggle button { font-size: 11px; padding: 4px 10px; margin-right: 4px; }
+    .footer { padding: 2px 12px 4px 12px; font-size: 9px; }
+    .tabelle-schalter, .tabelle table, .tabelle p { font-size: 9px; }
+  }
+</style>
+<style>
+  /* Drei Panels teilen sich die Resthoehe gleichmaessig. */
+  #charts { flex: 1 1 auto; display: flex; flex-direction: column;
+             min-height: 600px; }
+  .teil { flex: 1 1 0; min-height: 200px; }
+  /* Der Kategoriename steht breit als Achsenbeschriftung links am Balken. In
+     der schmalen Ansicht ist dort kein Platz; dann steht er als HTML-Zeile
+     ueber dem Panel. Frueher war das eine Plotly-Anmerkung im Diagramm, die
+     sich mit der Legende ueberlagert hat -- als eigenes Element im Seitenfluss
+     kann das nicht passieren. */
+  /* Zeilenhoehe mit Luft fuer die Unterlaengen: bei line-height 1 ragte das
+     'g' von "Energietraeger" aus der Zeile und wurde vom weissen Diagramm
+     darunter ueberdeckt. Die Hoehe, die das kostet, holt sich
+     panelsAnpassen() aus den Zeichenflaechen zurueck. */
+  .teilTitel { display: none; margin: 0 0 1px 2px; font-size: 11px;
+                line-height: 1.35; font-weight: 700; color: #1D4B8F; }
+  @media (max-width: 619.98px) {
+    #charts { min-height: 0; }
+    .teil { min-height: 0; }
+    .teilTitel { display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1 id="titel">Holzkirchen: Endenergieverbrauch 2024</h1>
+  <p>Aufteilung nach Energieträger, Sektor und Gebäudetyp</p>
+</div>
+<p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
+<div id="charts">
+  <h2 class="teilTitel" aria-hidden="true">Energieträger</h2>
+  <div class="teil" id="teil0" role="group" aria-label="Aufteilung nach Energieträger" aria-describedby="hinweis"></div>
+  <h2 class="teilTitel" aria-hidden="true">Sektor</h2>
+  <div class="teil" id="teil1" role="group" aria-label="Aufteilung nach Sektor" aria-describedby="hinweis"></div>
+  <h2 class="teilTitel" aria-hidden="true">Gebäudetyp</h2>
+  <div class="teil" id="teil2" role="group" aria-label="Aufteilung nach Gebäudetyp" aria-describedby="hinweis"></div>
+</div>
+<div class="footer">
+  <div class="footer-zeile">
+    <span>Quelle: Kommunale Wärmeplanung Holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
+            onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
+  </div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Endenergieverbrauch 2024 nach Energieträger – in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>34,0</td><td>15,4</td></tr><tr><th scope="row">Solarthermie</th><td>2,4</td><td>1,1</td></tr><tr><th scope="row">Fernwärme EE</th><td>10,4</td><td>4,7</td></tr><tr><th scope="row">Fernwärme fossil</th><td>11,0</td><td>5,0</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>0,6</td><td>0,3</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>0,3</td><td>0,1</td></tr><tr><th scope="row">Heizstrom</th><td>0,7</td><td>0,3</td></tr><tr><th scope="row">BHKW-Wärme</th><td>0,7</td><td>0,3</td></tr><tr><th scope="row">Flüssiggas</th><td>1,8</td><td>0,8</td></tr><tr><th scope="row">Erdgas</th><td>96,3</td><td>43,8</td></tr><tr><th scope="row">Kohle</th><td>0,0</td><td>0,0</td></tr><tr><th scope="row">Heizöl</th><td>61,9</td><td>28,1</td></tr><tr><th scope="row">Summe</th><td>220,2</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2024 nach Sektor – in GWh/a</caption><thead><tr><th scope="col">Sektor</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Kommunal</th><td>2,2</td><td>1,0</td></tr><tr><th scope="row">GHD</th><td>72,4</td><td>32,9</td></tr><tr><th scope="row">private Haushalte</th><td>145,5</td><td>66,1</td></tr><tr><th scope="row">Summe</th><td>220,2</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2024 nach Gebäudetyp – in GWh/a</caption><thead><tr><th scope="col">Gebäudetyp</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Nichtwohngebäude</th><td>74,0</td><td>33,6</td></tr><tr><th scope="row">Wohnen MFH</th><td>49,5</td><td>22,5</td></tr><tr><th scope="row">Wohnen EFH/DHH/RH</th><td>96,7</td><td>43,9</td></tr><tr><th scope="row">Summe</th><td>220,2</td><td>100,0</td></tr></tbody></table></div>
+</div>
+<script>
+const gruppen = [{"achse": "Energietr\u00e4ger", "eintraege": [{"label": "Energieholz", "wert": 33.95, "farbe": "#6FAC46"}, {"label": "Solarthermie", "wert": 2.44, "farbe": "#FFCF00"}, {"label": "Fernw\u00e4rme EE", "wert": 10.38, "farbe": "#F39C12"}, {"label": "Fernw\u00e4rme fossil", "wert": 11.01, "farbe": "#BB5C07"}, {"label": "Luft-Wasser-WP", "wert": 0.6, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 0.29, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 0.74, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 0.69, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 1.82, "farbe": "#887894"}, {"label": "Erdgas", "wert": 96.33, "farbe": "#999999"}, {"label": "Kohle", "wert": 0.03, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 61.9, "farbe": "#4A4A4A"}]}, {"achse": "Sektor", "eintraege": [{"label": "Kommunal", "wert": 2.2, "farbe": "#00A24D"}, {"label": "GHD", "wert": 72.44, "farbe": "#F39C12"}, {"label": "private Haushalte", "wert": 145.53, "farbe": "#326F90"}]}, {"achse": "Geb\u00e4udetyp", "eintraege": [{"label": "Nichtwohngeb\u00e4ude", "wert": 73.98, "farbe": "#1D4B8F"}, {"label": "Wohnen MFH", "wert": 49.54, "farbe": "#6FAC46"}, {"label": "Wohnen EFH/DHH/RH", "wert": 96.66, "farbe": "#E8C547"}]}];
+const OBERGRENZE = 240;
+// Jede zweite Zahl der schmalen Ansicht: 0, 40, 80, ... bis OBERGRENZE.
+const SCHMAL_TICKS = Array.from(
+  { length: Math.floor(OBERGRENZE / (2 * 20)) + 1 }, (_, k) => k * 2 * 20);
+
+function layoutFuer(gruppe) {
+  return {
+    barmode: 'stack',
+    font: { family: "'Avenir Next', 'Open Sans', 'Segoe UI', Arial, sans-serif", size: 13, color: '#333' },
+    margin: { t: 8, l: 110, r: 20, b: 44 },
+    // Feste, gemeinsame Achse: sonst skaliert jeder Balken eigenstaendig und
+    // die drei Balken waeren trotz gleicher Summe unterschiedlich lang.
+    xaxis: { fixedrange: true, range: [0, OBERGRENZE], dtick: 20, gridcolor: '#eee', automargin: true,
+              title: { text: "<b>Endenergieverbrauch 2024 [GWh/a]</b>", standoff: 12, font: { size: 13 } },
+              ticks: 'outside', ticklen: 6, tickcolor: 'rgba(0,0,0,0)',
+              tickfont: { size: 14 },
+              showline: true, linecolor: '#595959', linewidth: 1, zeroline: false },
+    yaxis: { fixedrange: true, showgrid: false, ticks: 'outside', ticklen: 8, tickcolor: 'rgba(0,0,0,0)',
+              showline: true, linecolor: '#595959', linewidth: 1,
+              tickfont: { size: 14 },
+              tickmode: 'array', tickvals: [gruppe.achse],
+              ticktext: ['<b>' + gruppe.achse + '</b>'] },
+    legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom',
+               font: { size: 16 }, traceorder: 'normal' },
+    // Der Strich der letzten Zahl faellt genau auf den rechten Rand der
+    // Zeichenflaeche; dort zeichnet Plotly keine Gitterlinie mehr. Deshalb als
+    // Linie in Gitterfarbe nachziehen -- verhaelt sich wie eine echte
+    // Gitterlinie (gleiches Vorgehen wie beim Jahr 2045 in den Zeitreihen).
+    shapes: [{ type: 'line', xref: 'x', yref: 'paper', layer: 'below',
+                x0: OBERGRENZE, x1: OBERGRENZE, y0: 0, y1: 1,
+                line: { color: '#eee', width: 1 } }],
+    separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
+  };
+}
+
+async function draw() {
+  const schmal = window.innerWidth < 620;
+  // Beim Wechsel zurueck in die breite Ansicht die Festhoehen abgeben, die
+  // panelsAnpassen() gesetzt hat -- sonst rechnet Plotly mit der alten Hoehe
+  // weiter und die Panels behalten die schmalen Proportionen.
+  if (!schmal) [0, 1, 2].forEach(i => {
+    const d = document.getElementById('teil' + i);
+    d.style.flex = '';
+    d.style.height = '';
+  });
+  await Promise.all(gruppen.map((g, i) => {
+    const balken = g.eintraege.map(e => ({
+      x: [e.wert], y: [g.achse], type: 'bar', orientation: 'h', name: e.label,
+      marker: { color: e.farbe }, width: 0.5, showlegend: false,
+      hovertemplate: e.label + ': %{x:.1f} GWh/a<extra></extra>'
+    }));
+    // Runde Legendensymbole: fuer Balken zeichnet Plotly ein Rechteck und kennt
+    // keine Option fuer die Form. Deshalb je Reihe eine leere Punkt-Spur, die
+    // ausschliesslich den Legendeneintrag liefert. Der Klick darauf wird in
+    // legendeVerdrahten() auf die zugehoerige Balken-Spur uebertragen.
+    const legendenPunkte = g.eintraege.map(e => ({
+      x: [null], y: [null], type: 'scatter', mode: 'markers', name: e.label,
+      marker: { symbol: 'circle', size: schmal ? 8 : 11, color: e.farbe },
+      hoverinfo: 'skip', showlegend: true
+    }));
+    const traces = balken.concat(legendenPunkte);
+    const l = layoutFuer(g);
+    if (schmal) {
+      // Schmal ist links kein Platz fuer die Kategorienamen; die stehen dann
+      // als HTML-Zeile ueber dem Panel (.teilTitel), nicht als Anmerkung im
+      // Diagramm -- die hat sich mit der Legende ueberlagert.
+      //
+      // Der obere Rand ist hier absichtlich grosszuegig: panelsAnpassen() misst
+      // anschliessend die tatsaechliche Legendenhoehe und zieht ihn darauf
+      // zusammen. Zu klein begonnen wuerde Plotly die Legende beschneiden und
+      // ihr einen Scrollbalken geben -- gemessen wird dann nur die
+      // abgeschnittene Hoehe.
+      // Unterer Rand knapp: automargin holt sich zurueck, was die
+      // Achsenbeschriftung wirklich braucht.
+      l.margin = { t: 140, l: 34, r: 8, b: 22 };
+      l.yaxis.showticklabels = false;
+      l.legend.font = { size: 12 };
+      if (g.eintraege.length > 8) {
+        l.legend.entrywidthmode = 'fraction';
+        l.legend.entrywidth = 0.5;
+      }
+      // Direkt auf der Oberkante der Zeichenflaeche: der Platz darueber ist
+      // durch margin.t reserviert.
+      l.legend.y = 1;
+      l.legend.yanchor = 'bottom';
+      // Waagrechte Zahlen: senkrecht gedreht sind sie schwer zu lesen und
+      // brauchen unten viel Platz. Dafuer nur jede zweite -- alle 20er
+      // Schritte stehen auf einem Handy zu dicht.
+      l.xaxis.tickangle = 0;
+      l.xaxis.tickmode = 'array';
+      l.xaxis.tickvals = SCHMAL_TICKS;
+      l.xaxis.tickfont = { size: 10 };
+      l.xaxis.title.font = { size: 10 };
+      l.margin.b = 44;
+    }
+    const gd = document.getElementById('teil' + i);
+    return Plotly.react('teil' + i, traces, l, {responsive: true, displayModeBar: false})
+      .then(() => { legendeVerdrahten(gd, g); zugaenglichMachen(gd); });
+  }));
+  if (schmal) {
+    await panelsAnpassen();
+  } else {
+    // Nach dem Wechsel aus der schmalen Ansicht haben die Container eine neue
+    // Hoehe (die Festhoehen sind oben abgegeben). Plotly rechnet erst nach
+    // Plots.resize damit -- ohne das misst zeichenflaechenAusgleichen die
+    // alten Hoehen und die Balken bleiben unterschiedlich dick.
+    await Promise.all([0, 1, 2].map(
+      i => Plotly.Plots.resize(document.getElementById('teil' + i))));
+    await zeichenflaechenAusgleichen();
+  }
+}
+
+// Der Legendenklick trifft die Punkt-Spur; ohne diese Verdrahtung bliebe der
+// zugehoerige Balken stehen. Nur einmal je Panel anhaengen, sonst wuerde der
+// Handler bei jedem Neuzeichnen doppelt reagieren.
+//
+// Statt die Balken-Spur auf visible:false zu setzen, laeuft ihr Wert weich auf
+// Null: 'visible' ist in Plotly nicht animierbar und wuerde springen, der
+// Balkenwert dagegen schon. Die uebrigen Segmente schieben sich dadurch
+// fliessend nach. Das Ausgrauen des Legendeneintrags macht Plotly selbst an der
+// Punkt-Spur, deshalb wird das Standardverhalten nicht unterdrueckt.
+function legendeVerdrahten(gd, gruppe) {
+  if (gd._legendeVerdrahtet) return;
+  gd._legendeVerdrahtet = true;
+  const anzahl = gruppe.eintraege.length;
+  gd.on('plotly_legendclick', ev => {
+    const balken = ev.curveNumber - anzahl;
+    if (balken < 0 || balken >= anzahl) return;
+    const ausgeblendet = gd._ausgeblendet || (gd._ausgeblendet = {});
+    const jetztAus = !ausgeblendet[balken];
+    ausgeblendet[balken] = jetztAus;
+    const voll = gruppe.eintraege[balken].wert;
+    weichSetzen(gd, balken, jetztAus ? 0 : voll);
+  });
+}
+
+// Plotly kann Balken nicht animieren: 'Plotly.animate' bleibt wirkungslos, und
+// 'Plotly.react' mit layout.transition aendert zwar die Daten, zeichnet aber
+// nicht neu (Darstellung bliebe veraltet stehen). Deshalb selbst schrittweise
+// per restyle interpolieren - das zeichnet zuverlaessig.
+// Wer im Betriebssystem reduzierte Bewegung eingestellt hat, bekommt den
+// Wechsel ohne Animation (WCAG 2.3.3). Dauer 0 laesst ihn sofort einrasten.
+const ANIM_DAUER =
+  window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ? 0 : 450;
+function weichSetzen(gd, spur, ziel) {
+  const laufend = gd._anim || (gd._anim = {});
+  laufend[spur] = (laufend[spur] || 0) + 1;
+  const marke = laufend[spur];
+  const von = Number(gd.data[spur].x[0]) || 0;
+  const start = performance.now();
+  // Bewusst setTimeout statt requestAnimationFrame: rAF steht in verborgenen
+  // Tabs und iframes still, die Animation waere dort nie fertig und die
+  // Darstellung bliebe auf halbem Weg stehen. Der Fortschritt kommt aus der
+  // Uhrzeit, die Dauer stimmt also auch bei gebremsten Timern.
+  function schritt() {
+    if (laufend[spur] !== marke) return;   // neuerer Klick hat uebernommen
+    const t = Math.min(1, (performance.now() - start) / ANIM_DAUER);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    Plotly.restyle(gd, { x: [[von + (ziel - von) * e]] }, [spur]);
+    if (t < 1) setTimeout(schritt, 16);
+  }
+  schritt();
+}
+
+// Die Legende der Energietraeger braucht mehr Zeilen als die der anderen
+// Panels; Plotly vergroessert dafuer den oberen Rand und verkleinert die
+// Zeichenflaeche. Folge: kuerzere y-Achse und duennerer Balken in diesem Panel.
+// Deshalb nach dem Rendern alle Zeichenflaechen auf die kleinste angleichen -
+// damit stimmen Achsenlaenge und Balkendicke ueberall ueberein, ohne an der
+// Balkenbreite zu drehen.
+// Schmale Ansicht: jedes Panel bekommt genau die Hoehe, die es braucht --
+// Legende oben, gleich hohe Zeichenflaeche, Achse unten. Der Ausgleich fuer die
+// breite Ansicht (zeichenflaechenAusgleichen) geht umgekehrt vor: alle Panels
+// sind gleich hoch und der obere Rand wird aufgefuellt, bis die
+// Zeichenflaechen gleich gross sind. Schmal ergibt das viel Leerraum zwischen
+// den Diagrammen, weil die Legende des ersten Panels zwoelf Energietraeger
+// fuehrt und die beiden anderen nur drei bzw. vier.
+// Abstand Legende -> Zeichenflaeche. Knapp gehalten: an dieser Stelle haengt,
+// ob die Legendenschrift in den Block passt -- bei 330 x 750 px fehlten mit 6 px
+// genau 5 px, um bei Groesse 12 zu bleiben.
+const SCHMAL_LUFT = 4;
+const SCHMAL_FLAECHE_MIN = 54;    // Mindesthoehe der Zeichenflaeche je Panel
+// Plotly beschneidet die Legende, sobald sie hoeher ist als die halbe
+// Panelhoehe -- gemessen bei 330 px Breite: eine 124 px hohe Legende blieb bis
+// 248 px Panelhoehe vollstaendig, darunter wurde sie auf genau die Haelfte der
+// Panelhoehe gestutzt und bekam einen Scrollbalken. Passt das nicht, wird die
+// Legendenschrift schrittweise kleiner, bis es aufgeht.
+const SCHMAL_LEGENDE_MIN = 9;
+
+function legendenHoehe(gd) {
+  // Plotly fuehrt die Hoehe intern mit; falls sich das aendert, aus dem SVG
+  // messen. Beides setzt voraus, dass die Legende beim Messen nicht
+  // beschnitten ist -- deshalb wird mit grosszuegigem margin.t gezeichnet.
+  const leg = gd._fullLayout && gd._fullLayout.legend;
+  if (leg && leg._height) return leg._height;
+  const g = gd.querySelector('g.legend');
+  return g ? g.getBoundingClientRect().height : 0;
+}
+
+async function panelsAnpassen() {
+  const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
+  const charts = document.getElementById('charts');
+  if (divs.some(d => !d._fullLayout)) return;
+  const summe = werte => werte.reduce((a, b) => a + b, 0);
+  const titel = Array.from(document.querySelectorAll('.teilTitel'))
+                     .reduce((s, e) => s + e.offsetHeight, 0);
+  let schrift = 12;
+
+  // Zusaetzlicher oberer Rand je Panel. Ein Pixel mehr oben verschiebt Hoehe
+  // aus den (geteilten) Zeichenflaechen in dieses eine Panel -- netto bringt es
+  // ihm 2/3 px, weil ein Drittel des Verlusts auf es selbst zurueckfaellt.
+  // Damit laesst sich die Legendenbedingung erfuellen, ohne die Schrift zu
+  // verkleinern: die Balken werden dafuer etwas duenner.
+  const zusatz = [0, 0, 0];
+
+  for (let versuch = 0; ; versuch++) {
+    const legenden = divs.map(d => Math.ceil(legendenHoehe(d)));
+    const oben = legenden.map((h, i) => h + SCHMAL_LUFT + zusatz[i]);
+    const unten = divs.map(d => Math.ceil(d._fullLayout.margin.b));
+    const rest = charts.clientHeight - titel - summe(oben) - summe(unten);
+    // Gleiche Zeichenflaeche fuer alle drei: nur so sind die Balken gleich dick.
+    const flaeche = Math.max(SCHMAL_FLAECHE_MIN, Math.floor(rest / 3));
+    // Fehlt einem Panel Hoehe fuer seine Legende, bekommt es sie oben dazu --
+    // solange die Zeichenflaechen das hergeben. Erst wenn die an ihrer
+    // Untergrenze sind, wird die Legendenschrift kleiner (s.
+    // SCHMAL_LEGENDE_MIN); beschneiden lassen wir sie nie.
+    const fehlend = divs.map((d, i) => 2 * legenden[i] - (oben[i] + flaeche + unten[i]));
+    const platzDa = flaeche > SCHMAL_FLAECHE_MIN;
+    if (fehlend.some(f => f > 0) && versuch < 6) {
+      if (platzDa) {
+        fehlend.forEach((f, i) => { if (f > 0) zusatz[i] += Math.ceil(f * 1.5); });
+        continue;
+      }
+      if (schrift > SCHMAL_LEGENDE_MIN) {
+        schrift -= 1;
+        zusatz.fill(0);
+        await Promise.all(divs.map(d => Plotly.relayout(d, { 'legend.font.size': schrift })));
+        continue;
+      }
+    }
+    await Promise.all(divs.map((d, i) => {
+      d.style.flex = '0 0 auto';
+      d.style.height = (oben[i] + flaeche + unten[i]) + 'px';
+      return Plotly.relayout(d, { 'margin.t': oben[i] });
+    }));
+    // Plotly liest die neue Containerhoehe nicht von selbst.
+    await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+    return;
+  }
+}
+
+async function zeichenflaechenAusgleichen() {
+  const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
+  // Mehrere Durchlaeufe: automargin holt sich einen Teil des zusaetzlichen
+  // Randes wieder zurueck, ein einzelner Schritt trifft die Zielhoehe nicht.
+  for (let durchlauf = 0; durchlauf < 6; durchlauf++) {
+    const laengen = divs.map(d => d._fullLayout && d._fullLayout.yaxis
+                                  ? d._fullLayout.yaxis._length : null);
+    if (laengen.some(l => !l)) return;
+    const ziel = Math.min(...laengen);
+    if (Math.max(...laengen) - ziel <= 1) return;
+    await Promise.all(divs.map((d, i) => {
+      const zusatz = laengen[i] - ziel;
+      return zusatz > 0.5
+        ? Plotly.relayout(d, { 'margin.t': d._fullLayout.margin.t + zusatz })
+        : Promise.resolve();
+    }));
+  }
+}
+
+
+// Rolle 'switch' statt 'button': aria-checked wird als ein/aus vorgelesen und
+// passt damit zum Ein- und Ausblenden einer Datenreihe. 'gedrueckt' waere hier
+// missverstaendlich (gedrueckt = sichtbar oder ausgeblendet?).
+function legendeEigenschaftenSetzen(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    eintrag.setAttribute('tabindex', '0');
+    eintrag.setAttribute('role', 'switch');
+    const text = eintrag.querySelector('text.legendtext');
+    if (text) eintrag.setAttribute('aria-label',
+      text.getAttribute('data-unformatted') || text.textContent);
+  });
+}
+
+// Zustand aus der Darstellung ablesen statt aus den Daten: Plotly setzt einen
+// abgeschalteten Legendeneintrag auf Deckkraft 0.5. Ueber die Datenspuren ginge
+// es nicht verlaesslich, weil die Reihenfolge der Legende nicht der Reihenfolge
+// in gd.data entspricht -- gestapelte Diagramme drehen sie um.
+function legendeZustandNachfuehren(gd) {
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const sichtbar = parseFloat(eintrag.style.opacity || '1') > 0.9;
+    eintrag.setAttribute('aria-checked', sichtbar ? 'true' : 'false');
+  });
+}
+
+// Die Grafik selbst ist fuer Screenreader stumm: Plotly zeichnet reines SVG
+// ohne Rollen. Die Achsen-, Titel- und Datenbeschriftungen darin wuerden als
+// zusammenhanglose Wortfolge vorgelesen ('2023 2030 ... 10.000 20.000 ...').
+// Deshalb alles ausblenden, was rein grafisch ist; die Werte stehen in der
+// Datentabelle, die Beschriftungen als echter Text im Seitenkopf.
+//
+// aria-hidden muss dabei auf die Geschwister der Legende gesetzt werden, nicht
+// auf ihre Vorfahren: ein 'aria-hidden=false' im Inneren hebt ein
+// 'aria-hidden=true' weiter oben nicht wieder auf.
+function grafikAusZugaenglichkeitsbaum(gd) {
+  const legende = gd.querySelector('g.legend');
+  const legendenEbene = legende && legende.closest('svg.main-svg');
+  gd.querySelectorAll('svg.main-svg').forEach(svg => {
+    if (svg !== legendenEbene) { svg.setAttribute('aria-hidden', 'true'); return; }
+    [...svg.children].forEach(kind => {
+      if (kind !== legende.parentElement) { kind.setAttribute('aria-hidden', 'true'); return; }
+      // In dieser Ebene (infolayer) sitzen neben der Legende die Achsen- und
+      // Diagrammtitel sowie die Annotationen.
+      [...kind.children].forEach(enkel => {
+        if (enkel !== legende) enkel.setAttribute('aria-hidden', 'true');
+      });
+    });
+  });
+}
+
+function a11yAnwenden(gd) {
+  legendeEigenschaftenSetzen(gd);
+  legendeZustandNachfuehren(gd);
+  grafikAusZugaenglichkeitsbaum(gd);
+}
+
+
+// ---------------------------------------------------------------------------
+// Hervorheben beim Zeigen auf einen Legendeneintrag: der gezeigte Teil bleibt
+// kraeftig, alle uebrigen werden blasser.
+//
+// Plotly kennt dafuer kein Ereignis -- es gibt nur plotly_legendclick und
+// plotly_legenddoubleclick -- deshalb eigene Zuhoerer auf den Eintraegen.
+//
+// Zugeordnet wird ueber den NAMEN der Spur, beim Kuchen ueber das Label der
+// Stuecke. Nicht ueber Index oder uid: im Feuerstaetten-Diagramm gehoeren die
+// Legendeneintraege zu unsichtbaren Punktspuren (die tragen die runden
+// Symbole), gezeichnet werden aber Balkenspuren -- gemeinsam ist beiden nur
+// der Name.
+// ---------------------------------------------------------------------------
+const HERVOR_BLASS = '0.2';
+// Was in einem Legendeneintrag mit abblasst: Beschriftung und Symbol.
+const HERVOR_LEGENDE_TEILE =
+  'text.legendtext, g.legendpoints, g.legendlines, g.legendfill';
+// Der Eintrag unter der Maus wird nur leicht zurueckgenommen. Nicht so stark
+// wie die Flaechen im Diagramm: 0.5 benutzt Plotly fuer ausgeschaltete Reihen,
+// so weit heruntergedimmt saehe der Eintrag aus, als waere er abgewaehlt.
+const HERVOR_LEGENDE_BLASS = '0.55';
+const HERVOR_DAUER = (window.matchMedia
+  && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 0 : 150;
+
+function spurVonElement(el) {
+  let d = el.__data__;
+  if (Array.isArray(d)) d = d[0];
+  return (d && d.trace) || (d && d[0] && d[0].trace) || null;
+}
+
+function legendenSchluessel(eintrag) {
+  let d = eintrag.__data__;
+  if (Array.isArray(d)) d = d[0];
+  if (!d) return null;
+  // Kuchen: ein Eintrag steht fuer ein Stueck, nicht fuer eine ganze Spur.
+  if (d.label !== undefined) return { art: 'label', wert: d.label };
+  return d.trace ? { art: 'name', wert: d.trace.name } : null;
+}
+
+function hervorheben(gd, ziel) {
+  gd.querySelectorAll('g.slice').forEach(stueck => {
+    const label = stueck.__data__ && stueck.__data__.label;
+    const blass = ziel && ziel.art === 'label' && label !== ziel.wert;
+    stueck.style.opacity = blass ? HERVOR_BLASS : '';
+  });
+  gd.querySelectorAll('g.trace').forEach(el => {
+    const spur = spurVonElement(el);
+    // Die Kuchenspur enthaelt alle Stuecke und wird oben behandelt.
+    if (!spur || spur.type === 'pie') return;
+    const blass = ziel && ziel.art === 'name' && spur.name !== ziel.wert;
+    el.style.opacity = blass ? HERVOR_BLASS : '';
+  });
+  // In der Legende blasst NUR der Eintrag unter der Maus ab -- als Rueckmeldung,
+  // worauf man gerade zeigt. Die uebrigen bleiben unveraendert lesbar; sie
+  // mitzudimmen macht die Legende waehrend des Zeigens unbrauchbar.
+  //
+  // Abgeblendet werden Text und Symbol, NICHT der Eintrag selbst: an dessen
+  // Deckkraft liest legendeZustandNachfuehren() ab, ob eine Reihe ausgeblendet
+  // ist.
+  gd.querySelectorAll('g.traces').forEach(eintrag => {
+    const eigen = legendenSchluessel(eintrag);
+    const gezeigt = ziel && eigen
+                    && eigen.art === ziel.art && eigen.wert === ziel.wert;
+    eintrag.querySelectorAll(HERVOR_LEGENDE_TEILE).forEach(teil => {
+      teil.style.opacity = gezeigt ? HERVOR_LEGENDE_BLASS : '';
+    });
+  });
+}
+
+function hervorhebenVerdrahten(gd) {
+  const verdrahten = () => {
+    gd.querySelectorAll('g.slice, g.trace, ' + HERVOR_LEGENDE_TEILE)
+      .forEach(el => { el.style.transition = 'opacity ' + HERVOR_DAUER + 'ms'; });
+    gd.querySelectorAll('g.traces').forEach(eintrag => {
+      if (eintrag._hervorVerdrahtet) return;
+      eintrag._hervorVerdrahtet = true;
+      eintrag.addEventListener('mouseenter',
+        () => hervorheben(gd, legendenSchluessel(eintrag)));
+      eintrag.addEventListener('mouseleave', () => hervorheben(gd, null));
+    });
+  };
+  verdrahten();
+  if (gd._hervorAngemeldet) return;
+  gd._hervorAngemeldet = true;
+  // Plotly baut Legende und Zeichenflaeche bei jedem Neuzeichnen neu auf; die
+  // Zuhoerer haengen dann an weggeworfenen Knoten.
+  gd.on('plotly_afterplot', verdrahten);
+}
+
+function zugaenglichMachen(gd) {
+  a11yAnwenden(gd);
+  // Reitet hier mit: jedes Diagramm laeuft nach dem Zeichnen durch diese
+  // Funktion, so gibt es nur eine Stelle statt neun.
+  hervorhebenVerdrahten(gd);
+  if (gd._a11yVerdrahtet) return;
+  gd._a11yVerdrahtet = true;
+
+  gd.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' && ev.key !== ' ') return;
+    const eintrag = ev.target.closest && ev.target.closest('g.traces');
+    if (!eintrag) return;
+    ev.preventDefault();      // die Leertaste wuerde sonst die Seite scrollen
+    const ziel = eintrag.querySelector('rect.legendtoggle') || eintrag;
+    ['mousedown', 'mouseup', 'click'].forEach(art => ziel.dispatchEvent(
+      new MouseEvent(art, { bubbles: true, cancelable: true, view: window })));
+  });
+
+  // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
+  // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
+  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
+  // Animation.
+  gd.on('plotly_afterplot', () => a11yAnwenden(gd));
+}
+
+
+function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  ziel.hidden = !auf;
+}
+
+draw();
+let warSchmal = window.innerWidth < 620;
+// Siehe onResize() in RESPONSIVE_JS: neben dem resize-Ereignis auch ein
+// ResizeObserver, sonst kann das Schmal-Layout in einer breiten Ansicht
+// stehenbleiben, weil Plotly an einem Observer haengt und wir nicht.
+const breitePruefen = () => {
+  const jetzt = window.innerWidth < 620;
+  if (jetzt !== warSchmal) { warSchmal = jetzt; draw(); }
+};
+window.addEventListener('resize', breitePruefen);
+if (window.ResizeObserver) new ResizeObserver(breitePruefen).observe(document.body);
+</script>
+</body>
+</html>
