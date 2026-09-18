@@ -7,7 +7,7 @@
      die Media-Query noch responsive() greifen, weil innerWidth 980 bleibt. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<title>CO₂-Äquivalente Holzkirchen</title>
+<title>CO₂-Äquivalente holzkirchen</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <style>
   html, body { height: 100%; }
@@ -97,18 +97,18 @@
      (gemessen, Desktop; schmal 49 px). Ersatzlos streichen geht nicht -- der
      Diagrammbereich benennt sich per aria-labelledby ueber die h1. -->
 <div class="sr-only">
-  <h1 id="titel">Holzkirchen: CO₂-Äquivalente 2024</h1>
+  <h1 id="titel">holzkirchen: CO₂-Äquivalente 2024</h1>
   <p>Treibhausgasemissionen nach Energieträgern [t CO₂-Äquivalent]</p>
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
 <div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
 <div class="footer">
   <div class="footer-zeile">
-    <span>Quelle: Kommunale Wärmeplanung Holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <span>Quelle: Kommunale Wärmeplanung holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Holzkirchen 2024 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>679</td><td>1,4</td></tr><tr><th scope="row">Fernwärme</th><td>3.550</td><td>7,5</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>161</td><td>0,3</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>78</td><td>0,2</td></tr><tr><th scope="row">Heizstrom</th><td>242</td><td>0,5</td></tr><tr><th scope="row">BHKW-Wärme</th><td>124</td><td>0,3</td></tr><tr><th scope="row">Flüssiggas</th><td>436</td><td>0,9</td></tr><tr><th scope="row">Erdgas</th><td>23.120</td><td>48,6</td></tr><tr><th scope="row">Kohle</th><td>12</td><td>0,0</td></tr><tr><th scope="row">Heizöl</th><td>19.189</td><td>40,3</td></tr><tr><th scope="row">Summe</th><td>47.593</td><td>100,0</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente holzkirchen 2024 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>679</td><td>1,4</td></tr><tr><th scope="row">Fernwärme</th><td>3.550</td><td>7,5</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>161</td><td>0,3</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>78</td><td>0,2</td></tr><tr><th scope="row">Heizstrom</th><td>242</td><td>0,5</td></tr><tr><th scope="row">BHKW-Wärme</th><td>124</td><td>0,3</td></tr><tr><th scope="row">Flüssiggas</th><td>436</td><td>0,9</td></tr><tr><th scope="row">Erdgas</th><td>23.120</td><td>48,6</td></tr><tr><th scope="row">Kohle</th><td>12</td><td>0,0</td></tr><tr><th scope="row">Heizöl</th><td>19.189</td><td>40,3</td></tr><tr><th scope="row">Summe</th><td>47.593</td><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
 const eintraege = [{"label": "Energieholz", "wert": 678.9, "farbe": "#6FAC46"}, {"label": "Fernw\u00e4rme", "wert": 3550.4, "farbe": "#F39C12"}, {"label": "Luft-Wasser-WP", "wert": 161.4, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 77.8, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 242.4, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 124.5, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 435.8, "farbe": "#887894"}, {"label": "Erdgas", "wert": 23119.9, "farbe": "#999999"}, {"label": "Kohle", "wert": 12.5, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 19189.0, "farbe": "#4A4A4A"}];
