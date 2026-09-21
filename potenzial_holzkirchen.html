@@ -103,22 +103,23 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Potenzialanalyse Holzkirchen: Nutzenergie in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Ist 2023</th><th scope="col">wirtschaftliches Potenzial</th><th scope="col">technisches Potenzial</th><th scope="col">Summe</th></tr></thead><tbody><tr><th scope="row">Solarthermie</th><td>2,9</td><td>4,6</td><td>0,0</td><td>7,5</td></tr><tr><th scope="row">Energieholz</th><td>25,3</td><td>3,6</td><td>0,0</td><td>28,9</td></tr><tr><th scope="row">Oberfl. Geothermie (EWS &amp; GWWP)</th><td>1,2</td><td>21,2</td><td>30,4</td><td>52,8</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,8</td><td>96,6</td><td>44,5</td><td>142,9</td></tr><tr><th scope="row">Fernwärme</th><td>21,4</td><td>60,9</td><td>0,0</td><td>82,3</td></tr><tr><th scope="row">ind. Abwärme (Prüfung ob EE)</th><td>0,0</td><td>4,7</td><td>0,8</td><td>5,5</td></tr><tr><th scope="row">Biogas Wärme</th><td>0,0</td><td>6,3</td><td>0,0</td><td>6,3</td></tr><tr><th scope="row">Gesamt (erneuerbar)</th><td>52,5</td><td>197,8</td><td>75,6</td><td>325,9</td></tr></tbody></table><p>Gesamtbedarf Nutzwärme 2023: 0,0 GWh/a</p><p>konservatives Sanierungsszenario (2045): 133,6 GWh/a</p><p>ambitioniertes Sanierungsszenario (2045): 119,2 GWh/a</p></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Potenzialanalyse Holzkirchen: Nutzenergie in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Ist 2024</th><th scope="col">wirtschaftliches Potenzial</th><th scope="col">technisches Potenzial</th><th scope="col">Summe</th></tr></thead><tbody><tr><th scope="row">Solarthermie</th><td>2,9</td><td>4,6</td><td>0,0</td><td>7,5</td></tr><tr><th scope="row">Energieholz</th><td>25,3</td><td>3,6</td><td>0,0</td><td>28,9</td></tr><tr><th scope="row">Oberfl. Geothermie (EWS &amp; GWWP)</th><td>1,2</td><td>21,2</td><td>30,4</td><td>52,8</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,8</td><td>96,6</td><td>44,5</td><td>142,9</td></tr><tr><th scope="row">Fernwärme</th><td>21,4</td><td>60,9</td><td>0,0</td><td>82,3</td></tr><tr><th scope="row">ind. Abwärme (Prüfung ob EE)</th><td>0,0</td><td>4,7</td><td>0,8</td><td>5,5</td></tr><tr><th scope="row">Biogas Wärme</th><td>0,0</td><td>6,3</td><td>0,0</td><td>6,3</td></tr><tr><th scope="row">Gesamt (erneuerbar)</th><td>52,5</td><td>197,8</td><td>75,6</td><td>325,9</td></tr></tbody></table><p>Gesamtbedarf Nutzwärme 2024: 168,2 GWh/a</p><p>konservatives Sanierungsszenario (2045): 133,6 GWh/a</p><p>ambitioniertes Sanierungsszenario (2045): 119,2 GWh/a</p></div>
 </div>
 <script>
 const labels = ["Solarthermie", "Energieholz", "Oberfl. Geothermie (EWS & GWWP)", "Luft-Wasser-WP", "Fernw\u00e4rme", "ind. Abw\u00e4rme (Pr\u00fcfung ob EE)", "Biogas W\u00e4rme", "Gesamt (erneuerbar)"];
 const ist = [2.9, 25.3, 1.2, 1.8, 21.4, 0.0, 0.0, 52.5];
 const wirt = [4.6, 3.6, 21.2, 96.6, 60.9, 4.7, 6.3, 197.8];
 const techx = [0.0, 0.0, 30.4, 44.5, 0.0, 0.8, 0.0, 75.6];
-const gesamtbedarf = 0.0;
+// null, wenn die Zeile in der Excel fehlt -- die Linie entfaellt dann ganz.
+const gesamtbedarf = 168.2;
 const konservativ = 133.6;
 const ambitioniert = 119.2;
 
 // Die y-Werte sind bereits Zuwaechse, das Stapeln uebernimmt barmode 'stack'.
 // Nicht ueber feste base-Werte stapeln: beim Ausblenden einer Reihe ueber die
 // Legende behielten die darueberliegenden ihren Sockel und es blieb ein Loch.
-const traceIst = { x: labels, y: ist, customdata: ist, type: 'bar', name: 'Ist 2023', width: 0.5,
-  marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2023: %{customdata:.1f} GWh/a<extra></extra>' };
+const traceIst = { x: labels, y: ist, customdata: ist, type: 'bar', name: 'Ist 2024', width: 0.5,
+  marker: { color: '#4F81BD' }, hovertemplate: '%{x}<br>Ist 2024: %{customdata:.1f} GWh/a<extra></extra>' };
 const traceWirt = { x: labels, y: wirt, customdata: wirt, type: 'bar', name: 'wirtschaftliches Potenzial', width: 0.5,
   marker: { color: '#92D050' }, hovertemplate: '%{x}<br>wirtschaftliches Potenzial: %{customdata:.1f} GWh/a<extra></extra>' };
 const traceTech = { x: labels, y: techx, customdata: techx, type: 'bar', name: 'technisches Potenzial', width: 0.5,
@@ -129,10 +130,10 @@ const traceTech = { x: labels, y: techx, customdata: techx, type: 'bar', name: '
 // abgeschaltet wurde nur eine leere Platzhalter-Spur. Als Spur verschwindet die
 // Linie wirklich und zaehlt ausserdem bei der Achsenskalierung mit.
 const traceLinien = [
-  { wert: gesamtbedarf, farbe: '#C00000', strich: 'solid', name: 'Gesamtbedarf Nutzwärme 2023' },
+  { wert: gesamtbedarf, farbe: '#C00000', strich: 'solid', name: 'Gesamtbedarf Nutzwärme 2024' },
   { wert: konservativ, farbe: '#984807', strich: 'dash', name: 'konservatives Sanierungsszenario (2045)' },
   { wert: ambitioniert, farbe: '#F79646', strich: 'dash', name: 'ambitioniertes Sanierungsszenario (2045)' },
-].map(l => ({
+].filter(l => l.wert !== null).map(l => ({
   x: labels, y: labels.map(() => l.wert), type: 'scatter', mode: 'lines', name: l.name,
   line: { color: l.farbe, width: 2, dash: l.strich },
   hovertemplate: l.name + ': %{y:.1f} GWh/a<extra></extra>'
@@ -152,7 +153,7 @@ const layout = {
   // Interaktive Fassung: Legende rechts neben dem Diagramm. In der PNG-Fassung
   // (fig_potenzial) steht sie stattdessen darunter. traceorder, weil barmode
   // 'stack' die Reihenfolge sonst umdreht und die Referenzlinien vor
-  // 'Ist 2023' stellt.
+  // die Ist-Saeulen stellt.
   legend: { orientation: 'v', x: 1.02, xanchor: 'left', y: 1, yanchor: 'top',
              font: { size: 16 }, traceorder: 'normal' },
   separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
