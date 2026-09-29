@@ -4,7 +4,7 @@
 # StoryMaps eine eigene, flache Blockhöhe.
 
 Potenzialanalyse
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_holzkirchen.html" width="100%" height="550" title="Potenzialanalyse Holzkirchen" style="border:0" loading="lazy"></iframe>
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_holzkirchen.html" width="100%" height="567" title="Potenzialanalyse Holzkirchen" style="border:0" loading="lazy"></iframe>
 
 Entwicklung Wärmemix Endenergie
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_holzkirchen.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie Holzkirchen" style="border:0" loading="lazy"></iframe>
