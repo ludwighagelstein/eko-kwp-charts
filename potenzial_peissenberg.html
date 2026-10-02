@@ -51,8 +51,21 @@
      hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
      wirklich kein Platz mehr ist. */
   .footer-zeile { display: block; }
-  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
-    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
+  .tabelle-schalter, .hinweis-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F;
+    background: none; border: 0; padding: 0; margin-left: 8px; cursor: pointer;
+    text-decoration: underline; }
+
+  /* Der Bedienhinweis legt sich als Sprechblase ueber das Diagramm, statt die
+     Fusszeile hoeher zu machen. Grund: jede Hoehenaenderung zieht ein
+     Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
+     zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
+     sich am Layout nichts. */
+  .footer { position: relative; }
+  .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
+    max-width: 440px; margin-bottom: 4px; z-index: 5;
+    background: #fff; border: 1px solid #ddd; border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); padding: 8px 10px;
+    font-size: 11px; line-height: 1.45; color: #333; }
   /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
      die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
      auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
@@ -65,6 +78,18 @@
      mancher Browser sind auf dem hellen Tabellenhintergrund kaum zu sehen, und
      dann sieht die Tabelle einfach abgeschnitten aus. Er erscheint nur, wenn
      die Tabelle offen und laenger als ihr Platz ist. */
+  /* Ab- und Aufblenden beim Ein-/Ausblenden der Datentabelle (s. TABELLE_JS):
+     waehrend das Diagramm neu gezeichnet wird, ist es blass -- der Sprung in
+     der Hoehe faellt so nicht auf. Nur die Deckkraft wird bewegt, die kostet
+     im Gegensatz zu einem Neuzeichnen nichts. */
+  #chart, #charts, .tabelle { transition: opacity 160ms ease; }
+  body.wechselt #chart, body.wechselt #charts { opacity: 0.15; }
+  body.wechselt .tabelle { opacity: 0; }
+  /* Wer Bewegung im System abgestellt hat, bekommt den harten Wechsel. */
+  @media (prefers-reduced-motion: reduce) {
+    #chart, #charts, .tabelle { transition: none; }
+    body.wechselt #chart, body.wechselt #charts, body.wechselt .tabelle { opacity: 1; }
+  }
   .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px;
     scrollbar-width: thin; scrollbar-color: #bbb #f0f0f0; }
   .tabelle::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -117,9 +142,13 @@
 <div class="footer">
   <div class="footer-zeile">
     <span>Quelle: Kommunale Wärmeplanung Peißenberg, EWO-Kompetenzzentrum Energie EKO e.V.</span>
+    <button type="button" class="hinweis-schalter" aria-expanded="false"
+            aria-controls="datentabelle-hinweis" onclick="hinweisUmschalten(this)"
+            title="Bedienung des Diagramms">ⓘ Bedienung</button>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
+  <div id="datentabelle-hinweis" class="bedienhinweis" role="note" hidden>Einzelne Datenreihen lassen sich über die Legende aus- und wieder einblenden — dafür den Eintrag auswählen. So lassen sich einzelne Anteile für sich betrachten oder miteinander vergleichen.</div>
   <div id="datentabelle" class="tabelle" hidden><table><caption>Potenzialanalyse Peißenberg: Nutzenergie in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Ist 2023</th><th scope="col">wirtschaftliches Potenzial</th><th scope="col">technisches Potenzial</th><th scope="col">Summe</th></tr></thead><tbody><tr><th scope="row">Solarthermie</th><td>2,7</td><td>4,6</td><td>0,0</td><td>7,3</td></tr><tr><th scope="row">Energieholz</th><td>18,8</td><td>19,5</td><td>0,0</td><td>38,3</td></tr><tr><th scope="row">Oberfl. Geothermie (EWS &amp; GWWP)</th><td>1,7</td><td>17,3</td><td>7,7</td><td>26,7</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,2</td><td>23,6</td><td>73,9</td><td>98,7</td></tr><tr><th scope="row">Umweltwärme Klärwasser</th><td>0,0</td><td>1,2</td><td>0,0</td><td>1,2</td></tr><tr><th scope="row">Fernwärme</th><td>31,8</td><td>0,0</td><td>32,2</td><td>64,0</td></tr><tr><th scope="row">ind. Abwärme (Prüfung ob EE)</th><td>0,0</td><td>0,0</td><td>1,4</td><td>1,4</td></tr><tr><th scope="row">Biogas Wärme</th><td>0,0</td><td>3,2</td><td>0,0</td><td>3,2</td></tr><tr><th scope="row">Gesamt (erneuerbar)</th><td>56,3</td><td>69,4</td><td>115,3</td><td>241,0</td></tr></tbody></table><p>Gesamtbedarf Nutzwärme 2023: 115,6 GWh/a</p><p>konservatives Sanierungsszenario (2045): 143,2 GWh/a</p><p>ambitioniertes Sanierungsszenario (2045): 124,3 GWh/a</p></div>
 </div>
 <script>
@@ -612,25 +641,58 @@ function zugaenglichMachen(gd) {
 // iframe laenger werden zu lassen. Die Tabelle selbst bleibt auf ihre
 // Hoechsthoehe begrenzt und rollt in sich (s. .tabelle im Stylesheet) --
 // Diagramm und Tabelle sind so gleichzeitig zu sehen.
-function tabelleUmschalten(schalter) {
+//
+// Der Wechsel laeuft ueber ein kurzes Ab- und Aufblenden (Klasse 'wechselt').
+// Weich mitwandern kann das Diagramm naemlich nicht: Plotly braucht fuer einen
+// Neuzeichnen-Durchgang rund 120 ms (nachgemessen am dreiteiligen
+// Endenergie-Diagramm, 3 x 40 ms), bei 60 Bildern je Sekunde stehen aber nur
+// 17 ms zur Verfuegung. Bild fuer Bild nachzuziehen ergaebe also ein Ruckeln
+// statt einer Bewegung. Abgeblendet faellt der Sprung dagegen nicht auf, und
+// die Rechenzeit stoert dort niemanden.
+const WECHSEL_MS = 160;
+
+// Bewusst setTimeout statt requestAnimationFrame: rAF steht in verborgenen
+// Tabs und iframes still. Das Warten wuerde dort nie enden, der Schalter bliebe
+// gesperrt und das Diagramm dauerhaft blass -- und eingebettet in einer
+// StoryMap ist genau das der Normalfall, solange man noch nicht hingescrollt
+// hat. Zwei Bilder bei 60 Hz sind rund 32 ms.
+const warten = ms => new Promise(r => setTimeout(r, ms));
+const ZWEI_BILDER_MS = 32;
+
+async function tabelleUmschalten(schalter) {
   const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
   const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  if (schalter.dataset.wechselt === 'ja') return;    // Doppelklick abfangen
+  schalter.dataset.wechselt = 'ja';
   schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
   schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
-  ziel.hidden = !auf;
-  ziel.style.maxHeight = '';
-  document.body.classList.toggle('tabelle-offen', auf);
-  // Plotly rechnet die neue Containerhoehe nicht immer von selbst nach --
-  // 'responsive' reagiert auf die Fenstergroesse, nicht auf eine geaenderte
-  // Mindesthoehe.
-  if (window.Plotly) {
-    document.querySelectorAll('.js-plotly-plot').forEach(gd => Plotly.Plots.resize(gd));
+  try {
+    document.body.classList.add('wechselt');
+    await warten(WECHSEL_MS);
+    ziel.hidden = !auf;
+    ziel.style.maxHeight = '';
+    document.body.classList.toggle('tabelle-offen', auf);
+    // Plotly rechnet die neue Containerhoehe nicht immer von selbst nach --
+    // 'responsive' reagiert auf die Fenstergroesse, nicht auf eine geaenderte
+    // Mindesthoehe.
+    if (window.Plotly) {
+      document.querySelectorAll('.js-plotly-plot').forEach(gd => Plotly.Plots.resize(gd));
+    }
+    // Diagramme, die ihre Panels selbst ausmessen (Endenergieverbrauch),
+    // muessen danach neu verteilen; sie hinterlegen dafuer diesen Haken.
+    // Eingepasst wird erst, wenn das durch ist -- vorher stimmt die
+    // Seitenhoehe noch nicht.
+    await Promise.resolve(window.tabelleUmgeschaltet ? window.tabelleUmgeschaltet() : null);
+    if (auf) tabelleEinpassen(ziel);
+    // Kurz Luft: erst danach steht das neu gezeichnete Diagramm wirklich, und
+    // es wird nicht mitten im Aufbau aufgeblendet.
+    await warten(ZWEI_BILDER_MS);
+  } finally {
+    // Auch bei einem Fehler wieder aufblenden -- ein dauerhaft blasses
+    // Diagramm waere schlimmer als ein harter Wechsel.
+    document.body.classList.remove('wechselt');
+    schalter.dataset.wechselt = '';
   }
-  // Diagramme, die ihre Panels selbst ausmessen (Endenergieverbrauch), muessen
-  // danach neu verteilen; sie hinterlegen dafuer diesen Haken. Eingepasst wird
-  // erst, wenn das durch ist -- vorher stimmt die Seitenhoehe noch nicht.
-  Promise.resolve(window.tabelleUmgeschaltet ? window.tabelleUmgeschaltet() : null)
-    .then(() => { if (auf) tabelleEinpassen(ziel); });
 }
 
 // Kleinste Hoehe, auf die die Tabelle eingepasst wird, und ein Pixel Luft gegen
@@ -655,6 +717,30 @@ function tabelleEinpassen(ziel) {
   ziel.style.maxHeight = neu + 'px';
   if (ueberstand() > 0) ziel.style.maxHeight = '';
 }
+
+// -- Bedienhinweis ----------------------------------------------------------
+// Sprechblase ueber der Fusszeile. Sie liegt ueber dem Diagramm und aendert am
+// Layout nichts -- deshalb kein Neuzeichnen, kein Ab- und Aufblenden noetig.
+function hinweisUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  ziel.hidden = !auf;
+}
+
+function hinweisSchliessen() {
+  document.querySelectorAll('.hinweis-schalter[aria-expanded="true"]').forEach(s => {
+    s.setAttribute('aria-expanded', 'false');
+    document.getElementById(s.getAttribute('aria-controls')).hidden = true;
+  });
+}
+
+// Mit Escape und mit einem Klick daneben wieder zu: eine Sprechblase, die offen
+// stehen bleibt, verdeckt genau das Diagramm, um das es geht.
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hinweisSchliessen(); });
+document.addEventListener('click', e => {
+  if (!e.target.closest('.bedienhinweis, .hinweis-schalter')) hinweisSchliessen();
+});
 
 function draw() {
   const traces = [traceIst, traceWirt, traceTech, ...traceLinien];
