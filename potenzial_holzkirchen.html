@@ -60,7 +60,7 @@
      Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
      zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
      sich am Layout nichts. */
-  .footer, .header { position: relative; }
+  .footer, .header, #charts { position: relative; }
   .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
     max-width: 440px; margin-bottom: 4px; z-index: 5;
     background: #fff; border: 1px solid #ddd; border-radius: 4px;
@@ -77,6 +77,24 @@
   .hinweis-zeichen { margin-left: 0; font-size: 15px; line-height: 1;
     text-decoration: none; }
   .hinweis-zeichen:hover { color: #163a6e; }
+
+  /* Diagramme ohne Ueberschrift, aber mit Umschaltern: das Zeichen steht
+     rechts neben den Knoepfen. align-items: center, weil es hier neben
+     Schaltflaechen sitzt und nicht neben einer Schriftzeile. */
+  .toggle { display: flex; align-items: center; gap: 10px; position: relative; }
+  /* Im Umschalterblock gilt sonst '.toggle button' mit Rahmen und Polster --
+     das Zeichen soll schlicht bleiben wie an den anderen Stellen. */
+  .toggle .hinweis-schalter { border: 0; background: none; padding: 0; margin: 0;
+    font-size: 15px; line-height: 1; color: #1D4B8F; text-decoration: none; }
+  .toggle .hinweis-schalter:hover { background: none; color: #163a6e; }
+
+  /* Diagramme ohne Ueberschrift und ohne Umschalter: das Zeichen sitzt in der
+     oberen linken Ecke der Zeichenflaeche. Den linken Abstand setzt das
+     Diagramm selbst (hinweisAusrichten), damit es buendig unter der Legende
+     steht; absolut positioniert nimmt es der Flexaufteilung keinen Platz. */
+  #charts > .hinweis-schalter { position: absolute; top: 0; left: 30px; z-index: 5; }
+  /* Die Blase haengt hier am Zeichen, nicht am unteren Rand des Blocks. */
+  #charts > .bedienhinweis { top: 22px; bottom: auto; }
   /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
      die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
      auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
@@ -160,11 +178,11 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Potenzialanalyse Holzkirchen: Nutzenergie in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Ist 2024</th><th scope="col">wirtschaftliches Potenzial</th><th scope="col">technisches Potenzial</th><th scope="col">Summe</th></tr></thead><tbody><tr><th scope="row">Solarthermie</th><td>2,4</td><td>4,9</td><td>0,0</td><td>7,3</td></tr><tr><th scope="row">Energieholz</th><td>25,5</td><td>19,5</td><td>0,0</td><td>45,0</td></tr><tr><th scope="row">Oberfl. Geothermie (EWS &amp; GWWP)</th><td>1,2</td><td>17,9</td><td>7,7</td><td>26,8</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,8</td><td>23,0</td><td>73,9</td><td>98,7</td></tr><tr><th scope="row">Umweltwärme Klärwasser</th><td>0,0</td><td>1,2</td><td>0,0</td><td>1,2</td></tr><tr><th scope="row">Fernwärme</th><td>21,4</td><td>0,0</td><td>42,6</td><td>64,0</td></tr><tr><th scope="row">ind. Abwärme (Prüfung ob EE)</th><td>0,0</td><td>0,0</td><td>1,4</td><td>1,4</td></tr><tr><th scope="row">Biogas Wärme</th><td>0,0</td><td>3,2</td><td>0,0</td><td>3,2</td></tr><tr><th scope="row">Gesamt (erneuerbar)</th><td>52,2</td><td>69,7</td><td>125,7</td><td>247,6</td></tr></tbody></table><p>Gesamtbedarf Nutzwärme 2024: 168,2 GWh/a</p><p>konservatives Sanierungsszenario (2045): 133,6 GWh/a</p><p>ambitioniertes Sanierungsszenario (2045): 119,2 GWh/a</p></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Potenzialanalyse Holzkirchen: Nutzenergie in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">Ist 2024</th><th scope="col">wirtschaftliches Potenzial</th><th scope="col">technisches Potenzial</th><th scope="col">Summe</th></tr></thead><tbody><tr><th scope="row">Solarthermie</th><td>2,4</td><td>4,9</td><td>0,0</td><td>7,3</td></tr><tr><th scope="row">Energieholz</th><td>28,1</td><td>19,5</td><td>0,0</td><td>47,6</td></tr><tr><th scope="row">Oberfl. Geothermie (EWS &amp; GWWP)</th><td>1,2</td><td>17,9</td><td>7,7</td><td>26,8</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>1,8</td><td>23,0</td><td>73,9</td><td>98,7</td></tr><tr><th scope="row">Umweltwärme Klärwasser</th><td>0,0</td><td>1,2</td><td>0,0</td><td>1,2</td></tr><tr><th scope="row">Fernwärme</th><td>21,4</td><td>0,0</td><td>42,6</td><td>64,0</td></tr><tr><th scope="row">ind. Abwärme (Prüfung ob EE)</th><td>0,0</td><td>0,0</td><td>1,4</td><td>1,4</td></tr><tr><th scope="row">Biogas Wärme</th><td>0,0</td><td>3,2</td><td>0,0</td><td>3,2</td></tr><tr><th scope="row">Gesamt (erneuerbar)</th><td>54,9</td><td>69,7</td><td>125,7</td><td>250,3</td></tr></tbody></table><p>Gesamtbedarf Nutzwärme 2024: 168,2 GWh/a</p><p>konservatives Sanierungsszenario (2045): 133,6 GWh/a</p><p>ambitioniertes Sanierungsszenario (2045): 119,2 GWh/a</p></div>
 </div>
 <script>
 const labels = ["Solarthermie", "Energieholz", "Oberfl. Geothermie (EWS & GWWP)", "Luft-Wasser-WP", "Umweltw\u00e4rme Kl\u00e4rwasser", "Fernw\u00e4rme", "ind. Abw\u00e4rme (Pr\u00fcfung ob EE)", "Biogas W\u00e4rme", "Gesamt (erneuerbar)"];
-const ist = [2.4, 25.5, 1.2, 1.8, 0.0, 21.4, 0.0, 0.0, 52.2];
+const ist = [2.4, 28.1, 1.2, 1.8, 0.0, 21.4, 0.0, 0.0, 54.9];
 const wirt = [4.9, 19.5, 17.9, 23.0, 1.2, 0.0, 0.0, 3.2, 69.7];
 const techx = [0.0, 0.0, 7.7, 73.9, 0.0, 42.6, 1.4, 0.0, 125.7];
 // null, wenn die Zeile in der Excel fehlt -- die Linie entfaellt dann ganz.

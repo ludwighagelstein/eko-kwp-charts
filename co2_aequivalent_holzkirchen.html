@@ -60,7 +60,7 @@
      Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
      zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
      sich am Layout nichts. */
-  .footer, .header { position: relative; }
+  .footer, .header, #charts { position: relative; }
   .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
     max-width: 440px; margin-bottom: 4px; z-index: 5;
     background: #fff; border: 1px solid #ddd; border-radius: 4px;
@@ -77,6 +77,24 @@
   .hinweis-zeichen { margin-left: 0; font-size: 15px; line-height: 1;
     text-decoration: none; }
   .hinweis-zeichen:hover { color: #163a6e; }
+
+  /* Diagramme ohne Ueberschrift, aber mit Umschaltern: das Zeichen steht
+     rechts neben den Knoepfen. align-items: center, weil es hier neben
+     Schaltflaechen sitzt und nicht neben einer Schriftzeile. */
+  .toggle { display: flex; align-items: center; gap: 10px; position: relative; }
+  /* Im Umschalterblock gilt sonst '.toggle button' mit Rahmen und Polster --
+     das Zeichen soll schlicht bleiben wie an den anderen Stellen. */
+  .toggle .hinweis-schalter { border: 0; background: none; padding: 0; margin: 0;
+    font-size: 15px; line-height: 1; color: #1D4B8F; text-decoration: none; }
+  .toggle .hinweis-schalter:hover { background: none; color: #163a6e; }
+
+  /* Diagramme ohne Ueberschrift und ohne Umschalter: das Zeichen sitzt in der
+     oberen linken Ecke der Zeichenflaeche. Den linken Abstand setzt das
+     Diagramm selbst (hinweisAusrichten), damit es buendig unter der Legende
+     steht; absolut positioniert nimmt es der Flexaufteilung keinen Platz. */
+  #charts > .hinweis-schalter { position: absolute; top: 0; left: 30px; z-index: 5; }
+  /* Die Blase haengt hier am Zeichen, nicht am unteren Rand des Blocks. */
+  #charts > .bedienhinweis { top: 22px; bottom: auto; }
   /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
      die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
      auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
@@ -161,10 +179,10 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Holzkirchen 2024 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>679</td><td>1,4</td></tr><tr><th scope="row">Fernwärme</th><td>3.550</td><td>7,5</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>161</td><td>0,3</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>78</td><td>0,2</td></tr><tr><th scope="row">Heizstrom</th><td>242</td><td>0,5</td></tr><tr><th scope="row">BHKW-Wärme</th><td>124</td><td>0,3</td></tr><tr><th scope="row">Flüssiggas</th><td>436</td><td>0,9</td></tr><tr><th scope="row">Erdgas</th><td>23.120</td><td>48,6</td></tr><tr><th scope="row">Kohle</th><td>12</td><td>0,0</td></tr><tr><th scope="row">Heizöl</th><td>19.189</td><td>40,3</td></tr><tr><th scope="row">Summe</th><td>47.593</td><td>100,0</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Holzkirchen 2024 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>473</td><td>1,1</td></tr><tr><th scope="row">Fernwärme</th><td>3.550</td><td>8,6</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>161</td><td>0,4</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>78</td><td>0,2</td></tr><tr><th scope="row">Heizstrom</th><td>242</td><td>0,6</td></tr><tr><th scope="row">BHKW-Wärme</th><td>124</td><td>0,3</td></tr><tr><th scope="row">Flüssiggas</th><td>304</td><td>0,7</td></tr><tr><th scope="row">Erdgas</th><td>23.120</td><td>55,8</td></tr><tr><th scope="row">Kohle</th><td>9</td><td>0,0</td></tr><tr><th scope="row">Heizöl</th><td>13.372</td><td>32,3</td></tr><tr><th scope="row">Summe</th><td>41.434</td><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
-const eintraege = [{"label": "Energieholz", "wert": 678.9, "farbe": "#6FAC46"}, {"label": "Fernw\u00e4rme", "wert": 3550.4, "farbe": "#F39C12"}, {"label": "Luft-Wasser-WP", "wert": 161.4, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 77.8, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 242.4, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 124.5, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 435.8, "farbe": "#887894"}, {"label": "Erdgas", "wert": 23119.9, "farbe": "#999999"}, {"label": "Kohle", "wert": 12.5, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 19189.0, "farbe": "#4A4A4A"}];
+const eintraege = [{"label": "Energieholz", "wert": 473.1, "farbe": "#6FAC46"}, {"label": "Fernw\u00e4rme", "wert": 3550.4, "farbe": "#F39C12"}, {"label": "Luft-Wasser-WP", "wert": 161.4, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 77.8, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 242.4, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 124.5, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 303.7, "farbe": "#887894"}, {"label": "Erdgas", "wert": 23119.9, "farbe": "#999999"}, {"label": "Kohle", "wert": 8.7, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 13372.5, "farbe": "#4A4A4A"}];
 const LABELS = eintraege.map(e => e.label);
 const WERTE = eintraege.map(e => e.wert);
 const FARBEN = eintraege.map(e => e.farbe);
