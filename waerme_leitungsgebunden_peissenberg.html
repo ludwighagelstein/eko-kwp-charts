@@ -60,12 +60,23 @@
      Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
      zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
      sich am Layout nichts. */
-  .footer { position: relative; }
+  .footer, .header { position: relative; }
   .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
     max-width: 440px; margin-bottom: 4px; z-index: 5;
     background: #fff; border: 1px solid #ddd; border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); padding: 8px 10px;
     font-size: 11px; line-height: 1.45; color: #333; }
+  /* Neben der Ueberschrift klappt die Blase nach unten auf, nicht nach oben --
+     ueber dem Titel ist kein Platz. */
+  .bedienhinweis.hinweis-unten { bottom: auto; top: 100%; margin: 0 0 0; }
+
+  /* Ueberschrift und Info-Knopf in einer Zeile. Ausrichtung an der Grundlinie,
+     damit das Zeichen auf der Schriftlinie des Titels sitzt und nicht in der
+     Mitte seiner Zeilenhoehe schwebt. */
+  .kopf-zeile { display: flex; align-items: baseline; gap: 6px; }
+  .hinweis-zeichen { margin-left: 0; font-size: 15px; line-height: 1;
+    text-decoration: none; }
+  .hinweis-zeichen:hover { color: #163a6e; }
   /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
      die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
      auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
@@ -159,9 +170,7 @@
 <div class="footer">
   <div class="footer-zeile">
     <span>Quelle: Kommunale Wärmeplanung Peißenberg, EWO-Kompetenzzentrum Energie EKO e.V.</span>
-    <button type="button" class="hinweis-schalter" aria-expanded="false"
-            aria-controls="datentabelle-hinweis" onclick="hinweisUmschalten(this)"
-            title="Bedienung des Diagramms">ⓘ Bedienung</button>
+    <button type="button" class="hinweis-schalter" aria-expanded="false" aria-controls="datentabelle-hinweis" onclick="hinweisUmschalten(this)">ⓘ Bedienung</button>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>

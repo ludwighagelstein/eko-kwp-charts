@@ -60,12 +60,23 @@
      Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
      zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
      sich am Layout nichts. */
-  .footer { position: relative; }
+  .footer, .header { position: relative; }
   .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
     max-width: 440px; margin-bottom: 4px; z-index: 5;
     background: #fff; border: 1px solid #ddd; border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); padding: 8px 10px;
     font-size: 11px; line-height: 1.45; color: #333; }
+  /* Neben der Ueberschrift klappt die Blase nach unten auf, nicht nach oben --
+     ueber dem Titel ist kein Platz. */
+  .bedienhinweis.hinweis-unten { bottom: auto; top: 100%; margin: 0 0 0; }
+
+  /* Ueberschrift und Info-Knopf in einer Zeile. Ausrichtung an der Grundlinie,
+     damit das Zeichen auf der Schriftlinie des Titels sitzt und nicht in der
+     Mitte seiner Zeilenhoehe schwebt. */
+  .kopf-zeile { display: flex; align-items: baseline; gap: 6px; }
+  .hinweis-zeichen { margin-left: 0; font-size: 15px; line-height: 1;
+    text-decoration: none; }
+  .hinweis-zeichen:hover { color: #163a6e; }
   /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
      die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
      auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
@@ -134,21 +145,21 @@
 </head>
 <body>
 <div class="header">
-  <h1 id="titel">Holzkirchen: Sanierungsszenario</h1>
+  <div class="kopf-zeile">
+    <h1 id="titel">Holzkirchen: Sanierungsszenario</h1>
+    <button type="button" class="hinweis-schalter hinweis-zeichen" aria-expanded="false" aria-controls="datentabelle-hinweis" aria-label="Bedienung des Diagramms" onclick="hinweisUmschalten(this)">ⓘ</button>
+  </div>
   <p>Nutzenergie [MWh] je Stützjahr, Szenario Fortschreibung/O45</p>
+  <div id="datentabelle-hinweis" class="bedienhinweis hinweis-unten" role="note" hidden>Einzelne Datenreihen lassen sich über die Legende aus- und wieder einblenden — dafür den Eintrag auswählen. So lassen sich einzelne Anteile für sich betrachten oder miteinander vergleichen.</div>
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
 <div id="chart" role="group" aria-labelledby="titel" aria-describedby="hinweis"></div>
 <div class="footer">
   <div class="footer-zeile">
     <span>Quelle: Kommunale Wärmeplanung Holzkirchen, EWO-Kompetenzzentrum Energie EKO e.V.</span>
-    <button type="button" class="hinweis-schalter" aria-expanded="false"
-            aria-controls="datentabelle-hinweis" onclick="hinweisUmschalten(this)"
-            title="Bedienung des Diagramms">ⓘ Bedienung</button>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle-hinweis" class="bedienhinweis" role="note" hidden>Einzelne Datenreihen lassen sich über die Legende aus- und wieder einblenden — dafür den Eintrag auswählen. So lassen sich einzelne Anteile für sich betrachten oder miteinander vergleichen.</div>
   <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Holzkirchen: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2024</th><td>168.246</td><td>168.246</td></tr><tr><th scope="row">2030</th><td>156.941</td><td>151.808</td></tr><tr><th scope="row">2035</th><td>148.751</td><td>140.045</td></tr><tr><th scope="row">2040</th><td>140.993</td><td>129.195</td></tr><tr><th scope="row">2045</th><td>133.646</td><td>119.184</td></tr></tbody></table><p>Fortschreibung 2024→2045: -34.600 MWh (-21 %)</p><p>O45 2024→2045: -49.061 MWh (-29 %)</p></div>
 </div>
 <script>

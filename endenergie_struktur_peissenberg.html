@@ -60,12 +60,23 @@
      Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
      zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
      sich am Layout nichts. */
-  .footer { position: relative; }
+  .footer, .header { position: relative; }
   .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
     max-width: 440px; margin-bottom: 4px; z-index: 5;
     background: #fff; border: 1px solid #ddd; border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); padding: 8px 10px;
     font-size: 11px; line-height: 1.45; color: #333; }
+  /* Neben der Ueberschrift klappt die Blase nach unten auf, nicht nach oben --
+     ueber dem Titel ist kein Platz. */
+  .bedienhinweis.hinweis-unten { bottom: auto; top: 100%; margin: 0 0 0; }
+
+  /* Ueberschrift und Info-Knopf in einer Zeile. Ausrichtung an der Grundlinie,
+     damit das Zeichen auf der Schriftlinie des Titels sitzt und nicht in der
+     Mitte seiner Zeilenhoehe schwebt. */
+  .kopf-zeile { display: flex; align-items: baseline; gap: 6px; }
+  .hinweis-zeichen { margin-left: 0; font-size: 15px; line-height: 1;
+    text-decoration: none; }
+  .hinweis-zeichen:hover { color: #163a6e; }
   /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
      die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
      auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
@@ -156,8 +167,12 @@
 </head>
 <body>
 <div class="header">
-  <h1 id="titel">Peißenberg: Endenergieverbrauch 2023</h1>
+  <div class="kopf-zeile">
+    <h1 id="titel">Peißenberg: Endenergieverbrauch 2023</h1>
+    <button type="button" class="hinweis-schalter hinweis-zeichen" aria-expanded="false" aria-controls="datentabelle-hinweis" aria-label="Bedienung des Diagramms" onclick="hinweisUmschalten(this)">ⓘ</button>
+  </div>
   <p>Aufteilung nach Energieträger, Sektor und Gebäudetyp</p>
+  <div id="datentabelle-hinweis" class="bedienhinweis hinweis-unten" role="note" hidden>Einzelne Datenreihen lassen sich über die Legende aus- und wieder einblenden — dafür den Eintrag auswählen. So lassen sich einzelne Anteile für sich betrachten oder miteinander vergleichen.</div>
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
 <div id="charts">
@@ -171,13 +186,9 @@
 <div class="footer">
   <div class="footer-zeile">
     <span>Quelle: Kommunale Wärmeplanung Peißenberg, EWO-Kompetenzzentrum Energie EKO e.V.</span>
-    <button type="button" class="hinweis-schalter" aria-expanded="false"
-            aria-controls="datentabelle-hinweis" onclick="hinweisUmschalten(this)"
-            title="Bedienung des Diagramms">ⓘ Bedienung</button>
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle-hinweis" class="bedienhinweis" role="note" hidden>Einzelne Datenreihen lassen sich über die Legende aus- und wieder einblenden — dafür den Eintrag auswählen. So lassen sich einzelne Anteile für sich betrachten oder miteinander vergleichen.</div>
   <div id="datentabelle" class="tabelle" hidden><table><caption>Endenergieverbrauch 2023 nach Energieträger – in GWh/a</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>24,2</td><td>17,4</td></tr><tr><th scope="row">Solarthermie</th><td>2,7</td><td>2,0</td></tr><tr><th scope="row">Biogas-Wärme</th><td>6,0</td><td>4,3</td></tr><tr><th scope="row">Fernwärme EE</th><td>0,8</td><td>0,6</td></tr><tr><th scope="row">Fernwärme fossil</th><td>31,0</td><td>22,3</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>0,4</td><td>0,3</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>0,4</td><td>0,3</td></tr><tr><th scope="row">Heizstrom</th><td>1,0</td><td>0,7</td></tr><tr><th scope="row">BHKW-Wärme</th><td>3,9</td><td>2,8</td></tr><tr><th scope="row">Flüssiggas</th><td>1,9</td><td>1,4</td></tr><tr><th scope="row">Erdgas</th><td>37,9</td><td>27,3</td></tr><tr><th scope="row">Kohle</th><td>0,1</td><td>0,1</td></tr><tr><th scope="row">Heizöl</th><td>28,7</td><td>20,6</td></tr><tr><th scope="row">Summe</th><td>139,0</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2023 nach Sektor – in GWh/a</caption><thead><tr><th scope="col">Sektor</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Kommunal</th><td>3,1</td><td>2,2</td></tr><tr><th scope="row">GHD</th><td>40,0</td><td>28,8</td></tr><tr><th scope="row">private Haushalte</th><td>95,9</td><td>69,0</td></tr><tr><th scope="row">Summe</th><td>139,0</td><td>100,0</td></tr></tbody></table><table><caption>Endenergieverbrauch 2023 nach Gebäudetyp – in GWh/a</caption><thead><tr><th scope="col">Gebäudetyp</th><th scope="col">GWh/a</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Nichtwohngebäude</th><td>43,1</td><td>31,0</td></tr><tr><th scope="row">Wohnen MFH</th><td>25,7</td><td>18,5</td></tr><tr><th scope="row">Wohnen EFH/DHH/RH</th><td>70,2</td><td>50,5</td></tr><tr><th scope="row">Summe</th><td>139,0</td><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
