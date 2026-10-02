@@ -194,6 +194,13 @@ function layoutFuer(gruppe) {
 
 async function draw() {
   const schmal = window.innerWidth < 620;
+  // Die Festhoehe des Blocks abgeben, die panelsAnpassen() gesetzt hat: sie
+  // waere sonst gleich wieder der Massstab fuer die naechste Verteilung und der
+  // Block koennte nie mehr wachsen oder schrumpfen.
+  const block = document.getElementById('charts');
+  block.style.flex = '';
+  block.style.height = '';
+  block.style.minHeight = '';
   // Beim Wechsel zurueck in die breite Ansicht die Festhoehen abgeben, die
   // panelsAnpassen() gesetzt hat -- sonst rechnet Plotly mit der alten Hoehe
   // weiter und die Panels behalten die schmalen Proportionen.
@@ -418,13 +425,24 @@ async function panelsAnpassen(schriftStart, verfuegbar) {
         continue;
       }
     }
+    const hoehen = divs.map((d, i) => oben[i] + flaeche + unten[i]);
+    // Der Block bekommt die Hoehe, die die Panels zusammen brauchen. Ohne das
+    // ragen sie bei knapper Hoehe unten heraus -- die Zeichenflaechen haben
+    // eine Untergrenze, die Summe kann also groesser werden als der Platz --
+    // und legen sich ueber die Fusszeile. Genau dort steht die Datentabelle,
+    // deren erste Zeilen dann verdeckt sind. Mit fester Hoehe ist der Block so
+    // hoch wie sein Inhalt; reicht die Seite dafuer nicht, macht die
+    // Datentabelle Platz (tabelleEinpassen) und notfalls rollt die Seite.
+    charts.style.flex = '0 0 auto';
+    charts.style.minHeight = '0';
+    charts.style.height = (summe(hoehen) + titel) + 'px';
     await Promise.all(divs.map((d, i) => {
       d.style.flex = '0 0 auto';
       // Die Mindesthoehe aus dem Stylesheet muss weichen, sonst bekommen die
       // beiden kleinen Panels mehr Hoehe als berechnet -- und damit laengere
       // Achsen und dickere Balken als das erste.
       d.style.minHeight = '0';
-      d.style.height = (oben[i] + flaeche + unten[i]) + 'px';
+      d.style.height = hoehen[i] + 'px';
       return Plotly.relayout(d, { 'margin.t': oben[i] });
     }));
     // Plotly liest die neue Containerhoehe nicht von selbst.
