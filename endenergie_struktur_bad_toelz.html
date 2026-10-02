@@ -53,7 +53,24 @@
   .footer-zeile { display: block; }
   .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
     border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
-  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
+     die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
+     auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
+     den iframe, statt dass die Seite laenger wird und das Diagramm nach oben
+     aus dem Bild scrollt. */
+  body.tabelle-offen #chart { min-height: 180px; }
+  body.tabelle-offen #charts { min-height: 330px; }
+  /* Hoechsthoehe der Tabelle; was nicht hineinpasst, wird in ihr gerollt. Der
+     Rollbalken ist ausdruecklich gestaltet: die zarten Ueberlagerungsbalken
+     mancher Browser sind auf dem hellen Tabellenhintergrund kaum zu sehen, und
+     dann sieht die Tabelle einfach abgeschnitten aus. Er erscheint nur, wenn
+     die Tabelle offen und laenger als ihr Platz ist. */
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px;
+    scrollbar-width: thin; scrollbar-color: #bbb #f0f0f0; }
+  .tabelle::-webkit-scrollbar { width: 10px; height: 10px; }
+  .tabelle::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 5px; }
+  .tabelle::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; }
+  .tabelle::-webkit-scrollbar-thumb:hover { background: #999; }
   .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
   .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
   .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
@@ -158,7 +175,11 @@ function layoutFuer(gruppe) {
               tickfont: { size: 14 },
               tickmode: 'array', tickvals: [gruppe.achse],
               ticktext: ['<b>' + gruppe.achse + '</b>'] },
-    legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1.02, yanchor: 'bottom',
+    // Direkt auf der Oberkante der Zeichenflaeche (nicht 1.02): den Abstand
+    // setzt panelsAnpassen() ueber den oberen Rand, und der rechnet mit der
+    // Legende genau auf der Kante. Ein Zuschlag in Anteilen der Panelhoehe
+    // waere je Panel verschieden gross und liesse die Legende oben ueberstehen.
+    legend: { orientation: 'h', x: 0, xanchor: 'left', y: 1, yanchor: 'bottom',
                font: { size: 16 }, traceorder: 'normal' },
     // Der Strich der letzten Zahl faellt genau auf den rechten Rand der
     // Zeichenflaeche; dort zeichnet Plotly keine Gitterlinie mehr. Deshalb als
@@ -180,6 +201,7 @@ async function draw() {
     const d = document.getElementById('teil' + i);
     d.style.flex = '';
     d.style.height = '';
+    d.style.minHeight = '';
   });
   await Promise.all(gruppen.map((g, i) => {
     const balken = g.eintraege.map(e => ({
@@ -236,15 +258,28 @@ async function draw() {
       .then(() => { legendeVerdrahten(gd, g); zugaenglichMachen(gd); });
   }));
   if (schmal) {
-    await panelsAnpassen();
+    await panelsAnpassen(12);
   } else {
     // Nach dem Wechsel aus der schmalen Ansicht haben die Container eine neue
     // Hoehe (die Festhoehen sind oben abgegeben). Plotly rechnet erst nach
-    // Plots.resize damit -- ohne das misst zeichenflaechenAusgleichen die
-    // alten Hoehen und die Balken bleiben unterschiedlich dick.
-    await Promise.all([0, 1, 2].map(
-      i => Plotly.Plots.resize(document.getElementById('teil' + i))));
-    await zeichenflaechenAusgleichen();
+    // Plots.resize damit -- ohne das misst panelsAnpassen die alten Hoehen.
+    const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
+    await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+    // Verfuegbare Hoehe merken, BEVOR den Panels zum Messen Festhoehen gegeben
+    // werden -- danach richtet sich #charts nach seinen Kindern und waere so
+    // hoch wie die Messhoehen.
+    const verfuegbar = document.getElementById('charts').clientHeight;
+    // Zum Messen grosszuegig Platz geben: eine beschnittene Legende (Plotly
+    // haengt ihr dann einen Rollbalken an) misst sich zu klein, und die
+    // Energietraeger-Legende braucht bei 13 Traegern vier bis fuenf Zeilen -
+    // deutlich mehr als der Rand von 8 px aus layoutFuer.
+    await Promise.all(divs.map(d => {
+      d.style.flex = '0 0 auto';
+      d.style.height = BREIT_MESS_HOEHE + 'px';
+      return Plotly.relayout(d, { 'margin.t': BREIT_MESS_RAND });
+    }));
+    await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+    await panelsAnpassen(16, verfuegbar);
   }
 }
 
@@ -302,22 +337,21 @@ function weichSetzen(gd, spur, ziel) {
 }
 
 // Die Legende der Energietraeger braucht mehr Zeilen als die der anderen
-// Panels; Plotly vergroessert dafuer den oberen Rand und verkleinert die
-// Zeichenflaeche. Folge: kuerzere y-Achse und duennerer Balken in diesem Panel.
-// Deshalb nach dem Rendern alle Zeichenflaechen auf die kleinste angleichen -
-// damit stimmen Achsenlaenge und Balkendicke ueberall ueberein, ohne an der
-// Balkenbreite zu drehen.
-// Schmale Ansicht: jedes Panel bekommt genau die Hoehe, die es braucht --
-// Legende oben, gleich hohe Zeichenflaeche, Achse unten. Der Ausgleich fuer die
-// breite Ansicht (zeichenflaechenAusgleichen) geht umgekehrt vor: alle Panels
-// sind gleich hoch und der obere Rand wird aufgefuellt, bis die
-// Zeichenflaechen gleich gross sind. Schmal ergibt das viel Leerraum zwischen
-// den Diagrammen, weil die Legende des ersten Panels zwoelf Energietraeger
-// fuehrt und die beiden anderen nur drei bzw. vier.
+// Panels. Deshalb bekommt jedes Panel genau die Hoehe, die es braucht --
+// Legende oben, gleich hohe Zeichenflaeche, Achse unten -- statt dass alle drei
+// gleich hoch sind und der obere Rand aufgefuellt wird: bei gleicher Panelhoehe
+// bleibt dem ersten Panel zu wenig Platz (seine Legende wurde beschnitten) und
+// den anderen beiden zu viel (Leerraum zwischen den Diagrammen).
 // Abstand Legende -> Zeichenflaeche. Knapp gehalten: an dieser Stelle haengt,
 // ob die Legendenschrift in den Block passt -- bei 330 x 750 px fehlten mit 6 px
 // genau 5 px, um bei Groesse 12 zu bleiben.
 const SCHMAL_LUFT = 4;
+// Breite Ansicht: Hoehe und oberer Rand, mit denen zum Messen gezeichnet wird.
+// Reichlich bemessen, damit Plotly die Legende nicht beschneidet -- eine
+// beschnittene Legende misst sich zu klein. Die Werte sind nur voruebergehend,
+// panelsAnpassen() setzt gleich darauf die endgueltigen.
+const BREIT_MESS_HOEHE = 460;
+const BREIT_MESS_RAND = 280;
 const SCHMAL_FLAECHE_MIN = 54;    // Mindesthoehe der Zeichenflaeche je Panel
 // Plotly beschneidet die Legende, sobald sie hoeher ist als die halbe
 // Panelhoehe -- gemessen bei 330 px Breite: eine 124 px hohe Legende blieb bis
@@ -336,14 +370,21 @@ function legendenHoehe(gd) {
   return g ? g.getBoundingClientRect().height : 0;
 }
 
-async function panelsAnpassen() {
+// Verteilt die vorhandene Hoehe so auf die drei Panels, dass jede Legende
+// vollstaendig hineinpasst und alle drei Zeichenflaechen gleich hoch bleiben
+// (gleich dicke Balken). Wird aus BEIDEN Ansichten aufgerufen: schmal steht die
+// Legende ohnehin ueber dem Balken, breit ebenso -- und dort hatte die
+// Energietraeger-Legende mit 13 Eintraegen nur den Rand von 8 px zur
+// Verfuegung und bekam von Plotly einen Rollbalken verpasst.
+async function panelsAnpassen(schriftStart, verfuegbar) {
   const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
   const charts = document.getElementById('charts');
   if (divs.some(d => !d._fullLayout)) return;
   const summe = werte => werte.reduce((a, b) => a + b, 0);
   const titel = Array.from(document.querySelectorAll('.teilTitel'))
                      .reduce((s, e) => s + e.offsetHeight, 0);
-  let schrift = 12;
+  const hoeheGesamt = verfuegbar || charts.clientHeight;
+  let schrift = schriftStart;
 
   // Zusaetzlicher oberer Rand je Panel. Ein Pixel mehr oben verschiebt Hoehe
   // aus den (geteilten) Zeichenflaechen in dieses eine Panel -- netto bringt es
@@ -356,7 +397,7 @@ async function panelsAnpassen() {
     const legenden = divs.map(d => Math.ceil(legendenHoehe(d)));
     const oben = legenden.map((h, i) => h + SCHMAL_LUFT + zusatz[i]);
     const unten = divs.map(d => Math.ceil(d._fullLayout.margin.b));
-    const rest = charts.clientHeight - titel - summe(oben) - summe(unten);
+    const rest = hoeheGesamt - titel - summe(oben) - summe(unten);
     // Gleiche Zeichenflaeche fuer alle drei: nur so sind die Balken gleich dick.
     const flaeche = Math.max(SCHMAL_FLAECHE_MIN, Math.floor(rest / 3));
     // Fehlt einem Panel Hoehe fuer seine Legende, bekommt es sie oben dazu --
@@ -379,31 +420,22 @@ async function panelsAnpassen() {
     }
     await Promise.all(divs.map((d, i) => {
       d.style.flex = '0 0 auto';
+      // Die Mindesthoehe aus dem Stylesheet muss weichen, sonst bekommen die
+      // beiden kleinen Panels mehr Hoehe als berechnet -- und damit laengere
+      // Achsen und dickere Balken als das erste.
+      d.style.minHeight = '0';
       d.style.height = (oben[i] + flaeche + unten[i]) + 'px';
       return Plotly.relayout(d, { 'margin.t': oben[i] });
     }));
     // Plotly liest die neue Containerhoehe nicht von selbst.
     await Promise.all(divs.map(d => Plotly.Plots.resize(d)));
+    // Mit der neuen Panelhoehe kann Plotly die Legende anders umbrechen (bei
+    // Peissenberg vier Zeilen statt fuenf). Der oben reservierte Platz stimmt
+    // dann nicht mehr, und das Panel bekaeme eine hoehere Zeichenflaeche als
+    // die anderen -- also mit der gemessenen Hoehe noch einmal rechnen.
+    const nachher = divs.map(d => Math.ceil(legendenHoehe(d)));
+    if (versuch < 6 && nachher.some((h, i) => Math.abs(h - legenden[i]) > 1)) continue;
     return;
-  }
-}
-
-async function zeichenflaechenAusgleichen() {
-  const divs = [0, 1, 2].map(i => document.getElementById('teil' + i));
-  // Mehrere Durchlaeufe: automargin holt sich einen Teil des zusaetzlichen
-  // Randes wieder zurueck, ein einzelner Schritt trifft die Zielhoehe nicht.
-  for (let durchlauf = 0; durchlauf < 6; durchlauf++) {
-    const laengen = divs.map(d => d._fullLayout && d._fullLayout.yaxis
-                                  ? d._fullLayout.yaxis._length : null);
-    if (laengen.some(l => !l)) return;
-    const ziel = Math.min(...laengen);
-    if (Math.max(...laengen) - ziel <= 1) return;
-    await Promise.all(divs.map((d, i) => {
-      const zusatz = laengen[i] - ziel;
-      return zusatz > 0.5
-        ? Plotly.relayout(d, { 'margin.t': d._fullLayout.margin.t + zusatz })
-        : Promise.resolve();
-    }));
   }
 }
 
@@ -573,22 +605,68 @@ function zugaenglichMachen(gd) {
 
   // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
   // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
-  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // (z.B. nach panelsAnpassen() im Endenergie-Diagramm). Ausserdem
   // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
   // Animation.
   gd.on('plotly_afterplot', () => a11yAnwenden(gd));
 }
 
 
+// Mit offener Datentabelle bekommt body die Klasse 'tabelle-offen'. Daran
+// haengt im Stylesheet eine kleinere Mindesthoehe des Diagramms: es schrumpft
+// dann so weit, dass die Tabelle darunter Platz findet, statt die Seite im
+// iframe laenger werden zu lassen. Die Tabelle selbst bleibt auf ihre
+// Hoechsthoehe begrenzt und rollt in sich (s. .tabelle im Stylesheet) --
+// Diagramm und Tabelle sind so gleichzeitig zu sehen.
 function tabelleUmschalten(schalter) {
   const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
   const auf = schalter.getAttribute('aria-expanded') !== 'true';
   schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
   schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
   ziel.hidden = !auf;
+  ziel.style.maxHeight = '';
+  document.body.classList.toggle('tabelle-offen', auf);
+  // Plotly rechnet die neue Containerhoehe nicht immer von selbst nach --
+  // 'responsive' reagiert auf die Fenstergroesse, nicht auf eine geaenderte
+  // Mindesthoehe.
+  if (window.Plotly) {
+    document.querySelectorAll('.js-plotly-plot').forEach(gd => Plotly.Plots.resize(gd));
+  }
+  // Diagramme, die ihre Panels selbst ausmessen (Endenergieverbrauch), muessen
+  // danach neu verteilen; sie hinterlegen dafuer diesen Haken. Eingepasst wird
+  // erst, wenn das durch ist -- vorher stimmt die Seitenhoehe noch nicht.
+  Promise.resolve(window.tabelleUmgeschaltet ? window.tabelleUmgeschaltet() : null)
+    .then(() => { if (auf) tabelleEinpassen(ziel); });
+}
+
+// Kleinste Hoehe, auf die die Tabelle eingepasst wird, und ein Pixel Luft gegen
+// Rundungen.
+const TABELLE_MIN_HOEHE = 120;
+const TABELLE_LUFT = 2;
+
+// Die Hoechsthoehe aus dem Stylesheet (45 % der Seitenhoehe) ist eine Vorgabe,
+// kein Versprechen: reicht das Schrumpfen des Diagramms nicht, laeuft die Seite
+// ueber und die Tabelle waere oben und unten angeschnitten. Dann wird sie um
+// genau den Ueberstand kuerzer.
+//
+// Aber nur, wenn das auch wirklich hilft. In der schmalen Ansicht traegt das
+// Diagramm eine feste Hoehe und kann gar nicht nachgeben; die Tabelle klein zu
+// rechnen braechte dort nichts ausser einer kleinen Tabelle -- auf dem Handy
+// rollt die Seite ohnehin, und das ist dort auch richtig.
+function tabelleEinpassen(ziel) {
+  const ueberstand = () => document.documentElement.scrollHeight - window.innerHeight;
+  if (ueberstand() <= 0) return;
+  const neu = ziel.clientHeight - ueberstand() - TABELLE_LUFT;
+  if (neu < TABELLE_MIN_HOEHE) return;
+  ziel.style.maxHeight = neu + 'px';
+  if (ueberstand() > 0) ziel.style.maxHeight = '';
 }
 
 draw();
+// Die Panels haben feste Hoehen aus panelsAnpassen(); eine kleinere
+// Mindesthoehe des Blocks allein laesst sie nicht schrumpfen. Deshalb nach dem
+// Ein- und Ausblenden der Datentabelle neu verteilen (s. TABELLE_JS).
+window.tabelleUmgeschaltet = () => draw();
 let warSchmal = window.innerWidth < 620;
 // Siehe onResize() in RESPONSIVE_JS: neben dem resize-Ereignis auch ein
 // ResizeObserver, sonst kann das Schmal-Layout in einer breiten Ansicht

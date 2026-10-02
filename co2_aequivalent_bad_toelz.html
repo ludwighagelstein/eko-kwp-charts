@@ -53,7 +53,24 @@
   .footer-zeile { display: block; }
   .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
     border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
-  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
+     die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
+     auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
+     den iframe, statt dass die Seite laenger wird und das Diagramm nach oben
+     aus dem Bild scrollt. */
+  body.tabelle-offen #chart { min-height: 180px; }
+  body.tabelle-offen #charts { min-height: 330px; }
+  /* Hoechsthoehe der Tabelle; was nicht hineinpasst, wird in ihr gerollt. Der
+     Rollbalken ist ausdruecklich gestaltet: die zarten Ueberlagerungsbalken
+     mancher Browser sind auf dem hellen Tabellenhintergrund kaum zu sehen, und
+     dann sieht die Tabelle einfach abgeschnitten aus. Er erscheint nur, wenn
+     die Tabelle offen und laenger als ihr Platz ist. */
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px;
+    scrollbar-width: thin; scrollbar-color: #bbb #f0f0f0; }
+  .tabelle::-webkit-scrollbar { width: 10px; height: 10px; }
+  .tabelle::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 5px; }
+  .tabelle::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; }
+  .tabelle::-webkit-scrollbar-thumb:hover { background: #999; }
   .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
   .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
   .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
@@ -545,19 +562,61 @@ function zugaenglichMachen(gd) {
 
   // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
   // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
-  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // (z.B. nach panelsAnpassen() im Endenergie-Diagramm). Ausserdem
   // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
   // Animation.
   gd.on('plotly_afterplot', () => a11yAnwenden(gd));
 }
 
 
+// Mit offener Datentabelle bekommt body die Klasse 'tabelle-offen'. Daran
+// haengt im Stylesheet eine kleinere Mindesthoehe des Diagramms: es schrumpft
+// dann so weit, dass die Tabelle darunter Platz findet, statt die Seite im
+// iframe laenger werden zu lassen. Die Tabelle selbst bleibt auf ihre
+// Hoechsthoehe begrenzt und rollt in sich (s. .tabelle im Stylesheet) --
+// Diagramm und Tabelle sind so gleichzeitig zu sehen.
 function tabelleUmschalten(schalter) {
   const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
   const auf = schalter.getAttribute('aria-expanded') !== 'true';
   schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
   schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
   ziel.hidden = !auf;
+  ziel.style.maxHeight = '';
+  document.body.classList.toggle('tabelle-offen', auf);
+  // Plotly rechnet die neue Containerhoehe nicht immer von selbst nach --
+  // 'responsive' reagiert auf die Fenstergroesse, nicht auf eine geaenderte
+  // Mindesthoehe.
+  if (window.Plotly) {
+    document.querySelectorAll('.js-plotly-plot').forEach(gd => Plotly.Plots.resize(gd));
+  }
+  // Diagramme, die ihre Panels selbst ausmessen (Endenergieverbrauch), muessen
+  // danach neu verteilen; sie hinterlegen dafuer diesen Haken. Eingepasst wird
+  // erst, wenn das durch ist -- vorher stimmt die Seitenhoehe noch nicht.
+  Promise.resolve(window.tabelleUmgeschaltet ? window.tabelleUmgeschaltet() : null)
+    .then(() => { if (auf) tabelleEinpassen(ziel); });
+}
+
+// Kleinste Hoehe, auf die die Tabelle eingepasst wird, und ein Pixel Luft gegen
+// Rundungen.
+const TABELLE_MIN_HOEHE = 120;
+const TABELLE_LUFT = 2;
+
+// Die Hoechsthoehe aus dem Stylesheet (45 % der Seitenhoehe) ist eine Vorgabe,
+// kein Versprechen: reicht das Schrumpfen des Diagramms nicht, laeuft die Seite
+// ueber und die Tabelle waere oben und unten angeschnitten. Dann wird sie um
+// genau den Ueberstand kuerzer.
+//
+// Aber nur, wenn das auch wirklich hilft. In der schmalen Ansicht traegt das
+// Diagramm eine feste Hoehe und kann gar nicht nachgeben; die Tabelle klein zu
+// rechnen braechte dort nichts ausser einer kleinen Tabelle -- auf dem Handy
+// rollt die Seite ohnehin, und das ist dort auch richtig.
+function tabelleEinpassen(ziel) {
+  const ueberstand = () => document.documentElement.scrollHeight - window.innerHeight;
+  if (ueberstand() <= 0) return;
+  const neu = ziel.clientHeight - ueberstand() - TABELLE_LUFT;
+  if (neu < TABELLE_MIN_HOEHE) return;
+  ziel.style.maxHeight = neu + 'px';
+  if (ueberstand() > 0) ziel.style.maxHeight = '';
 }
 
 
