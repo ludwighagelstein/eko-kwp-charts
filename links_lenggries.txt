@@ -1,0 +1,20 @@
+# Zum Einfügen in den Embed-Block der StoryMap:
+# den iFrame-Code unter der jeweiligen Bezeichnung kopieren.
+# Nicht die nackte URL aus dem src einfügen — dann erzwingt
+# StoryMaps eine eigene, flache Blockhöhe.
+
+Entwicklung Wärmemix Nutzenergie
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_lenggries.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Lenggries" style="border:0" loading="lazy"></iframe>
+
+Sanierungsszenario
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_lenggries.html" width="100%" height="550" title="Sanierungsszenario Lenggries" style="border:0" loading="lazy"></iframe>
+
+Endenergieverbrauch
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_lenggries.html" width="100%" height="750" title="Endenergieverbrauch Lenggries" style="border:0" loading="lazy"></iframe>
+
+Anteile der Energieträger
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_lenggries.html" width="100%" height="561" title="Anteile der Energieträger Lenggries" style="border:0" loading="lazy"></iframe>
+
+CO₂-Äquivalente
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_lenggries.html" width="100%" height="521" title="CO₂-Äquivalente Lenggries" style="border:0" loading="lazy"></iframe>
+
