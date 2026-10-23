@@ -1,0 +1,31 @@
+# Zum Einfügen in den Embed-Block der StoryMap:
+# den iFrame-Code unter der jeweiligen Bezeichnung kopieren.
+# Nicht die nackte URL aus dem src einfügen — dann erzwingt
+# StoryMaps eine eigene, flache Blockhöhe.
+
+Potenzialanalyse
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_benediktbeuern.html" width="100%" height="550" title="Potenzialanalyse Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Entwicklung Wärmemix Endenergie
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_benediktbeuern.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Entwicklung Wärmemix Nutzenergie
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_benediktbeuern.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Entwicklung CO₂-Emissionen
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_benediktbeuern.html" width="100%" height="550" title="Entwicklung CO₂-Emissionen Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Sanierungsszenario
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_benediktbeuern.html" width="100%" height="550" title="Sanierungsszenario Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Endenergieverbrauch
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_benediktbeuern.html" width="100%" height="750" title="Endenergieverbrauch Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Anteile der Energieträger
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_benediktbeuern.html" width="100%" height="561" title="Anteile der Energieträger Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+CO₂-Äquivalente
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_benediktbeuern.html" width="100%" height="521" title="CO₂-Äquivalente Benediktbeuern" style="border:0" loading="lazy"></iframe>
+
+Feuerstätten
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_benediktbeuern.html" width="100%" height="421" title="Feuerstätten Benediktbeuern" style="border:0" loading="lazy"></iframe>
