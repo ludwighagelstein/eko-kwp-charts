@@ -51,9 +51,80 @@
      hinter der Quellenangabe und kostet nur dann eine Zeile, wenn dort
      wirklich kein Platz mehr ist. */
   .footer-zeile { display: block; }
-  .tabelle-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F; background: none;
-    border: 0; padding: 0; margin-left: 8px; cursor: pointer; text-decoration: underline; }
-  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px; }
+  .tabelle-schalter, .hinweis-schalter { font-family: inherit; font-size: 11px; color: #1D4B8F;
+    background: none; border: 0; padding: 0; margin-left: 8px; cursor: pointer;
+    text-decoration: underline; }
+
+  /* Der Bedienhinweis legt sich als Sprechblase ueber das Diagramm, statt die
+     Fusszeile hoeher zu machen. Grund: jede Hoehenaenderung zieht ein
+     Neuzeichnen durch Plotly nach sich (rund 120 ms, s. Datentabelle) -- fuer
+     zwei Zeilen Text waere das ein unverhaeltnismaessiger Sprung. So aendert
+     sich am Layout nichts. */
+  .footer, .header, #charts { position: relative; }
+  .bedienhinweis { position: absolute; bottom: 100%; left: 30px; right: 30px;
+    max-width: 440px; margin-bottom: 4px; z-index: 5;
+    background: #fff; border: 1px solid #ddd; border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12); padding: 8px 10px;
+    font-size: 11px; line-height: 1.45; color: #333; }
+  /* Neben der Ueberschrift klappt die Blase nach unten auf, nicht nach oben --
+     ueber dem Titel ist kein Platz. */
+  .bedienhinweis.hinweis-unten { bottom: auto; top: 100%; margin: 0 0 0; }
+
+  /* Ueberschrift und Info-Knopf in einer Zeile. Ausrichtung an der Grundlinie,
+     damit das Zeichen auf der Schriftlinie des Titels sitzt und nicht in der
+     Mitte seiner Zeilenhoehe schwebt. */
+  .kopf-zeile { display: flex; align-items: baseline; gap: 6px; }
+  .hinweis-zeichen { margin-left: 0; font-size: 15px; line-height: 1;
+    text-decoration: none; }
+  .hinweis-zeichen:hover { color: #163a6e; }
+
+  /* Diagramme ohne Ueberschrift, aber mit Umschaltern: das Zeichen steht
+     rechts neben den Knoepfen. align-items: center, weil es hier neben
+     Schaltflaechen sitzt und nicht neben einer Schriftzeile. */
+  .toggle { display: flex; align-items: center; gap: 10px; position: relative; }
+  /* Im Umschalterblock gilt sonst '.toggle button' mit Rahmen und Polster --
+     das Zeichen soll schlicht bleiben wie an den anderen Stellen. */
+  .toggle .hinweis-schalter { border: 0; background: none; padding: 0; margin: 0;
+    font-size: 15px; line-height: 1; color: #1D4B8F; text-decoration: none; }
+  .toggle .hinweis-schalter:hover { background: none; color: #163a6e; }
+
+  /* Diagramme ohne Ueberschrift und ohne Umschalter: das Zeichen sitzt in der
+     oberen linken Ecke der Zeichenflaeche. Den linken Abstand setzt das
+     Diagramm selbst (hinweisAusrichten), damit es buendig unter der Legende
+     steht; absolut positioniert nimmt es der Flexaufteilung keinen Platz. */
+  #charts > .hinweis-schalter { position: absolute; top: 0; left: 30px; z-index: 5; }
+  /* Die Blase haengt hier am Zeichen, nicht am unteren Rand des Blocks. */
+  #charts > .bedienhinweis { top: 22px; bottom: auto; }
+  /* Solange die Tabelle zu ist, gilt die volle Mindesthoehe des Diagramms und
+     die Seite fuellt den iframe genau aus. Ist sie offen, darf das Diagramm bis
+     auf diese Grenze schrumpfen -- dann passen Diagramm und Tabelle zusammen in
+     den iframe, statt dass die Seite laenger wird und das Diagramm nach oben
+     aus dem Bild scrollt. */
+  body.tabelle-offen #chart { min-height: 180px; }
+  body.tabelle-offen #charts { min-height: 330px; }
+  /* Hoechsthoehe der Tabelle; was nicht hineinpasst, wird in ihr gerollt. Der
+     Rollbalken ist ausdruecklich gestaltet: die zarten Ueberlagerungsbalken
+     mancher Browser sind auf dem hellen Tabellenhintergrund kaum zu sehen, und
+     dann sieht die Tabelle einfach abgeschnitten aus. Er erscheint nur, wenn
+     die Tabelle offen und laenger als ihr Platz ist. */
+  /* Ab- und Aufblenden beim Ein-/Ausblenden der Datentabelle (s. TABELLE_JS):
+     waehrend das Diagramm neu gezeichnet wird, ist es blass -- der Sprung in
+     der Hoehe faellt so nicht auf. Nur die Deckkraft wird bewegt, die kostet
+     im Gegensatz zu einem Neuzeichnen nichts. */
+  #chart, #charts, .tabelle { transition: opacity 160ms ease; }
+  body.wechselt #chart, body.wechselt #charts { opacity: 0.15; }
+  body.wechselt .tabelle { opacity: 0; }
+  /* Wer Bewegung im System abgestellt hat, bekommt den harten Wechsel. */
+  @media (prefers-reduced-motion: reduce) {
+    #chart, #charts, .tabelle { transition: none; }
+    body.wechselt #chart, body.wechselt #charts, body.wechselt .tabelle { opacity: 1; }
+  }
+  .tabelle { max-height: 45vh; overflow: auto; margin-top: 6px;
+    scrollbar-width: thin; scrollbar-color: #bbb #f0f0f0; }
+  .tabelle::-webkit-scrollbar { width: 10px; height: 10px; }
+  .tabelle::-webkit-scrollbar-track { background: #f0f0f0; border-radius: 5px; }
+  .tabelle::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; }
+  .tabelle::-webkit-scrollbar-thumb:hover { background: #999; }
   .tabelle table { border-collapse: collapse; font-size: 11px; color: #333; margin-bottom: 8px; }
   .tabelle caption { text-align: left; font-weight: bold; padding: 4px 0; color: #1D4B8F; }
   .tabelle th, .tabelle td { border: 1px solid #ddd; padding: 2px 6px; text-align: right;
@@ -108,10 +179,10 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Geretsried 2023 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>332</td><td>0,7</td></tr><tr><th scope="row">Fernwärme</th><td>3.951</td><td>8,2</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>792</td><td>1,7</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>115</td><td>0,2</td></tr><tr><th scope="row">Heizstrom</th><td>114</td><td>0,2</td></tr><tr><th scope="row">BHKW-Wärme</th><td>922</td><td>1,9</td></tr><tr><th scope="row">Flüssiggas</th><td>353</td><td>0,7</td></tr><tr><th scope="row">Erdgas</th><td>25.979</td><td>54,1</td></tr><tr><th scope="row">Kohle</th><td>268</td><td>0,6</td></tr><tr><th scope="row">Heizöl</th><td>15.154</td><td>31,6</td></tr><tr><th scope="row">Summe</th><td>47.977</td><td>100,0</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Geretsried 2023 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>576</td><td>0,8</td></tr><tr><th scope="row">Biogas-Wärme</th><td>273</td><td>0,4</td></tr><tr><th scope="row">Fernwärme</th><td>1.034</td><td>1,4</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>440</td><td>0,6</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>256</td><td>0,3</td></tr><tr><th scope="row">Heizstrom</th><td>531</td><td>0,7</td></tr><tr><th scope="row">BHKW-Wärme</th><td>790</td><td>1,0</td></tr><tr><th scope="row">Flüssiggas</th><td>734</td><td>1,0</td></tr><tr><th scope="row">Erdgas</th><td>50.321</td><td>65,8</td></tr><tr><th scope="row">Kohle</th><td>541</td><td>0,7</td></tr><tr><th scope="row">Heizöl</th><td>20.990</td><td>27,4</td></tr><tr><th scope="row">Summe</th><td>76.488</td><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
-const eintraege = [{"label": "Energieholz", "wert": 331.5, "farbe": "#6FAC46"}, {"label": "Fernw\u00e4rme", "wert": 3950.8, "farbe": "#F39C12"}, {"label": "Luft-Wasser-WP", "wert": 791.7, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 115.1, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 113.6, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 921.6, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 353.0, "farbe": "#887894"}, {"label": "Erdgas", "wert": 25978.7, "farbe": "#999999"}, {"label": "Kohle", "wert": 267.9, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 15153.5, "farbe": "#4A4A4A"}];
+const eintraege = [{"label": "Energieholz", "wert": 576.1, "farbe": "#6FAC46"}, {"label": "Biogas-W\u00e4rme", "wert": 272.7, "farbe": "#00A24D"}, {"label": "Fernw\u00e4rme", "wert": 1034.4, "farbe": "#F39C12"}, {"label": "Luft-Wasser-WP", "wert": 440.1, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 256.5, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 531.1, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 790.3, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 734.3, "farbe": "#887894"}, {"label": "Erdgas", "wert": 50321.0, "farbe": "#999999"}, {"label": "Kohle", "wert": 541.1, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 20990.1, "farbe": "#4A4A4A"}];
 const LABELS = eintraege.map(e => e.label);
 const WERTE = eintraege.map(e => e.wert);
 const FARBEN = eintraege.map(e => e.farbe);
@@ -545,20 +616,119 @@ function zugaenglichMachen(gd) {
 
   // Nach jedem Neuzeichnen erneut anwenden: Plotly baut Legende, Achsentitel
   // und Annotationen dabei neu auf, die Attribute waeren sonst wieder weg
-  // (z.B. nach zeichenflaechenAusgleichen() im Endenergie-Diagramm). Ausserdem
+  // (z.B. nach panelsAnpassen() im Endenergie-Diagramm). Ausserdem
   // erscheint das Ausgrauen in den animierten Diagrammen erst am Ende der
   // Animation.
   gd.on('plotly_afterplot', () => a11yAnwenden(gd));
 }
 
 
-function tabelleUmschalten(schalter) {
+// Mit offener Datentabelle bekommt body die Klasse 'tabelle-offen'. Daran
+// haengt im Stylesheet eine kleinere Mindesthoehe des Diagramms: es schrumpft
+// dann so weit, dass die Tabelle darunter Platz findet, statt die Seite im
+// iframe laenger werden zu lassen. Die Tabelle selbst bleibt auf ihre
+// Hoechsthoehe begrenzt und rollt in sich (s. .tabelle im Stylesheet) --
+// Diagramm und Tabelle sind so gleichzeitig zu sehen.
+//
+// Der Wechsel laeuft ueber ein kurzes Ab- und Aufblenden (Klasse 'wechselt').
+// Weich mitwandern kann das Diagramm naemlich nicht: Plotly braucht fuer einen
+// Neuzeichnen-Durchgang rund 120 ms (nachgemessen am dreiteiligen
+// Endenergie-Diagramm, 3 x 40 ms), bei 60 Bildern je Sekunde stehen aber nur
+// 17 ms zur Verfuegung. Bild fuer Bild nachzuziehen ergaebe also ein Ruckeln
+// statt einer Bewegung. Abgeblendet faellt der Sprung dagegen nicht auf, und
+// die Rechenzeit stoert dort niemanden.
+const WECHSEL_MS = 160;
+
+// Bewusst setTimeout statt requestAnimationFrame: rAF steht in verborgenen
+// Tabs und iframes still. Das Warten wuerde dort nie enden, der Schalter bliebe
+// gesperrt und das Diagramm dauerhaft blass -- und eingebettet in einer
+// StoryMap ist genau das der Normalfall, solange man noch nicht hingescrollt
+// hat. Zwei Bilder bei 60 Hz sind rund 32 ms.
+const warten = ms => new Promise(r => setTimeout(r, ms));
+const ZWEI_BILDER_MS = 32;
+
+async function tabelleUmschalten(schalter) {
+  const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
+  const auf = schalter.getAttribute('aria-expanded') !== 'true';
+  if (schalter.dataset.wechselt === 'ja') return;    // Doppelklick abfangen
+  schalter.dataset.wechselt = 'ja';
+  schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
+  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
+  try {
+    document.body.classList.add('wechselt');
+    await warten(WECHSEL_MS);
+    ziel.hidden = !auf;
+    ziel.style.maxHeight = '';
+    document.body.classList.toggle('tabelle-offen', auf);
+    // Plotly rechnet die neue Containerhoehe nicht immer von selbst nach --
+    // 'responsive' reagiert auf die Fenstergroesse, nicht auf eine geaenderte
+    // Mindesthoehe.
+    if (window.Plotly) {
+      document.querySelectorAll('.js-plotly-plot').forEach(gd => Plotly.Plots.resize(gd));
+    }
+    // Diagramme, die ihre Panels selbst ausmessen (Endenergieverbrauch),
+    // muessen danach neu verteilen; sie hinterlegen dafuer diesen Haken.
+    // Eingepasst wird erst, wenn das durch ist -- vorher stimmt die
+    // Seitenhoehe noch nicht.
+    await Promise.resolve(window.tabelleUmgeschaltet ? window.tabelleUmgeschaltet() : null);
+    if (auf) tabelleEinpassen(ziel);
+    // Kurz Luft: erst danach steht das neu gezeichnete Diagramm wirklich, und
+    // es wird nicht mitten im Aufbau aufgeblendet.
+    await warten(ZWEI_BILDER_MS);
+  } finally {
+    // Auch bei einem Fehler wieder aufblenden -- ein dauerhaft blasses
+    // Diagramm waere schlimmer als ein harter Wechsel.
+    document.body.classList.remove('wechselt');
+    schalter.dataset.wechselt = '';
+  }
+}
+
+// Kleinste Hoehe, auf die die Tabelle eingepasst wird, und ein Pixel Luft gegen
+// Rundungen.
+const TABELLE_MIN_HOEHE = 120;
+const TABELLE_LUFT = 2;
+
+// Die Hoechsthoehe aus dem Stylesheet (45 % der Seitenhoehe) ist eine Vorgabe,
+// kein Versprechen: reicht das Schrumpfen des Diagramms nicht, laeuft die Seite
+// ueber und die Tabelle waere oben und unten angeschnitten. Dann wird sie um
+// genau den Ueberstand kuerzer.
+//
+// Aber nur, wenn das auch wirklich hilft. In der schmalen Ansicht traegt das
+// Diagramm eine feste Hoehe und kann gar nicht nachgeben; die Tabelle klein zu
+// rechnen braechte dort nichts ausser einer kleinen Tabelle -- auf dem Handy
+// rollt die Seite ohnehin, und das ist dort auch richtig.
+function tabelleEinpassen(ziel) {
+  const ueberstand = () => document.documentElement.scrollHeight - window.innerHeight;
+  if (ueberstand() <= 0) return;
+  const neu = ziel.clientHeight - ueberstand() - TABELLE_LUFT;
+  if (neu < TABELLE_MIN_HOEHE) return;
+  ziel.style.maxHeight = neu + 'px';
+  if (ueberstand() > 0) ziel.style.maxHeight = '';
+}
+
+// -- Bedienhinweis ----------------------------------------------------------
+// Sprechblase ueber der Fusszeile. Sie liegt ueber dem Diagramm und aendert am
+// Layout nichts -- deshalb kein Neuzeichnen, kein Ab- und Aufblenden noetig.
+function hinweisUmschalten(schalter) {
   const ziel = document.getElementById(schalter.getAttribute('aria-controls'));
   const auf = schalter.getAttribute('aria-expanded') !== 'true';
   schalter.setAttribute('aria-expanded', auf ? 'true' : 'false');
-  schalter.textContent = auf ? 'Datentabelle ausblenden' : 'Datentabelle anzeigen';
   ziel.hidden = !auf;
 }
+
+function hinweisSchliessen() {
+  document.querySelectorAll('.hinweis-schalter[aria-expanded="true"]').forEach(s => {
+    s.setAttribute('aria-expanded', 'false');
+    document.getElementById(s.getAttribute('aria-controls')).hidden = true;
+  });
+}
+
+// Mit Escape und mit einem Klick daneben wieder zu: eine Sprechblase, die offen
+// stehen bleibt, verdeckt genau das Diagramm, um das es geht.
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hinweisSchliessen(); });
+document.addEventListener('click', e => {
+  if (!e.target.closest('.bedienhinweis, .hinweis-schalter')) hinweisSchliessen();
+});
 
 
 function draw() {
