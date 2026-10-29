@@ -3,18 +3,29 @@
 # Nicht die nackte URL aus dem src einfügen — dann erzwingt
 # StoryMaps eine eigene, flache Blockhöhe.
 
-Entwicklung Wärmemix Nutzenergie
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_lenggries.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Lenggries" style="border:0" loading="lazy"></iframe>
+Aufteilung des Endenergieverbrauchs nach Energieträger, Sektor und Gebäudetyp
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_lenggries.html" width="100%" height="750" title="Aufteilung des Endenergieverbrauchs nach Energieträger, Sektor und Gebäudetyp Lenggries" style="border:0" loading="lazy"></iframe>
 
-Sanierungsszenario
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_lenggries.html" width="100%" height="550" title="Sanierungsszenario Lenggries" style="border:0" loading="lazy"></iframe>
-
-Endenergieverbrauch
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_lenggries.html" width="100%" height="750" title="Endenergieverbrauch Lenggries" style="border:0" loading="lazy"></iframe>
-
-Anteile der Energieträger
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_lenggries.html" width="100%" height="561" title="Anteile der Energieträger Lenggries" style="border:0" loading="lazy"></iframe>
+Endenergie- und Nutzwärmeverbrauch nach Energieträgern
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_lenggries.html" width="100%" height="561" title="Endenergie- und Nutzwärmeverbrauch nach Energieträgern Lenggries" style="border:0" loading="lazy"></iframe>
 
 CO₂-Äquivalente
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_lenggries.html" width="100%" height="521" title="CO₂-Äquivalente Lenggries" style="border:0" loading="lazy"></iframe>
 
+Wärme leitungsgebunden
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waerme_leitungsgebunden_lenggries.html" width="100%" height="531" title="Wärme leitungsgebunden Lenggries" style="border:0" loading="lazy"></iframe>
+
+Potenzialanalyse: Wirtschaftliches und technisches Potenzial je Energieträger
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_lenggries.html" width="100%" height="550" title="Potenzialanalyse: Wirtschaftliches und technisches Potenzial je Energieträger Lenggries" style="border:0" loading="lazy"></iframe>
+
+Entwicklung Wärmemix Nutzenergie
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_lenggries.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Lenggries" style="border:0" loading="lazy"></iframe>
+
+Entwicklung CO₂-Emissionen
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_lenggries.html" width="100%" height="550" title="Entwicklung CO₂-Emissionen Lenggries" style="border:0" loading="lazy"></iframe>
+
+Entwicklung Wärmemix Endenergie
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_lenggries.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie Lenggries" style="border:0" loading="lazy"></iframe>
+
+Sanierungsszenario
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_lenggries.html" width="100%" height="550" title="Sanierungsszenario Lenggries" style="border:0" loading="lazy"></iframe>

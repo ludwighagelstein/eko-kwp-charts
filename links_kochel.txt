@@ -3,26 +3,17 @@
 # Nicht die nackte URL aus dem src einfügen — dann erzwingt
 # StoryMaps eine eigene, flache Blockhöhe.
 
-Potenzialanalyse
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_kochel.html" width="100%" height="550" title="Potenzialanalyse Kochel" style="border:0" loading="lazy"></iframe>
+Aufteilung des Endenergieverbrauchs nach Energieträger, Sektor und Gebäudetyp
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_kochel.html" width="100%" height="750" title="Aufteilung des Endenergieverbrauchs nach Energieträger, Sektor und Gebäudetyp Kochel" style="border:0" loading="lazy"></iframe>
 
-Entwicklung Wärmemix Endenergie
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/waermemix_endenergie_kochel.html" width="100%" height="550" title="Entwicklung Wärmemix Endenergie Kochel" style="border:0" loading="lazy"></iframe>
+Endenergie- und Nutzwärmeverbrauch nach Energieträgern
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_kochel.html" width="100%" height="561" title="Endenergie- und Nutzwärmeverbrauch nach Energieträgern Kochel" style="border:0" loading="lazy"></iframe>
+
+CO₂-Äquivalente
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_kochel.html" width="100%" height="521" title="CO₂-Äquivalente Kochel" style="border:0" loading="lazy"></iframe>
 
 Entwicklung Wärmemix Nutzenergie
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/nutzwaerme_kochel.html" width="100%" height="550" title="Entwicklung Wärmemix Nutzenergie Kochel" style="border:0" loading="lazy"></iframe>
 
-Entwicklung CO₂-Emissionen
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_entwicklung_kochel.html" width="100%" height="550" title="Entwicklung CO₂-Emissionen Kochel" style="border:0" loading="lazy"></iframe>
-
 Sanierungsszenario
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/sanierung_kochel.html" width="100%" height="550" title="Sanierungsszenario Kochel" style="border:0" loading="lazy"></iframe>
-
-Endenergieverbrauch
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/endenergie_struktur_kochel.html" width="100%" height="750" title="Endenergieverbrauch Kochel" style="border:0" loading="lazy"></iframe>
-
-Anteile der Energieträger
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/energietraeger_anteile_kochel.html" width="100%" height="561" title="Anteile der Energieträger Kochel" style="border:0" loading="lazy"></iframe>
-
-CO₂-Äquivalente
-<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_kochel.html" width="100%" height="521" title="CO₂-Äquivalente Kochel" style="border:0" loading="lazy"></iframe>

@@ -178,12 +178,12 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Lenggries: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2024</th><td>104.561</td><td>104.561</td></tr><tr><th scope="row">2030</th><td>98.109</td><td>94.920</td></tr><tr><th scope="row">2035</th><td>93.041</td><td>87.566</td></tr><tr><th scope="row">2040</th><td>88.238</td><td>80.781</td></tr><tr><th scope="row">2045</th><td>83.686</td><td>74.522</td></tr></tbody></table><p>Fortschreibung 2024→2045: -20.875 MWh (-20 %)</p><p>O45 2024→2045: -30.039 MWh (-29 %)</p></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Lenggries: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2024</th><td>100.302</td><td>100.302</td></tr><tr><th scope="row">2030</th><td>93.440</td><td>90.394</td></tr><tr><th scope="row">2035</th><td>88.609</td><td>83.391</td></tr><tr><th scope="row">2040</th><td>84.032</td><td>76.930</td></tr><tr><th scope="row">2045</th><td>79.693</td><td>70.969</td></tr></tbody></table><p>Fortschreibung 2024→2045: -20.609 MWh (-21 %)</p><p>O45 2024→2045: -29.333 MWh (-29 %)</p></div>
 </div>
 <script>
 const years = [2024, 2030, 2035, 2040, 2045];
-const fort = [104561, 98109.2, 93041.2, 88238.1, 83685.8];
-const o45 = [104561, 94920.2, 87565.7, 80781.1, 74522.1];
+const fort = [100302.3, 93439.7, 88609.3, 84031.6, 79693.1];
+const o45 = [100302.3, 90394.4, 83390.6, 76929.5, 70968.9];
 
 const traceFort = { x: years, y: fort, type: 'bar', name: 'Sanierungsszenario Fortschreibung',
   marker: { color: '#8B0000' }, hovertemplate: '%{x}<br>Fortschreibung: %{y:.0f} MWh<extra></extra>' };
@@ -210,7 +210,7 @@ const layout = {
   annotations: [
     { xref: 'paper', yref: 'paper', x: 1, y: 1.02, xanchor: 'right', yanchor: 'bottom', showarrow: false,
        align: 'right', font: { size: 11, color: '#333' },
-       text: ["Fortschreibung 2024\u21922045: -20.875 MWh (-20 %)", "O45 2024\u21922045: -30.039 MWh (-29 %)"].join('<br>') }
+       text: ["Fortschreibung 2024\u21922045: -20.609 MWh (-21 %)", "O45 2024\u21922045: -29.333 MWh (-29 %)"].join('<br>') }
   ],
   separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };
