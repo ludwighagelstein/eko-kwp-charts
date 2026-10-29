@@ -204,6 +204,34 @@ const KUCHEN_LABEL_PLATZ = 76;
 const KUCHEN_LABEL_PLATZ_SCHMAL = 46;
 const KUCHEN_LABEL_GROESSE_SCHMAL = 10;
 
+// Unterhalb dieses Anteils bekommt ein Stueck keinen Prozentwert mehr an den
+// Rand geschrieben.
+//
+// Plotly reiht die aussen stehenden Werte einer Seite untereinander. Je mehr
+// winzige Stuecke, desto hoeher der Stapel -- und der haengt nicht an der
+// Groesse des Kreises, sondern allein an ihrer Anzahl. Bei Geretsried liegen
+// zehn von dreizehn Energietraegern unter 1,5 %; der Stapel braucht dort rund
+// 154 px, und in einem 201 px hohen Einbettungsblock standen sechs Werte
+// oberhalb der Oberkante, also ausserhalb des Bildes.
+//
+// Ein hoeherer Rand hilft nicht: Der Platz fehlt der Hoehe nach, und ein
+// groesserer Rand macht nur den Kreis kleiner. Deshalb entfaellt die
+// Beschriftung der kleinsten Stuecke. Sie sind im Kreis ohnehin nicht als
+// Flaeche erkennbar; Name und genauer Wert stehen in der Legende, im
+// Mouseover und in der Datentabelle.
+//
+// Der Schwellwert gilt fuer den vollen Datensatz, nicht fuer den gerade
+// sichtbaren. Dadurch springt die Beschriftung beim Aus- und Einblenden von
+// Energietraegern nicht um -- derselbe Grund, aus dem der Kreis mit
+// 'automargin: false' feste Groesse behaelt.
+//
+// 0,95 % statt glatter 1 %: Die Werte stehen auf eine Nachkommastelle gerundet
+// im Bild. Bei glatten 1 % waere ein Stueck mit 0,96 % ohne Beschriftung
+// geblieben, obwohl daneben in Legende und Datentabelle '1,0 %' steht -- das
+// sieht nach Willkuer aus. So gilt: Was gerundet 1,0 % oder mehr ergibt,
+// bekommt seinen Wert.
+const KUCHEN_LABEL_MINDESTANTEIL = 0.0095;
+
 // Legendenschrift auf schmalen Ansichten. 12 ist der groesste Wert, bei dem die
 // Legende zweispaltig bleibt: ab 13 passen bei 330 px Blockbreite keine zwei
 // Spalten mehr und Plotly bricht auf eine Spalte mit zwoelf Zeilen um.
@@ -710,6 +738,12 @@ function layoutFuer(schmal, gd) {
   };
 }
 
+function kuchenBeschriftung(werte) {
+  const summe = werte.reduce((a, b) => a + b, 0);
+  return werte.map(w => (summe > 0 && w / summe < KUCHEN_LABEL_MINDESTANTEIL)
+                          ? '' : '%{percent:.1%}');
+}
+
 function spurFuer(v, schmal, gd) {
   return {
     type: 'pie', labels: v.labels, values: v.werte,
@@ -718,9 +752,10 @@ function spurFuer(v, schmal, gd) {
     // direction/rotation lassen den Kuchen wie in Infogram oben beginnen.
     sort: false, direction: 'clockwise', rotation: 0,
     // texttemplate statt textinfo 'percent': Plotly schreibt sonst drei
-    // signifikante Stellen ('0,101%' statt '0,1%').
-    textinfo: 'percent',
-    texttemplate: '%{percent:.1%}',
+    // signifikante Stellen ('0,101%' statt '0,1%'). Als Liste je Stueck, damit
+    // die kleinsten leer bleiben -- siehe KUCHEN_LABEL_MINDESTANTEIL.
+    textinfo: 'none',
+    texttemplate: kuchenBeschriftung(v.werte),
     textposition: 'outside',
     // Schmal in kleinerer Schrift: der Kreis wird dadurch kleiner, die Zahlen
     // sind aber da. Vorher waren sie auf schmalen Ansichten abgeschaltet und
