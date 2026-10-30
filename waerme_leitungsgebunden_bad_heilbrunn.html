@@ -193,11 +193,11 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Leitungsgebundene Wärme Bad Heilbrunn – in MWh</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">MWh</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Hackschnitzel Fernwärme</th><td>12.778</td><td>10,0</td></tr><tr><th scope="row">Erdgas Fernwärme</th><td>6.813</td><td>5,3</td></tr><tr><th scope="row">Erdgas</th><td>108.244</td><td>84,7</td></tr><tr><th scope="row">Summe</th><td>127.836</td><td>100,0</td></tr></tbody></table><table><caption>Leitungsgebundene Wärme Bad Heilbrunn – Anteil erneuerbarer Energien</caption><thead><tr><th scope="col">Anteil</th><th scope="col">in %</th></tr></thead><tbody><tr><th scope="row">Erneuerbar</th><td>10,0</td></tr><tr><th scope="row">Konventionell</th><td>90,0</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Leitungsgebundene Wärme Bad Heilbrunn – in MWh</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">MWh</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Erdgas</th><td>12.010</td><td>100,0</td></tr><tr><th scope="row">Summe</th><td>12.010</td><td>100,0</td></tr></tbody></table><table><caption>Leitungsgebundene Wärme Bad Heilbrunn – Anteil erneuerbarer Energien</caption><thead><tr><th scope="col">Anteil</th><th scope="col">in %</th></tr></thead><tbody><tr><th scope="row">Erneuerbar</th><td>0,0</td></tr><tr><th scope="row">Konventionell</th><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
-const TRAEGER = [{"label": "Hackschnitzel Fernw\u00e4rme", "wert": 12778.3, "farbe": "#6FAC46"}, {"label": "Erdgas Fernw\u00e4rme", "wert": 6812.8, "farbe": "#C9C9C9"}, {"label": "Erdgas", "wert": 108244.4, "farbe": "#999999"}];
-const ANTEILE = [{"label": "Erneuerbar", "wert": 10.0, "farbe": "#6FAC46"}, {"label": "Konventionell", "wert": 90.0, "farbe": "#4A4A4A"}];
+const TRAEGER = [{"label": "Erdgas", "wert": 12010.2, "farbe": "#999999"}];
+const ANTEILE = [{"label": "Erneuerbar", "wert": 0, "farbe": "#6FAC46"}, {"label": "Konventionell", "wert": 100, "farbe": "#4A4A4A"}];
 
 // Raum fuer die Prozentwerte ausserhalb des Kreises. Fest reserviert, weil die
 // Zeichenflaeche fest ist: mit automargin schwankt der Kreis, je nachdem wie
