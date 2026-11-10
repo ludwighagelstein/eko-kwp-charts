@@ -12,6 +12,9 @@ Endenergie- und Nutzwärmeverbrauch nach Energieträgern
 CO₂-Äquivalente
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/co2_aequivalent_kochel.html" width="100%" height="521" title="CO₂-Äquivalente Kochel" style="border:0" loading="lazy"></iframe>
 
+Anzahl Feuerstätten nach Bauart und Energieträger
+<iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/feuerstaetten_kochel.html" width="100%" height="421" title="Anzahl Feuerstätten nach Bauart und Energieträger Kochel" style="border:0" loading="lazy"></iframe>
+
 Potenzialanalyse: Wirtschaftliches und technisches Potenzial je Energieträger
 <iframe src="https://ludwighagelstein.github.io/eko-kwp-charts/potenzial_kochel.html" width="100%" height="550" title="Potenzialanalyse: Wirtschaftliches und technisches Potenzial je Energieträger Kochel" style="border:0" loading="lazy"></iframe>
 
