@@ -1,10 +1,15 @@
-# eko-kwp-charts
+# eko-kwp-charts — umgezogen
 
-Oeffentlich gehostete KWP-Diagramme (Potenzialanalyse, Waermemix, CO2-Entwicklung)
-fuer die Einbindung in ArcGIS StoryMaps per iFrame/Link.
+Die KWP-Diagramme liegen jetzt unter
 
-Erzeugt und aktualisiert automatisch durch `kwp_chart_gen.py` aus dem privaten
-Repo `EKO-Helper-Scripts` (Ordner `kommunaleWaermeplanung/Ist-Pot-Diagramm Export`).
-Dieses Repo enthaelt nur die generierten HTML-Dateien, keine Quelldaten oder Skripte.
+**https://ewo-kompetenzzentrum-energie.github.io/kwp-diagramme/**
 
-Gehostet ueber GitHub Pages: https://ludwighagelstein.github.io/eko-kwp-charts/
+im Repo [EWO-Kompetenzzentrum-Energie/kwp-diagramme](https://github.com/EWO-Kompetenzzentrum-Energie/kwp-diagramme).
+
+Dieses Repo bleibt bestehen, weil GitHub Pages-Adressen nach einem Umzug
+nicht von sich aus weiterleitet. Jede HTML-Datei hier ist nur noch eine
+Weiterleitungsseite auf die neue Adresse, damit bestehende Einbettungen in
+ArcGIS StoryMaps weiter funktionieren.
+
+**Neue Einbettungen bitte gleich auf die neue Adresse setzen.** Erst wenn
+keine StoryMap mehr auf dieses Repo zeigt, kann es archiviert werden.
