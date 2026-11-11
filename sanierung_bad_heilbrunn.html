@@ -178,12 +178,12 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Bad Heilbrunn: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2023</th><td>176.351</td><td>176.351</td></tr><tr><th scope="row">2030</th><td>165.054</td><td>158.284</td></tr><tr><th scope="row">2035</th><td>157.434</td><td>146.020</td></tr><tr><th scope="row">2040</th><td>150.169</td><td>134.706</td></tr><tr><th scope="row">2045</th><td>143.242</td><td>124.269</td></tr></tbody></table><p>Fortschreibung 2023→2045: -33.109 MWh (-19 %)</p><p>O45 2023→2045: -52.082 MWh (-30 %)</p></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>Sanierungsszenario Bad Heilbrunn: Nutzenergie in MWh</caption><thead><tr><th scope="col">Jahr</th><th scope="col">Szenario Fortschreibung</th><th scope="col">Szenario O45</th></tr></thead><tbody><tr><th scope="row">2024</th><td>39.216</td><td>39.216</td></tr><tr><th scope="row">2030</th><td>36.751</td><td>35.577</td></tr><tr><th scope="row">2035</th><td>34.846</td><td>32.820</td></tr><tr><th scope="row">2040</th><td>33.041</td><td>30.278</td></tr><tr><th scope="row">2045</th><td>31.330</td><td>27.932</td></tr></tbody></table><p>Fortschreibung 2024→2045: -7.885 MWh (-20 %)</p><p>O45 2024→2045: -11.284 MWh (-29 %)</p></div>
 </div>
 <script>
-const years = [2023, 2030, 2035, 2040, 2045];
-const fort = [176351.2, 165053.6, 157433.8, 150168.9, 143242.3];
-const o45 = [176351.2, 158284.2, 146020.3, 134706.5, 124269.4];
+const years = [2024, 2030, 2035, 2040, 2045];
+const fort = [39215.9, 36751.3, 34846.2, 33041.0, 31330.5];
+const o45 = [39215.9, 35577.0, 32820.4, 30277.5, 27931.6];
 
 const traceFort = { x: years, y: fort, type: 'bar', name: 'Sanierungsszenario Fortschreibung',
   marker: { color: '#8B0000' }, hovertemplate: '%{x}<br>Fortschreibung: %{y:.0f} MWh<extra></extra>' };
@@ -210,7 +210,7 @@ const layout = {
   annotations: [
     { xref: 'paper', yref: 'paper', x: 1, y: 1.02, xanchor: 'right', yanchor: 'bottom', showarrow: false,
        align: 'right', font: { size: 11, color: '#333' },
-       text: ["Fortschreibung 2023\u21922045: -33.109 MWh (-19 %)", "O45 2023\u21922045: -52.082 MWh (-30 %)"].join('<br>') }
+       text: ["Fortschreibung 2024\u21922045: -7.885 MWh (-20 %)", "O45 2024\u21922045: -11.284 MWh (-29 %)"].join('<br>') }
   ],
   separators: ',.', plot_bgcolor: '#fff', paper_bgcolor: '#fff'
 };

@@ -168,7 +168,7 @@
      (gemessen, Desktop; schmal 49 px). Ersatzlos streichen geht nicht -- der
      Diagrammbereich benennt sich per aria-labelledby ueber die h1. -->
 <div class="sr-only">
-  <h1 id="titel">Bad Heilbrunn: CO₂-Äquivalente 2023</h1>
+  <h1 id="titel">Bad Heilbrunn: CO₂-Äquivalente 2024</h1>
   <p>Treibhausgasemissionen nach Energieträgern [t CO₂-Äquivalent]</p>
 </div>
 <p id="hinweis" class="sr-only">Interaktives Diagramm. Die Legende ist mit der Tabulatortaste erreichbar; einzelne Datenreihen lassen sich dort mit Enter oder der Leertaste ein- und ausblenden. Alle Werte stehen unter dem Diagramm auch als Datentabelle.</p>
@@ -179,10 +179,10 @@
     <button type="button" class="tabelle-schalter" aria-expanded="false" aria-controls="datentabelle"
             onclick="tabelleUmschalten(this)">Datentabelle anzeigen</button>
   </div>
-  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Bad Heilbrunn 2023 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>332</td><td>0,7</td></tr><tr><th scope="row">Fernwärme</th><td>3.951</td><td>8,2</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>792</td><td>1,7</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>115</td><td>0,2</td></tr><tr><th scope="row">Heizstrom</th><td>114</td><td>0,2</td></tr><tr><th scope="row">BHKW-Wärme</th><td>922</td><td>1,9</td></tr><tr><th scope="row">Flüssiggas</th><td>353</td><td>0,7</td></tr><tr><th scope="row">Erdgas</th><td>25.979</td><td>54,1</td></tr><tr><th scope="row">Kohle</th><td>268</td><td>0,6</td></tr><tr><th scope="row">Heizöl</th><td>15.154</td><td>31,6</td></tr><tr><th scope="row">Summe</th><td>47.977</td><td>100,0</td></tr></tbody></table></div>
+  <div id="datentabelle" class="tabelle" hidden><table><caption>CO₂-Äquivalente Bad Heilbrunn 2024 – in Tonnen</caption><thead><tr><th scope="col">Energieträger</th><th scope="col">t CO₂-Äquivalent</th><th scope="col">Anteil in %</th></tr></thead><tbody><tr><th scope="row">Energieholz</th><td>291</td><td>3,2</td></tr><tr><th scope="row">Luft-Wasser-WP</th><td>70</td><td>0,8</td></tr><tr><th scope="row">Oberfl. Geothermie</th><td>30</td><td>0,3</td></tr><tr><th scope="row">Heizstrom</th><td>58</td><td>0,6</td></tr><tr><th scope="row">BHKW-Wärme</th><td>64</td><td>0,7</td></tr><tr><th scope="row">Flüssiggas</th><td>207</td><td>2,3</td></tr><tr><th scope="row">Erdgas</th><td>2.882</td><td>32,1</td></tr><tr><th scope="row">Kohle</th><td>11</td><td>0,1</td></tr><tr><th scope="row">Heizöl</th><td>5.359</td><td>59,7</td></tr><tr><th scope="row">Summe</th><td>8.974</td><td>100,0</td></tr></tbody></table></div>
 </div>
 <script>
-const eintraege = [{"label": "Energieholz", "wert": 331.5, "farbe": "#6FAC46"}, {"label": "Fernw\u00e4rme", "wert": 3950.8, "farbe": "#F39C12"}, {"label": "Luft-Wasser-WP", "wert": 791.7, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 115.1, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 113.6, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 921.6, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 353.0, "farbe": "#887894"}, {"label": "Erdgas", "wert": 25978.7, "farbe": "#999999"}, {"label": "Kohle", "wert": 267.9, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 15153.5, "farbe": "#4A4A4A"}];
+const eintraege = [{"label": "Energieholz", "wert": 291.2, "farbe": "#6FAC46"}, {"label": "Luft-Wasser-WP", "wert": 70.5, "farbe": "#326F90"}, {"label": "Oberfl. Geothermie", "wert": 29.9, "farbe": "#83ACFC"}, {"label": "Heizstrom", "wert": 58.1, "farbe": "#1225A0"}, {"label": "BHKW-W\u00e4rme", "wert": 64.4, "farbe": "#B22222"}, {"label": "Fl\u00fcssiggas", "wert": 206.9, "farbe": "#887894"}, {"label": "Erdgas", "wert": 2882.5, "farbe": "#999999"}, {"label": "Kohle", "wert": 11.1, "farbe": "#7C350B"}, {"label": "Heiz\u00f6l", "wert": 5359.2, "farbe": "#4A4A4A"}];
 const LABELS = eintraege.map(e => e.label);
 const WERTE = eintraege.map(e => e.wert);
 const FARBEN = eintraege.map(e => e.farbe);
